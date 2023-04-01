@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface;
+using Dalamud.Plugin;
 using ImGuiNET;
 using LMeter.ACT;
 using LMeter.Helpers;
@@ -23,6 +24,7 @@ namespace LMeter.Config
         
         public IConfigPage GetDefault() => new ACTConfig();
 
+        public bool IINACTMode = true;
         public string ACTSocketAddress;
 
         public int EncounterHistorySize = 15;
@@ -43,30 +45,60 @@ namespace LMeter.Config
         {
             if (ImGui.BeginChild($"##{this.Name}", new Vector2(size.X, size.Y), true))
             {
-                Vector2 buttonSize = new Vector2(40, 0);
-                ImGui.Text($"ACT Status: {ACTClient.Status}");
-                ImGui.InputTextWithHint("ACT Websocket Address", $"Default: '{_defaultSocketAddress}'", ref this.ACTSocketAddress, 64);
-                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, () => ACTClient.RetryConnection(this.ACTSocketAddress), "Reconnect", buttonSize);
-
+                ImGui.Text("ACT Connection Mode:");
+                var iinactModeNum = IINACTMode ? 1 : 0;
+                if (ImGui.RadioButton("ACT WebSocket", ref iinactModeNum, 0))
+                {
+                    Singletons.DeleteActClients();
+                    var dpi = Singletons.Get<DalamudPluginInterface>();
+                    var client = new ACTClient(this, dpi);
+                    client.Start();
+                    Singletons.Register(client);
+                }
                 ImGui.SameLine();
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
-                ImGui.Text("Retry ACT Connection");
+                if (ImGui.RadioButton("IINACT", ref iinactModeNum, 1))
+                {
+                    Singletons.DeleteActClients();
+                    var dpi = Singletons.Get<DalamudPluginInterface>();
+                    var client = new IINACTClient(this, dpi);
+                    client.Start();
+                    Singletons.Register(client);
+                }
+                IINACTMode = iinactModeNum == 1;
+
+                Vector2 buttonSize = new Vector2(40, 0);
+
+                if (IINACTMode)
+                {
+                    ImGui.Text($"IINACT Status: " + IACTClient.Current.Status);
+                }
+                else
+                {
+                    ImGui.Text($"ACT Status: {IACTClient.Current.Status}");
+                    ImGui.InputTextWithHint("ACT Websocket Address", $"Default: '{_defaultSocketAddress}'", ref this.ACTSocketAddress, 64);
+                    DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, () => IACTClient.Current.RetryConnection(this.ACTSocketAddress), "Reconnect", buttonSize);
+                    ImGui.SameLine();
+                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
+                    ImGui.Text("Retry ACT Connection");
+                }
+
+                if (!IINACTMode)
+                {
+                    ImGui.NewLine();
+                    ImGui.Checkbox("Automatically attempt to reconnect if connection fails", ref this.AutoReconnect);
+                    if (this.AutoReconnect)
+                    {
+                        DrawHelpers.DrawNestIndicator(1);
+                        ImGui.PushItemWidth(30);
+                        ImGui.InputInt("Seconds between reconnect attempts", ref this.ReconnectDelay, 0, 0);
+                        ImGui.PopItemWidth();
+                    }
+                }
 
                 ImGui.NewLine();
                 ImGui.PushItemWidth(30);
                 ImGui.InputInt("Number of Encounters to save", ref this.EncounterHistorySize, 0, 0);
                 ImGui.PopItemWidth();
-
-                ImGui.NewLine();
-                ImGui.Checkbox("Automatically attempt to reconnect if connection fails", ref this.AutoReconnect);
-                if (this.AutoReconnect)
-                {
-                    DrawHelpers.DrawNestIndicator(1);
-                    ImGui.PushItemWidth(30);
-                    ImGui.InputInt("Seconds between reconnect attempts", ref this.ReconnectDelay, 0, 0);
-                    ImGui.PopItemWidth();
-                }
-
 
                 ImGui.NewLine();
                 ImGui.Checkbox("Clear ACT when clearing LMeter", ref this.ClearACT);
@@ -86,7 +118,7 @@ namespace LMeter.Config
                 }
 
                 ImGui.NewLine();
-                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Stop, () => ACTClient.EndEncounter(), null, buttonSize);
+                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Stop, () => IACTClient.Current.EndEncounter(), null, buttonSize);
                 ImGui.SameLine();
                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
                 ImGui.Text("Force End Combat");
@@ -103,13 +135,13 @@ namespace LMeter.Config
         public void TryReconnect()
         {
             if (this.LastReconnectAttempt.HasValue &&
-                (ACTClient.Status == ConnectionStatus.NotConnected ||
-                ACTClient.Status == ConnectionStatus.ConnectionFailed))
+                (IACTClient.Current.Status == ConnectionStatus.NotConnected ||
+                IACTClient.Current.Status == ConnectionStatus.ConnectionFailed))
             {
                 if (this.AutoReconnect &&
                     this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay))
                 {
-                    ACTClient.RetryConnection(this.ACTSocketAddress);
+                    IACTClient.Current.RetryConnection(this.ACTSocketAddress);
                     this.LastReconnectAttempt = DateTime.UtcNow;
                 }
             }
@@ -121,7 +153,7 @@ namespace LMeter.Config
 
         public void TryEndEncounter()
         {
-            if (ACTClient.Status == ConnectionStatus.Connected)
+            if (IACTClient.Current.Status == ConnectionStatus.Connected)
             {
                 if (this.AutoEnd &&
                     CharacterState.IsInCombat())
@@ -131,7 +163,7 @@ namespace LMeter.Config
                 else if (this.LastCombatTime is not null && 
                          this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay))
                 {
-                    ACTClient.EndEncounter();
+                    IACTClient.Current.EndEncounter();
                     this.LastCombatTime = null;
                 }
             }
