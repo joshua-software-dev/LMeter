@@ -126,7 +126,7 @@ namespace LMeter.ACT
             while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 // Prevent overuse of IPC API
-                Thread.Sleep(1000);
+                Thread.Sleep(_config.IINACTPollingRateMs);
                 string? data;
                 try
                 {
