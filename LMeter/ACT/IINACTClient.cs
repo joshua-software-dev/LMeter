@@ -72,7 +72,7 @@ namespace LMeter.ACT
             }
         }
 
-        public void RetryConnection(string address)
+        public void RetryConnection()
         {
             Reset();
             Start();
@@ -82,7 +82,7 @@ namespace LMeter.ACT
         {
             if (Status != ConnectionStatus.NotConnected)
             {
-                PluginLog.Error("Cannot start, ACTClient needs to be reset!");
+                PluginLog.Error("Cannot start, IINACTClient needs to be reset!");
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace LMeter.ACT
             }
 
             Status = ConnectionStatus.Connected;
-            PluginLog.Information("Successfully Established ACT Connection");
+            PluginLog.Information("Successfully Established IINACT Connection");
         }
 
         private bool Connect()
@@ -179,7 +179,7 @@ namespace LMeter.ACT
 
         private void LogConnectionFailure(string error)
         {
-            PluginLog.Debug($"Failed to connect to ACT!");
+            PluginLog.Debug($"Failed to connect to IINACT!");
             PluginLog.Verbose(error);
         }
 

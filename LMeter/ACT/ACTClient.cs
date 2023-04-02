@@ -75,7 +75,7 @@ namespace LMeter.ACT
             }
         }
 
-        public void RetryConnection(string address)
+        public void RetryConnection()
         {
             Reset();
             Start();

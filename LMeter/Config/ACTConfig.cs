@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using Dalamud.Interface;
-using Dalamud.Plugin;
 using ImGuiNET;
 using LMeter.ACT;
 using LMeter.Helpers;
@@ -46,25 +45,20 @@ namespace LMeter.Config
             if (ImGui.BeginChild($"##{this.Name}", new Vector2(size.X, size.Y), true))
             {
                 ImGui.Text("ACT Connection Mode:");
+
+                var newClientRequested = false;
                 var iinactModeNum = IINACTMode ? 1 : 0;
-                if (ImGui.RadioButton("ACT WebSocket", ref iinactModeNum, 0))
-                {
-                    Singletons.DeleteActClients();
-                    var dpi = Singletons.Get<DalamudPluginInterface>();
-                    var client = new ACTClient(this, dpi);
-                    client.Start();
-                    Singletons.Register(client);
-                }
+
+                newClientRequested |= ImGui.RadioButton("ACT WebSocket", ref iinactModeNum, 0);
                 ImGui.SameLine();
-                if (ImGui.RadioButton("IINACT", ref iinactModeNum, 1))
-                {
-                    Singletons.DeleteActClients();
-                    var dpi = Singletons.Get<DalamudPluginInterface>();
-                    var client = new IINACTClient(this, dpi);
-                    client.Start();
-                    Singletons.Register(client);
-                }
+                newClientRequested |= ImGui.RadioButton("IINACT", ref iinactModeNum, 1);
+
                 IINACTMode = iinactModeNum == 1;
+                if (newClientRequested)
+                {
+                    IACTClient client = IACTClient.GetNewClient(); // Singleton Registry is done internally here
+                    client.Start();
+                }
 
                 Vector2 buttonSize = new Vector2(40, 0);
 
@@ -76,23 +70,20 @@ namespace LMeter.Config
                 {
                     ImGui.Text($"ACT Status: {IACTClient.Current.Status}");
                     ImGui.InputTextWithHint("ACT Websocket Address", $"Default: '{_defaultSocketAddress}'", ref this.ACTSocketAddress, 64);
-                    DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, () => IACTClient.Current.RetryConnection(this.ACTSocketAddress), "Reconnect", buttonSize);
-                    ImGui.SameLine();
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
-                    ImGui.Text("Retry ACT Connection");
                 }
 
-                if (!IINACTMode)
+                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, IACTClient.Current.RetryConnection, "Reconnect", buttonSize);
+                ImGui.SameLine();
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
+                ImGui.Text("Retry Connection");
+                ImGui.NewLine();
+                ImGui.Checkbox("Automatically attempt to reconnect if connection fails", ref this.AutoReconnect);
+                if (this.AutoReconnect)
                 {
-                    ImGui.NewLine();
-                    ImGui.Checkbox("Automatically attempt to reconnect if connection fails", ref this.AutoReconnect);
-                    if (this.AutoReconnect)
-                    {
-                        DrawHelpers.DrawNestIndicator(1);
-                        ImGui.PushItemWidth(30);
-                        ImGui.InputInt("Seconds between reconnect attempts", ref this.ReconnectDelay, 0, 0);
-                        ImGui.PopItemWidth();
-                    }
+                    DrawHelpers.DrawNestIndicator(1);
+                    ImGui.PushItemWidth(30);
+                    ImGui.InputInt("Seconds between reconnect attempts", ref this.ReconnectDelay, 0, 0);
+                    ImGui.PopItemWidth();
                 }
 
                 ImGui.NewLine();
@@ -141,7 +132,7 @@ namespace LMeter.Config
                 if (this.AutoReconnect &&
                     this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay))
                 {
-                    IACTClient.Current.RetryConnection(this.ACTSocketAddress);
+                    IACTClient.Current.RetryConnection();
                     this.LastReconnectAttempt = DateTime.UtcNow;
                 }
             }
