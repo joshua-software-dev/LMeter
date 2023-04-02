@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Logging;
 using Dalamud.Plugin;
-using Dalamud.Plugin.Ipc.Exceptions;
+using Dalamud.Plugin.Ipc;
 using LMeter.Config;
 using LMeter.Helpers;
 using Newtonsoft.Json;
@@ -17,8 +16,8 @@ namespace LMeter.ACT
     {
         private readonly ACTConfig _config;
         private readonly DalamudPluginInterface _dpi;
-        private CancellationTokenSource _cancellationTokenSource;
         private ACTEvent? _lastEvent;
+        private readonly ICallGateProvider<string, bool> _combatEventReaderIpc;
 
         public ConnectionStatus Status { get; private set; }
         public List<ACTEvent> PastEvents { get; private set; }
@@ -27,9 +26,11 @@ namespace LMeter.ACT
         {
             _config = config;
             _dpi = dpi;
-            _cancellationTokenSource = new CancellationTokenSource();
             Status = ConnectionStatus.NotConnected;
             PastEvents = new List<ACTEvent>();
+
+            _combatEventReaderIpc = _dpi.GetIpcProvider<string, bool>("LMeter.CombatEventReader");
+            _combatEventReaderIpc.RegisterFunc(ReceiveIpcMessage);
         }
 
         public ACTEvent? GetEvent(int index = -1)
@@ -94,16 +95,6 @@ namespace LMeter.ACT
 
             Status = ConnectionStatus.Connected;
             PluginLog.Information("Successfully Established ACT Connection");
-
-            try
-            {
-                ThreadPool.QueueUserWorkItem(ReceiveLoop);
-            }
-            catch (Exception ex)
-            {
-                Status = ConnectionStatus.ConnectionFailed;
-                this.LogConnectionFailure(ex.ToString());
-            }
         }
 
         private bool Connect()
@@ -111,7 +102,9 @@ namespace LMeter.ACT
             try
             {
                 Status = ConnectionStatus.Connecting;
-                return _dpi.GetIpcSubscriber<bool>("IINACT.Server.Listening").InvokeFunc();
+                return _dpi
+                    .GetIpcSubscriber<string, bool>("IINACT.Server.SubscribeToCombatEvents")
+                    .InvokeFunc("LMeter.CombatEventReader");
             }
             catch (Exception ex)
             {
@@ -121,69 +114,58 @@ namespace LMeter.ACT
             }
         }
 
-        private void ReceiveLoop(object? o)
+        private bool ReceiveIpcMessage(string data)
         {
-            while (!_cancellationTokenSource.IsCancellationRequested)
+            if (string.IsNullOrEmpty(data)) return false;
+            try
             {
-                // Prevent overuse of IPC API
-                Thread.Sleep(_config.IINACTPollingRateMs);
-                string? data;
-                try
-                {
-                    data = _dpi.GetIpcSubscriber<string>("IINACT.Server.GetCombatEvents").InvokeFunc();
-                    if (string.IsNullOrEmpty(data)) continue;
-                }
-                catch (IpcNotReadyError)
-                {
-                    continue;
-                }
+                ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent>(data);
 
-                try
+                if (newEvent?.Encounter is not null &&
+                    newEvent?.Combatants is not null &&
+                    newEvent.Combatants.Any() &&
+                    (CharacterState.IsInCombat() || !newEvent.IsEncounterActive()))
                 {
-                    ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent>(data);
-
-                    if (newEvent?.Encounter is not null &&
-                        newEvent?.Combatants is not null &&
-                        newEvent.Combatants.Any() &&
-                        (CharacterState.IsInCombat() || !newEvent.IsEncounterActive()))
+                    if (!(_lastEvent is not null &&
+                          _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
+                          _lastEvent.Encounter is not null &&
+                          _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)))
                     {
-                        if (!(_lastEvent is not null &&
-                              _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
-                              _lastEvent.Encounter is not null &&
-                              _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)))
+                        if (!newEvent.IsEncounterActive())
                         {
-                            if (!newEvent.IsEncounterActive())
+                            PastEvents.Add(newEvent);
+
+                            while (PastEvents.Count > _config.EncounterHistorySize)
                             {
-                                PastEvents.Add(newEvent);
-
-                                while (PastEvents.Count > _config.EncounterHistorySize)
-                                {
-                                    PastEvents.RemoveAt(0);
-                                }
+                                PastEvents.RemoveAt(0);
                             }
-
-                            newEvent.Timestamp = DateTime.UtcNow;
-                            _lastEvent = newEvent;
                         }
+
+                        newEvent.Timestamp = DateTime.UtcNow;
+                        _lastEvent = newEvent;
                     }
                 }
-                catch (Exception ex)
-                {
-                    this.LogConnectionFailure(ex.ToString());
-                }
             }
+            catch (Exception ex)
+            {
+                this.LogConnectionFailure(ex.ToString());
+                return false;
+            }
+
+            return true;
         }
         
         public void Shutdown()
         {
-            _cancellationTokenSource.Cancel();
+            _dpi
+                .GetIpcSubscriber<string, bool>("IINACT.Server.UnsubscribeFromCombatEvents")
+                .InvokeFunc("LMeter.CombatEventReader");
             Status = ConnectionStatus.NotConnected;
         }
 
         public void Reset()
         {
             this.Shutdown();
-            _cancellationTokenSource = new CancellationTokenSource();
             Status = ConnectionStatus.NotConnected;
         }
 
@@ -195,6 +177,7 @@ namespace LMeter.ACT
 
         public void Dispose()
         {
+            _combatEventReaderIpc.UnregisterFunc();
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
