@@ -19,9 +19,9 @@
         "Punchline": "A parsing plugin.",
         "IsHide": "False",
         "IsTestingExclusive": "False",
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/IINACT/releases/download/poc.v4/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/IINACT/releases/download/poc.v4/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/IINACT/releases/download/poc.v4/latest.zip"
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/IINACT/releases/download/prerc.v1/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/IINACT/releases/download/prerc.v1/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/IINACT/releases/download/prerc.v1/latest.zip"
     },
     {
         "Author": "Lichie",
@@ -38,9 +38,9 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/poc.v4/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/poc.v4/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/poc.v4/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/prerc.v1/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/prerc.v1/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/prerc.v1/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/lichie567/LMeter/main/LMeter/Media/Images/icon.png"
     }
 ]
