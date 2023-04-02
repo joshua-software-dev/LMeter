@@ -8,7 +8,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using LMeter.Config;
 using LMeter.Helpers;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LMeter.ACT
 {
@@ -17,7 +17,11 @@ namespace LMeter.ACT
         private readonly ACTConfig _config;
         private readonly DalamudPluginInterface _dpi;
         private ACTEvent? _lastEvent;
-        private readonly ICallGateProvider<string, bool> _combatEventReaderIpc;
+        private readonly ICallGateProvider<JObject, bool> _combatEventReaderIpc;
+
+        private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
+        private const string IINACTSubscribeIpcEndpoint = "IINACT.CreateLegacySubscriber";
+        private const string IINACTUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
 
         public ConnectionStatus Status { get; private set; }
         public List<ACTEvent> PastEvents { get; private set; }
@@ -29,7 +33,7 @@ namespace LMeter.ACT
             Status = ConnectionStatus.NotConnected;
             PastEvents = new List<ACTEvent>();
 
-            _combatEventReaderIpc = _dpi.GetIpcProvider<string, bool>("LMeter.CombatEventReader");
+            _combatEventReaderIpc = _dpi.GetIpcProvider<JObject, bool>(LMeterSubscriptionIpcEndpoint);
             _combatEventReaderIpc.RegisterFunc(ReceiveIpcMessage);
         }
 
@@ -94,7 +98,7 @@ namespace LMeter.ACT
             }
 
             Status = ConnectionStatus.Connected;
-            PluginLog.Information("Successfully Established IINACT Connection");
+            PluginLog.Information("Successfully subscribed to IINACT");
         }
 
         private bool Connect()
@@ -103,23 +107,26 @@ namespace LMeter.ACT
             {
                 Status = ConnectionStatus.Connecting;
                 return _dpi
-                    .GetIpcSubscriber<string, bool>("IINACT.Server.SubscribeToCombatEvents")
-                    .InvokeFunc("LMeter.CombatEventReader");
+                    .GetIpcSubscriber<string, bool>(IINACTSubscribeIpcEndpoint)
+                    .InvokeFunc(LMeterSubscriptionIpcEndpoint);
             }
             catch (Exception ex)
             {
                 Status = ConnectionStatus.ConnectionFailed;
-                this.LogConnectionFailure(ex.ToString());
+                PluginLog.Debug("Failed to subscribe to IINACT!");
+                PluginLog.Verbose(ex.ToString());
                 return false;
             }
         }
 
-        private bool ReceiveIpcMessage(string data)
+        private bool ReceiveIpcMessage(JObject? data)
         {
-            if (string.IsNullOrEmpty(data)) return false;
+            // `is` statements do auto null checking \o/
+            if (data?["msgtype"]?.ToString() is not "CombatData") return false;
+
             try
             {
-                ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent>(data);
+                ACTEvent? newEvent = data?["msg"]?.ToObject<ACTEvent?>();
 
                 if (newEvent?.Encounter is not null &&
                     newEvent?.Combatants is not null &&
@@ -148,7 +155,7 @@ namespace LMeter.ACT
             }
             catch (Exception ex)
             {
-                this.LogConnectionFailure(ex.ToString());
+                PluginLog.Verbose(ex.ToString());
                 return false;
             }
 
@@ -159,9 +166,15 @@ namespace LMeter.ACT
         {
             try
             {
-                _dpi
-                    .GetIpcSubscriber<string, bool>("IINACT.Server.UnsubscribeFromCombatEvents")
-                    .InvokeFunc("LMeter.CombatEventReader");
+                var success = _dpi
+                    .GetIpcSubscriber<string, bool>(IINACTUnsubscribeIpcEndpoint)
+                    .InvokeFunc(LMeterSubscriptionIpcEndpoint);
+
+                PluginLog.Information(
+                    success
+                        ? "Successfully unsubscribed from IINACT"
+                        : "Failed to unsubscribe from IINACT"
+                );
             }
             catch (Exception)
             {
@@ -175,12 +188,6 @@ namespace LMeter.ACT
         {
             this.Shutdown();
             Status = ConnectionStatus.NotConnected;
-        }
-
-        private void LogConnectionFailure(string error)
-        {
-            PluginLog.Debug($"Failed to connect to IINACT!");
-            PluginLog.Verbose(error);
         }
 
         public void Dispose()
