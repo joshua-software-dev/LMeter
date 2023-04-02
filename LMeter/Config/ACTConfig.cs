@@ -25,7 +25,6 @@ namespace LMeter.Config
         public IConfigPage GetDefault() => new ACTConfig();
 
         public bool IINACTMode = true;
-        public int IINACTPollingRateMs = 100; 
         public string ACTSocketAddress;
 
         public int EncounterHistorySize = 15;
@@ -72,11 +71,6 @@ namespace LMeter.Config
                 if (IINACTMode)
                 {
                     ImGui.Text($"IINACT Status: " + IACTClient.Current.Status);
-                    ImGui.NewLine();
-                    ImGui.PushItemWidth(100);
-                    ImGui.InputInt("Polling Frequency in Milliseconds", ref this.IINACTPollingRateMs, 1, 100);
-                    this.IINACTPollingRateMs = Math.Max(1, this.IINACTPollingRateMs);
-                    ImGui.PopItemWidth();
                 }
                 else
                 {
