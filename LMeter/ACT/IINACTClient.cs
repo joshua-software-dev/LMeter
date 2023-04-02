@@ -157,9 +157,17 @@ namespace LMeter.ACT
         
         public void Shutdown()
         {
-            _dpi
-                .GetIpcSubscriber<string, bool>("IINACT.Server.UnsubscribeFromCombatEvents")
-                .InvokeFunc("LMeter.CombatEventReader");
+            try
+            {
+                _dpi
+                    .GetIpcSubscriber<string, bool>("IINACT.Server.UnsubscribeFromCombatEvents")
+                    .InvokeFunc("LMeter.CombatEventReader");
+            }
+            catch (Exception)
+            {
+                // don't throw when closing
+            }
+
             Status = ConnectionStatus.NotConnected;
         }
 
