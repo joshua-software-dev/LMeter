@@ -20,8 +20,9 @@ namespace LMeter.ACT
         private readonly ICallGateProvider<JObject, bool> _combatEventReaderIpc;
 
         private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
-        private const string IINACTSubscribeIpcEndpoint = "IINACT.CreateLegacySubscriber";
+        private const string IINACTSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
         private const string IINACTUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
+        private const string IINACTProviderEditEndpoint = "IINACT.IpcProvider." + LMeterSubscriptionIpcEndpoint;
 
         public ConnectionStatus Status { get; private set; }
         public List<ACTEvent> PastEvents { get; private set; }
@@ -90,12 +91,7 @@ namespace LMeter.ACT
                 return;
             }
 
-            var connectSuccess = Connect();
-            if (!connectSuccess)
-            {
-                Status = ConnectionStatus.ConnectionFailed;
-                return;
-            }
+            if (!Connect()) return;
 
             Status = ConnectionStatus.Connected;
             PluginLog.Information("Successfully subscribed to IINACT");
@@ -103,30 +99,45 @@ namespace LMeter.ACT
 
         private bool Connect()
         {
+            Status = ConnectionStatus.Connecting;
+
             try
             {
-                Status = ConnectionStatus.Connecting;
-                return _dpi
+                var connectSuccess = _dpi
                     .GetIpcSubscriber<string, bool>(IINACTSubscribeIpcEndpoint)
                     .InvokeFunc(LMeterSubscriptionIpcEndpoint);
+                if (!connectSuccess) return false;
             }
             catch (Exception ex)
             {
                 Status = ConnectionStatus.ConnectionFailed;
-                PluginLog.Debug("Failed to subscribe to IINACT!");
+                PluginLog.Debug("Failed to setup IINACT subscription!");
                 PluginLog.Verbose(ex.ToString());
                 return false;
             }
-        }
-
-        private bool ReceiveIpcMessage(JObject? data)
-        {
-            // `is` statements do auto null checking \o/
-            if (data?["msgtype"]?.ToString() is not "CombatData") return false;
-
+            
             try
             {
-                ACTEvent? newEvent = data?["msg"]?.ToObject<ACTEvent?>();
+                _dpi
+                    .GetIpcSubscriber<JObject, bool>(IINACTProviderEditEndpoint)
+                    .InvokeAction(JObject.Parse("""{"call":"subscribe","events":["CombatData"]}"""));
+            }
+            catch (Exception ex)
+            {
+                Status = ConnectionStatus.ConnectionFailed;
+                PluginLog.Debug("Failed to finalize IINACT subscription!");
+                PluginLog.Verbose(ex.ToString());
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool ReceiveIpcMessage(JObject data)
+        {
+            try
+            {
+                ACTEvent? newEvent = data.ToObject<ACTEvent?>();
 
                 if (newEvent?.Encounter is not null &&
                     newEvent?.Combatants is not null &&
