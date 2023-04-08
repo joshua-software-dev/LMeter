@@ -33,6 +33,7 @@
     <!-- Release Configuration -->
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <Deterministic>true</Deterministic>
+        <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)/../'))=C:\</PathMap>
     </PropertyGroup>
 
     <!-- Dalamud Configuration -->
