@@ -38,29 +38,45 @@
     <!-- Dalamud Configuration -->
     <PropertyGroup>
         <DalamudVersion>dev</DalamudVersion>
-        <DalamudHome>$(DALAMUD_HOME)/</DalamudHome>
-        <DalamudLocal>../dalamud/</DalamudLocal>
+        <DalamudHome>$(DALAMUD_HOME)</DalamudHome>
+        <DalamudLocal>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)/../deps/lib/dalamud/'))</DalamudLocal>
     </PropertyGroup>
     
     <!-- Dalamud Configuration (Windows-specific) -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-        <DalamudXIVLauncher>$(APPDATA)\XIVLauncher\addon\Hooks\$(DalamudVersion)</DalamudXIVLauncher>
+        <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(APPDATA)\XIVLauncher\addon\Hooks\$(DalamudVersion)\'))</DalamudXIVLauncher>
     </PropertyGroup>
     
     <!-- Dalamud Configuration (Linux-specific) -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-        <DalamudXIVLauncher>$(HOME)/.xlcore/dalamud/Hooks/$(DalamudVersion)</DalamudXIVLauncher>
+        <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(HOME)/.xlcore/dalamud/Hooks/$(DalamudVersion)/'))</DalamudXIVLauncher>
     </PropertyGroup>
 
     <!-- Assembly Reference Locations -->
     <PropertyGroup>
         <AssemblySearchPaths>
             $(AssemblySearchPaths);
+            $(DalamudXIVLauncher);
             $(DalamudHome);
             $(DalamudLocal);
-            $(DalamudXIVLauncher);
         </AssemblySearchPaths>
     </PropertyGroup>
+    
+    <Target Name="DownloadDalamudDependencies" BeforeTargets="CollectPackageReferences">
+        <DownloadFile
+            Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)')"
+            DestinationFolder="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/"
+            SourceUrl="https://github.com/goatcorp/dalamud-distrib/raw/main/stg/latest.zip"
+        />
+    </Target>
+
+    <Target Name="UnzipDalamud" AfterTargets="DownloadDalamudDependencies">
+        <Unzip
+            Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)/Dalamud.dll')"
+            DestinationFolder="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/"
+            SourceFiles="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/latest.zip"
+        />
+    </Target>
 
     <!-- Included Content -->
     <ItemGroup>
