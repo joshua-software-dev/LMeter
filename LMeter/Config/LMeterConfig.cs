@@ -14,7 +14,7 @@ namespace LMeter.Config
             set {}
         }
 
-        public string Version => Plugin.Version;
+        public string? Version => Plugin.Version;
 
         public bool FirstLoad = true;
 

@@ -78,6 +78,18 @@
             SourceFiles="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/latest.zip"
         />
     </Target>
+    
+    <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
+        <Exec
+            Command="git describe --long --always --dirty --exclude=* --abbrev=40"
+            ConsoleToMSBuild="True"
+            IgnoreExitCode="False"
+            StandardErrorImportance="low"
+            StandardOutputImportance="low"
+        >
+            <Output PropertyName="SourceRevisionId" TaskParameter="ConsoleOutput" />
+        </Exec>
+    </Target>
 
     <!-- Included Content -->
     <ItemGroup>

@@ -31,7 +31,7 @@ namespace LMeter.Windows
             this.PositionCondition = ImGuiCond.Appearing;
             this.SizeConstraints = new WindowSizeConstraints()
             {
-                MinimumSize = new Vector2(size.X, 160),
+                MinimumSize = new Vector2(size.X, 400),
                 MaximumSize = ImGui.GetMainViewport().Size
             };
 

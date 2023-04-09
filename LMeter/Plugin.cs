@@ -24,19 +24,14 @@ namespace LMeter
 {
     public class Plugin : IDalamudPlugin
     {
-        public const string ConfigFileName = "LMeter.json";
-
-        public static string Version { get; private set; } = "0.1.8.0";
-
-        public static string ConfigFileDir { get; private set; } = "";
-
-        public static string ConfigFilePath { get; private set; } = "";
-        
-        public static TextureWrap? IconTexture { get; private set; } = null;
-
         public static string Changelog { get; private set; } = string.Empty;
-
+        public static string ConfigFileDir { get; private set; } = string.Empty;
+        public const string ConfigFileName = "LMeter.json";
+        public static string ConfigFilePath { get; private set; } = string.Empty;
+        public static string? GitHash { get; private set; }
+        public static TextureWrap? IconTexture { get; private set; }
         public string Name => "LMeter";
+        public static string? Version { get; private set; }
 
         public Plugin(
             ClientState clientState,
@@ -54,7 +49,7 @@ namespace LMeter
             ChatGui chatGui
         )
         {
-            Plugin.Version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? Plugin.Version;
+            LoadVersion();
             Plugin.ConfigFileDir = pluginInterface.GetPluginConfigDirectory();
             Plugin.ConfigFilePath = Path.Combine(pluginInterface.GetPluginConfigDirectory(), Plugin.ConfigFileName);
 
@@ -161,6 +156,19 @@ namespace LMeter
             return string.Empty;
         }
 
+        private static void LoadVersion()
+        {
+            var assemblyVersion = (AssemblyInformationalVersionAttribute) Assembly
+                .GetExecutingAssembly()
+                .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)[0];
+
+            (Plugin.Version, Plugin.GitHash) = assemblyVersion.InformationalVersion.Split("+") switch
+            {
+                [var versionNum, var gitHash] => (versionNum, gitHash),
+                _ => throw new ArgumentException(nameof(assemblyVersion))
+            };
+        }
+        
         public void Dispose()
         {
             this.Dispose(true);
