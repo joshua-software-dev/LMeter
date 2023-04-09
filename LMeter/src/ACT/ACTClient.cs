@@ -16,6 +16,15 @@ using Newtonsoft.Json;
 
 namespace LMeter.ACT
 {
+    public enum ConnectionStatus
+    {
+        NotConnected,
+        Connecting,
+        ConnectionFailed,
+        Connected,
+        ShuttingDown
+    }
+    
     public class ACTClient : IACTClient
     {
         private ACTConfig _config;
@@ -24,8 +33,10 @@ namespace LMeter.ACT
         private Task? _receiveTask;
         private ACTEvent? _lastEvent;
 
+        private ConnectionStatus _status;
+        public string Status => _status.ToString();
+
         public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
-        public ConnectionStatus Status { get; private set; }
         public List<ACTEvent> PastEvents { get; private set; }
 
         public ACTClient(ACTConfig config, DalamudPluginInterface dpi)
@@ -33,9 +44,15 @@ namespace LMeter.ACT
             _config = config;
             _socket = new ClientWebSocket();
             _cancellationTokenSource = new CancellationTokenSource();
-            Status = ConnectionStatus.NotConnected;
+            _status = ConnectionStatus.NotConnected;
             PastEvents = new List<ACTEvent>();
         }
+
+        public bool ClientReady() =>
+            _status == ConnectionStatus.Connected;
+
+        public bool ConnectionIncompleteOrFailed() =>
+            _status == ConnectionStatus.NotConnected || _status == ConnectionStatus.ConnectionFailed;
 
         public ACTEvent? GetEvent(int index = -1)
         {
@@ -84,7 +101,7 @@ namespace LMeter.ACT
 
         public void Start()
         {
-            if (Status != ConnectionStatus.NotConnected)
+            if (_status != ConnectionStatus.NotConnected)
             {
                 PluginLog.Error("Cannot start, ACTClient needs to be reset!");
                 return;
@@ -96,7 +113,7 @@ namespace LMeter.ACT
             }
             catch (Exception ex)
             {
-                Status = ConnectionStatus.ConnectionFailed;
+                _status = ConnectionStatus.ConnectionFailed;
                 this.LogConnectionFailure(ex.ToString());
             }
         }
@@ -105,7 +122,7 @@ namespace LMeter.ACT
         {
             try
             {
-                Status = ConnectionStatus.Connecting;
+                _status = ConnectionStatus.Connecting;
                 await _socket.ConnectAsync(new Uri(host), _cancellationTokenSource.Token);
 
                 await _socket.SendAsync(
@@ -116,7 +133,7 @@ namespace LMeter.ACT
             }
             catch (Exception ex)
             {
-                Status = ConnectionStatus.ConnectionFailed;
+                _status = ConnectionStatus.ConnectionFailed;
                 this.LogConnectionFailure(ex.ToString());
                 return;
             }
@@ -124,12 +141,12 @@ namespace LMeter.ACT
             ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[4096]);
             if (buffer.Array is null)
             {
-                Status = ConnectionStatus.ConnectionFailed;
+                _status = ConnectionStatus.ConnectionFailed;
                 this.LogConnectionFailure("Failed to allocate receive buffer!");
                 return;
             }
 
-            Status = ConnectionStatus.Connected;
+            _status = ConnectionStatus.Connected;
             PluginLog.Information("Successfully Established ACT Connection");
             try
             {
@@ -195,7 +212,7 @@ namespace LMeter.ACT
                         }
                     }
                 }
-                while (Status == ConnectionStatus.Connected);
+                while (_status == ConnectionStatus.Connected);
             }
             catch
             {
@@ -203,7 +220,7 @@ namespace LMeter.ACT
             }
             finally
             {
-                if (Status != ConnectionStatus.ShuttingDown)
+                if (_status != ConnectionStatus.ShuttingDown)
                 {
                     this.Shutdown();
                 }
@@ -212,7 +229,7 @@ namespace LMeter.ACT
 
         public void Shutdown()
         {
-            Status = ConnectionStatus.ShuttingDown;
+            _status = ConnectionStatus.ShuttingDown;
             _lastEvent = null;
             if (_socket.State == WebSocketState.Open ||
                 _socket.State == WebSocketState.Connecting)
@@ -239,7 +256,7 @@ namespace LMeter.ACT
             }
 
             _socket.Dispose();
-            Status = ConnectionStatus.NotConnected;
+            _status = ConnectionStatus.NotConnected;
         }
 
         public void Reset()
@@ -247,7 +264,7 @@ namespace LMeter.ACT
             this.Shutdown();
             _socket = new ClientWebSocket();
             _cancellationTokenSource = new CancellationTokenSource();
-            Status = ConnectionStatus.NotConnected;
+            _status = ConnectionStatus.NotConnected;
         }
 
         private void LogConnectionFailure(string error)

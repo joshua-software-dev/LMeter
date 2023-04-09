@@ -12,32 +12,53 @@ using Newtonsoft.Json.Linq;
 
 namespace LMeter.ACT
 {
+    public enum SubscriptionStatus
+    {
+        NotConnected,
+        Connecting,
+        ConnectionFailed,
+        Connected,
+        SubscriptionRequested,
+        Subscribed,
+        Unsubscribing,
+        ShuttingDown
+    }
+
     public class IINACTClient : IACTClient
     {
         private readonly ACTConfig _config;
         private readonly DalamudPluginInterface _dpi;
         private ACTEvent? _lastEvent;
-        private readonly ICallGateProvider<JObject, bool> _combatEventReaderIpc;
+        private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
 
         private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
+        private const string IINACTListeningIpcEndpoint = "IINACT.Server.Listening";
         private const string IINACTSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
         private const string IINACTUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
         private const string IINACTProviderEditEndpoint = "IINACT.IpcProvider." + LMeterSubscriptionIpcEndpoint;
-        private readonly JObject SubscriptionMessageObject = JObject.Parse(ACTClient.SubscriptionMessage);
+        private static readonly JObject SubscriptionMessageObject = JObject.Parse(ACTClient.SubscriptionMessage);
 
-        public ConnectionStatus Status { get; private set; }
+        private SubscriptionStatus _status;
+        public string Status => _status.ToString();
+
         public List<ACTEvent> PastEvents { get; private set; }
 
         public IINACTClient(ACTConfig config, DalamudPluginInterface dpi)
         {
             _config = config;
             _dpi = dpi;
-            Status = ConnectionStatus.NotConnected;
+            _status = SubscriptionStatus.NotConnected;
             PastEvents = new List<ACTEvent>();
 
-            _combatEventReaderIpc = _dpi.GetIpcProvider<JObject, bool>(LMeterSubscriptionIpcEndpoint);
-            _combatEventReaderIpc.RegisterFunc(ReceiveIpcMessage);
+            subscriptionReceiver = _dpi.GetIpcProvider<JObject, bool>(LMeterSubscriptionIpcEndpoint);
+            subscriptionReceiver.RegisterFunc(ReceiveIpcMessage);
         }
+
+        public bool ClientReady() =>
+            _status == SubscriptionStatus.Subscribed;
+
+        public bool ConnectionIncompleteOrFailed() =>
+            _status == SubscriptionStatus.NotConnected || _status == SubscriptionStatus.ConnectionFailed;
 
         public ACTEvent? GetEvent(int index = -1)
         {
@@ -86,52 +107,70 @@ namespace LMeter.ACT
 
         public void Start()
         {
-            if (Status != ConnectionStatus.NotConnected)
+            if (_status != SubscriptionStatus.NotConnected)
             {
                 PluginLog.Error("Cannot start, IINACTClient needs to be reset!");
                 return;
             }
 
             if (!Connect()) return;
-
-            Status = ConnectionStatus.Connected;
+            _status = SubscriptionStatus.Subscribed;;
             PluginLog.Information("Successfully subscribed to IINACT");
         }
 
         private bool Connect()
         {
-            Status = ConnectionStatus.Connecting;
+            _status = SubscriptionStatus.Connecting;
 
             try
             {
-                var connectSuccess = _dpi
-                    .GetIpcSubscriber<string, bool>(IINACTSubscribeIpcEndpoint)
-                    .InvokeFunc(LMeterSubscriptionIpcEndpoint);
+                var connectSuccess = _dpi.GetIpcSubscriber<bool>(IINACTListeningIpcEndpoint).InvokeFunc();
+                PluginLog.Verbose("Check if IINACT installed and running: " + connectSuccess);
                 if (!connectSuccess) return false;
             }
             catch (Exception ex)
             {
-                Status = ConnectionStatus.ConnectionFailed;
-                PluginLog.Debug("Failed to setup IINACT subscription!");
+                _status = SubscriptionStatus.ConnectionFailed;
+                PluginLog.Information("IINACT server was not found or was not finished starting");
                 PluginLog.Verbose(ex.ToString());
                 return false;
             }
-            
+            _status = SubscriptionStatus.Connected;
+
             try
             {
-                _dpi
-                    .GetIpcSubscriber<JObject, bool>(IINACTProviderEditEndpoint)
-                    .InvokeAction(SubscriptionMessageObject);
+                var subscribeSuccess = _dpi
+                    .GetIpcSubscriber<string, bool>(IINACTSubscribeIpcEndpoint)
+                    .InvokeFunc(LMeterSubscriptionIpcEndpoint);
+                PluginLog.Verbose("Setup default empty IINACT subscription successfully: " + subscribeSuccess);
+                if (!subscribeSuccess) return false;
             }
             catch (Exception ex)
             {
-                Status = ConnectionStatus.ConnectionFailed;
-                PluginLog.Debug("Failed to finalize IINACT subscription!");
+                _status = SubscriptionStatus.ConnectionFailed;
+                PluginLog.Information("Failed to setup IINACT subscription!");
                 PluginLog.Verbose(ex.ToString());
                 return false;
             }
+            _status = SubscriptionStatus.SubscriptionRequested;
 
-            return true;
+            try
+            {
+                // no way to check this, hoping blindly that it always works ¯\_(ツ)_/¯
+                PluginLog.Verbose($"""Updating subscription using endpoint: `{IINACTProviderEditEndpoint}`""");
+                _dpi
+                    .GetIpcSubscriber<JObject, bool>(IINACTProviderEditEndpoint)
+                    .InvokeAction(SubscriptionMessageObject);
+                PluginLog.Verbose($"""Subscription update message sent""");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _status = SubscriptionStatus.ConnectionFailed;
+                PluginLog.Information("Failed to finalize IINACT subscription!");
+                PluginLog.Verbose(ex.ToString());
+                return false;
+            }
         }
 
         private bool ReceiveIpcMessage(JObject data)
@@ -140,15 +179,23 @@ namespace LMeter.ACT
             {
                 ACTEvent? newEvent = data.ToObject<ACTEvent?>();
 
-                if (newEvent?.Encounter is not null &&
+                if 
+                (
+                    newEvent?.Encounter is not null &&
                     newEvent?.Combatants is not null &&
                     newEvent.Combatants.Any() &&
-                    (CharacterState.IsInCombat() || !newEvent.IsEncounterActive()))
+                    (CharacterState.IsInCombat() || !newEvent.IsEncounterActive())
+                )
                 {
-                    if (!(_lastEvent is not null &&
-                          _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
-                          _lastEvent.Encounter is not null &&
-                          _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)))
+                    var lastEventIsDifferentEncounterOrInvalid =
+                    (
+                        _lastEvent is not null &&
+                        _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
+                        _lastEvent.Encounter is not null &&
+                        _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)
+                    );
+
+                    if (!lastEventIsDifferentEncounterOrInvalid)
                     {
                         if (!newEvent.IsEncounterActive())
                         {
@@ -176,6 +223,7 @@ namespace LMeter.ACT
         
         public void Shutdown()
         {
+            _status = SubscriptionStatus.Unsubscribing;
             try
             {
                 var success = _dpi
@@ -193,18 +241,18 @@ namespace LMeter.ACT
                 // don't throw when closing
             }
 
-            Status = ConnectionStatus.NotConnected;
+            _status = SubscriptionStatus.ShuttingDown;
         }
 
         public void Reset()
         {
             this.Shutdown();
-            Status = ConnectionStatus.NotConnected;
+            _status = SubscriptionStatus.NotConnected;
         }
 
         public void Dispose()
         {
-            _combatEventReaderIpc.UnregisterFunc();
+            subscriptionReceiver.UnregisterFunc();
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }

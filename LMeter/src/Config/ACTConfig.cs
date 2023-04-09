@@ -125,9 +125,7 @@ namespace LMeter.Config
 
         public void TryReconnect()
         {
-            if (this.LastReconnectAttempt.HasValue &&
-                (IACTClient.Current.Status == ConnectionStatus.NotConnected ||
-                IACTClient.Current.Status == ConnectionStatus.ConnectionFailed))
+            if (this.LastReconnectAttempt.HasValue && IACTClient.Current.ConnectionIncompleteOrFailed())
             {
                 if (this.AutoReconnect &&
                     this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay))
@@ -144,7 +142,7 @@ namespace LMeter.Config
 
         public void TryEndEncounter()
         {
-            if (IACTClient.Current.Status == ConnectionStatus.Connected)
+            if (IACTClient.Current.ClientReady())
             {
                 if (this.AutoEnd &&
                     CharacterState.IsInCombat())

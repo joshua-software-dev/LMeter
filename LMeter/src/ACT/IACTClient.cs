@@ -6,15 +6,6 @@ using LMeter.Helpers;
 
 namespace LMeter.ACT
 {
-    public enum ConnectionStatus
-    {
-        NotConnected,
-        Connected,
-        ShuttingDown,
-        Connecting,
-        ConnectionFailed
-    }
-
     public interface IACTClient : IPluginDisposable
     {
         public static IACTClient Current => 
@@ -36,10 +27,12 @@ namespace LMeter.ACT
             return client;
         }
 
-        public ConnectionStatus Status { get; }
+        public string Status { get; }
         public List<ACTEvent> PastEvents { get; }
 
         public void Clear();
+        public bool ClientReady();
+        public bool ConnectionIncompleteOrFailed();
         public void EndEncounter();
         public ACTEvent? GetEvent(int index = -1);
         public void Start();

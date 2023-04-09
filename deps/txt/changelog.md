@@ -1,9 +1,10 @@
 # Version 0.1.9.0
 - Add option to connect to IINACT using Dalamud IPC instead of using a WebSocket
+- Improve subscription process over pre-releases to give more info during failure states
 - Rename "Changelog" tab to "About / Changelog"
 - Add git commit info into plugin before distribution, visible from the 
 "About / Changelog" page
-- Fix builds not being properly deterministic, aiding in transparency the 
+- Fix builds not being properly deterministic, aiding in transparency that the 
 source code actually compiles to the build that users install.
 - New logo
 
