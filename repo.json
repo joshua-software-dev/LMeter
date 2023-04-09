@@ -1,12 +1,12 @@
 [
     {
-        "Author": "Lichie",
+        "Author": "Lichie, joshua.software.dev",
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data.",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.1.8.0",
-        "TestingAssemblyVersion": "0.1.8.0",
-        "RepoUrl": "https://github.com/lichie567/LMeter",
+        "AssemblyVersion": "0.1.9.0",
+        "TestingAssemblyVersion": "0.1.9.0",
+        "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
         "IsHide": "False",
@@ -14,9 +14,9 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/rc.v1/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/rc.v1/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/rc.v1/latest.zip",
-        "IconUrl": "https://raw.githubusercontent.com/lichie567/LMeter/main/LMeter/Media/Images/icon.png"
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.1.9.0/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.1.9.0/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.1.9.0/latest.zip",
+        "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png"
     }
 ]
