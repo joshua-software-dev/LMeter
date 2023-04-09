@@ -6,7 +6,7 @@ namespace LMeter.Config
 {
     public class AboutPage : IConfigPage
     {
-        public string Name => "Changelog";
+        public string Name => "About / Changelog";
 
         public IConfigPage GetDefault() => new AboutPage();
 
