@@ -62,7 +62,8 @@
             $(DalamudLocal);
         </AssemblySearchPaths>
     </PropertyGroup>
-    
+
+    <!-- Auto-Download Dalamud if not already present -->
     <Target Name="DownloadDalamudDependencies" BeforeTargets="CollectPackageReferences">
         <DownloadFile
             Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)')"
@@ -71,6 +72,7 @@
         />
     </Target>
 
+    <!-- Auto-Extract auto-downloaded Dalamud if not already present -->
     <Target Name="UnzipDalamud" AfterTargets="DownloadDalamudDependencies">
         <Unzip
             Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)/Dalamud.dll')"
@@ -78,7 +80,8 @@
             SourceFiles="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/latest.zip"
         />
     </Target>
-    
+
+    <!-- Add current git commit hash to build info -->
     <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
         <Exec
             Command="git describe --long --always --dirty --exclude=* --abbrev=40"
@@ -126,11 +129,27 @@
 
     <!-- NuGet Packages -->
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.10" />
+        <PackageReference Include="DalamudPackager" Version="2.1.11" />
     </ItemGroup>
 
     <!-- Dalamud Packager Task-->
     <Target Name="DalamudPackage" AfterTargets="Build">
-        <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(TargetDir)..\$(Configuration)" AssemblyName="$(AssemblyName)" MakeZip="true" Exclude="LMeter.pdb;LMeter.deps.json" VersionComponents="4" />
+        <DalamudPackager 
+            AssemblyName="$(AssemblyName)"
+            MakeZip="true"
+            OutputPath="$(TargetDir)..\$(Configuration)"
+            ProjectDir="$(ProjectDir)"
+        />
     </Target>
+
+    <!-- Dalamud Packager Task Fixer-->
+    <Target 
+        Name="ExcludeThatWorks" 
+        AfterTargets="Build"
+        BeforeTargets="DalamudPackage"
+        Condition="'$(Configuration)' == 'Release'"
+    >
+        <Delete Files="$(OutDir)LMeter.pdb;$(OutDir)LMeter.deps.json" />
+    </Target>
+
 </Project>
