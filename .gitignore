@@ -3,6 +3,9 @@
 .idea/
 .vs/
 dalamud/
+deps/lib
+deps/lib/
+deps/lib/*
 Naowh.ttf
 
 ## Ignore Visual Studio temporary files, build results, and
