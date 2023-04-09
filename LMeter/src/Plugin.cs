@@ -138,7 +138,7 @@ namespace LMeter
                 return string.Empty;
             }
 
-            string changelogPath = Path.Combine(pluginPath, "changelog.md");
+            string changelogPath = Path.Combine(pluginPath, "Media", "Text", "changelog.md");
 
             if (File.Exists(changelogPath))
             {
