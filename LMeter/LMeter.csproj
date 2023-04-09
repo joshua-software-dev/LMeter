@@ -22,7 +22,6 @@
 
     <!-- Build Configuration -->
     <PropertyGroup>
-        <OutputType>Library</OutputType>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -31,8 +30,10 @@
         <DebugType>full</DebugType>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <Nullable>enable</Nullable>
-        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <OutputPath>bin/$(Configuration)/</OutputPath>
+        <OutputType>Library</OutputType>
         <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
     </PropertyGroup>
 
     <!-- Release Configuration -->
