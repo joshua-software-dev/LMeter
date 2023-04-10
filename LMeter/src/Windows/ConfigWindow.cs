@@ -30,7 +30,7 @@ public class ConfigWindow : Window
 
         this.Position = position - size / 2;
         this.PositionCondition = ImGuiCond.Appearing;
-        this.SizeConstraints = new WindowSizeConstraints()
+        this.SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(size.X, 400),
             MaximumSize = ImGui.GetMainViewport().Size
@@ -113,7 +113,14 @@ public class ConfigWindow : Window
 
         if (ImGui.BeginChild($"##{this.WindowName}_NavBar", new Vector2(size.X, NavBarHeight), true))
         {
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.LongArrowAltLeft, () => _back = true, "Back", buttonsize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.LongArrowAltLeft,
+                () => _back = true,
+                "Back",
+                buttonsize
+            );
             ImGui.SameLine();
 
             if (_configStack.Count > 2)
@@ -131,7 +138,14 @@ public class ConfigWindow : Window
 
             ImGui.SetCursorPosX(ImGui.GetCursorPosX() + offset);
 
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.UndoAlt, () => Reset(openPage), $"Reset {openPage?.Name} to Defaults", buttonsize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.UndoAlt,
+                () => Reset(openPage),
+                $"Reset {openPage?.Name} to Defaults",
+                buttonsize
+            );
             ImGui.SameLine();
 
             ImGui.PushItemWidth(textInputWidth);
@@ -139,7 +153,7 @@ public class ConfigWindow : Window
             {
                 Rename(_name);
             }
-                
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip("Rename");
@@ -148,10 +162,24 @@ public class ConfigWindow : Window
             ImGui.PopItemWidth();
             ImGui.SameLine();
 
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Upload, () => Export(openPage), $"Export {openPage?.Name}", buttonsize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.Upload,
+                () => Export(openPage),
+                $"Export {openPage?.Name}",
+                buttonsize
+            );
             ImGui.SameLine();
 
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Download, () => Import(), $"Import {openPage?.Name}", buttonsize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.Download,
+                Import,
+                $"Import {openPage?.Name}",
+                buttonsize
+            );
         }
 
         ImGui.EndChild();

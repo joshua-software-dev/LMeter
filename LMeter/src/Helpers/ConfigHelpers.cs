@@ -15,7 +15,7 @@ namespace LMeter.Helpers;
 
 public static class ConfigHelpers
 {
-    private static readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
+    private static readonly JsonSerializerSettings _serializerSettings = new ()
     {
         TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
         TypeNameHandling = TypeNameHandling.Objects,
@@ -155,12 +155,10 @@ public static class ConfigHelpers
 public class LMeterSerializationBinder : ISerializationBinder
 {
     // TODO: Make this automatic somehow?
-    private static List<Type> _configTypes = new List<Type>()
-    {
-    };
+    private static List<Type> _configTypes = new ();
 
-    private readonly Dictionary<Type, string> typeToName = new Dictionary<Type, string>();
-    private readonly Dictionary<string, Type> nameToType = new Dictionary<string, Type>();
+    private readonly Dictionary<Type, string> typeToName = new ();
+    private readonly Dictionary<string, Type> nameToType = new ();
 
     public LMeterSerializationBinder()
     {
@@ -190,13 +188,10 @@ public class LMeterSerializationBinder : ISerializationBinder
 
     public Type BindToType(string? assemblyName, string? typeName)
     {
-        if (typeName is not null &&
-            this.nameToType.TryGetValue(typeName, out Type? type))
-        {
-            return type;
-        }
+        if (typeName is not null && this.nameToType.TryGetValue(typeName, out Type? type)) return type;
 
-        return Type.GetType($"{typeName}, {assemblyName}", true) ??
-               throw new TypeLoadException($"Unable to load type '{typeName}' from assembly '{assemblyName}'");
+        return
+            Type.GetType($"{typeName}, {assemblyName}", true) 
+                ?? throw new TypeLoadException($"Unable to load type '{typeName}' from assembly '{assemblyName}'");
     }
 }

@@ -11,7 +11,13 @@ public class LazyFloatConverter : JsonConverter
         throw new NotImplementedException("Write not supported.");
     }
 
-    public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
+    public override object? ReadJson
+    (
+        JsonReader reader,
+        Type objectType,
+        object? existingValue,
+        JsonSerializer serializer
+    )
     {
         if (objectType != typeof(LazyFloat))
         {
@@ -26,15 +32,11 @@ public class LazyFloatConverter : JsonConverter
         return new LazyFloat(serializer.Deserialize(reader, typeof(string))?.ToString());
     }
 
-    public override bool CanRead
-    {
-        get { return true; }
-    }
+    public override bool CanRead =>
+        true;
 
-    public override bool CanWrite
-    {
-        get { return false; }
-    }
+    public override bool CanWrite =>
+        false;
 
     public override bool CanConvert(Type objectType)
     {

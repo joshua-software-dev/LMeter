@@ -18,7 +18,7 @@ namespace LMeter;
 public class PluginManager : IPluginDisposable
 {
     private readonly Vector2 _origin = ImGui.GetMainViewport().Size / 2f;
-    private readonly Vector2 _configSize = new Vector2(550, 550);
+    private readonly Vector2 _configSize = new (550, 550);
 
     private ClientState _clientState;
     private DalamudPluginInterface _pluginInterface;
@@ -36,11 +36,13 @@ public class PluginManager : IPluginDisposable
         ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoSavedSettings;
 
-    public PluginManager(
+    public PluginManager
+    (
         ClientState clientState,
         CommandManager commandManager,
         DalamudPluginInterface pluginInterface,
-        LMeterConfig config)
+        LMeterConfig config
+    )
     {
         _clientState = clientState;
         _commandManager = commandManager;
@@ -55,11 +57,14 @@ public class PluginManager : IPluginDisposable
             "/lm",
             new CommandInfo(PluginCommand)
             {
-                HelpMessage = "Opens the LMeter configuration window.\n"
-                              + "/lm end → Ends current ACT Encounter.\n"
-                              + "/lm clear → Clears all ACT encounter log data.\n"
-                              + "/lm ct <number> → Toggles clickthrough status for the given profile.\n"
-                              + "/lm toggle <number> [on|off] → Toggles visibility for the given profile.",
+                HelpMessage = 
+                    """
+                    Opens the LMeter configuration window.
+                    /lm end → Ends current ACT Encounter.
+                    /lm clear → Clears all ACT encounter log data.
+                    /lm ct <number> → Toggles clickthrough status for the given profile.
+                    /lm toggle <number> [on|off] → Toggles visibility for the given profile.
+                    """,
                 ShowInHelp = true
             }
         );
@@ -126,10 +131,8 @@ public class PluginManager : IPluginDisposable
         }
     }
 
-    private void OnLogout(object? sender, EventArgs? args)
-    {
+    private void OnLogout(object? sender, EventArgs? args) =>
         ConfigHelpers.SaveConfig();
-    }
 
     private void PluginCommand(string command, string arguments)
     {
@@ -156,7 +159,11 @@ public class PluginManager : IPluginDisposable
     private static int GetIntArg(string argument)
     {
         string[] args = argument.Split(" ");
-        return args.Length > 1 && int.TryParse(args[1], out int num) ? num : 0;
+        return
+            args.Length > 1 &&
+            int.TryParse(args[1], out int num) 
+                ? num 
+                : 0;
     }
 
     private static bool? GetBoolArg(string argument, int index = 1)
@@ -165,7 +172,12 @@ public class PluginManager : IPluginDisposable
         if (args.Length > index)
         {
             string arg = args[index].ToLower();
-            return arg.Equals("on") ? true : (arg.Equals("off") ? false : null);
+            return
+                arg.Equals("on")
+                    ? true
+                    : arg.Equals("off") 
+                        ? false
+                        : null;
         }
 
         return null;

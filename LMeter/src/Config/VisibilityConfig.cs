@@ -14,11 +14,14 @@ namespace LMeter.Config;
 public class VisibilityConfig : IConfigPage
 {
     public string Name => "Visibility";
-        
-    public IConfigPage GetDefault() => new VisibilityConfig();
 
-    [JsonIgnore] private string _customJobInput = string.Empty;
-    [JsonIgnore] private string _hideIfValueInput = string.Empty;
+    public IConfigPage GetDefault() =>
+        new VisibilityConfig();
+
+    [JsonIgnore]
+    private string _customJobInput = string.Empty;
+    [JsonIgnore]
+    private string _hideIfValueInput = string.Empty;
 
     public bool AlwaysHide = false;
     public bool HideInCombat = false;
@@ -83,10 +86,16 @@ public class VisibilityConfig : IConfigPage
             ImGui.Checkbox("Hide While Performing", ref this.HideWhilePerforming);
             ImGui.Checkbox("Hide In Golden Saucer", ref this.HideInGoldenSaucer);
             ImGui.Checkbox("Hide While Not Connected to ACT", ref this.HideIfNotConnected);
-                
+
             DrawHelpers.DrawSpacing(1);
             string[] jobTypeOptions = Enum.GetNames(typeof(JobType));
-            ImGui.Combo("Show for Jobs", ref Unsafe.As<JobType, int>(ref this.ShowForJobTypes), jobTypeOptions, jobTypeOptions.Length);
+            ImGui.Combo
+            (
+                "Show for Jobs",
+                ref Unsafe.As<JobType, int>(ref this.ShowForJobTypes),
+                jobTypeOptions,
+                jobTypeOptions.Length
+            );
 
             if (this.ShowForJobTypes == JobType.Custom)
             {
@@ -95,7 +104,17 @@ public class VisibilityConfig : IConfigPage
                     _customJobInput = this.CustomJobString.ToUpper();
                 }
 
-                if (ImGui.InputTextWithHint("Custom Job List", "Comma Separated List (ex: WAR, SAM, BLM)", ref _customJobInput, 100, ImGuiInputTextFlags.EnterReturnsTrue))
+                if 
+                (
+                    ImGui.InputTextWithHint
+                    (
+                        "Custom Job List",
+                        "Comma Separated List (ex: WAR, SAM, BLM)",
+                        ref _customJobInput,
+                        100,
+                        ImGuiInputTextFlags.EnterReturnsTrue
+                    )
+                )
                 {
                     IEnumerable<string> jobStrings = _customJobInput.Split(',').Select(j => j.Trim());
                     List<Job> jobList = new List<Job>();
@@ -119,7 +138,7 @@ public class VisibilityConfig : IConfigPage
                 }
             }
         }
-            
+
         ImGui.EndChild();
     }
 }

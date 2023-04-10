@@ -13,16 +13,23 @@ namespace LMeter.Config;
 public class FontConfig : IConfigPage
 {
     public string Name => "Fonts";
-        
+
     public IConfigPage GetDefault() => new FontConfig();
 
-    [JsonIgnore] private static string? _fontPath = FontsManager.GetUserFontPath();
-    [JsonIgnore] private int _selectedFont = 0;
-    [JsonIgnore] private int _selectedSize = 23;
-    [JsonIgnore] private string[] _fonts = FontsManager.GetFontNamesFromPath(FontsManager.GetUserFontPath());
-    [JsonIgnore] private string[] _sizes = Enumerable.Range(1, 40).Select(i => i.ToString()).ToArray();
-    [JsonIgnore] private bool _chinese = false;
-    [JsonIgnore] private bool _korean = false;
+    [JsonIgnore]
+    private static string? _fontPath = FontsManager.GetUserFontPath();
+    [JsonIgnore]
+    private int _selectedFont = 0;
+    [JsonIgnore]
+    private int _selectedSize = 23;
+    [JsonIgnore]
+    private string[] _fonts = FontsManager.GetFontNamesFromPath(FontsManager.GetUserFontPath());
+    [JsonIgnore]
+    private string[] _sizes = Enumerable.Range(1, 40).Select(i => i.ToString()).ToArray();
+    [JsonIgnore]
+    private bool _chinese = false;
+    [JsonIgnore]
+    private bool _korean = false;
 
     public Dictionary<string, FontData> Fonts { get; set; }
 
@@ -61,16 +68,37 @@ public class FontConfig : IConfigPage
 
                 Vector2 buttonSize = new Vector2(40, 0);
                 ImGui.SetCursorPosY(cursorY);
-                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Copy, () => ImGui.SetClipboardText(_fontPath), null, buttonSize);
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Copy,
+                    () => ImGui.SetClipboardText(_fontPath),
+                    null,
+                    buttonSize
+                );
 
                 ImGui.Combo("Font", ref _selectedFont, _fonts, _fonts.Length);
                 ImGui.SameLine();
-                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, () => RefreshFontList(), "Reload Font List", buttonSize);
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Sync,
+                    RefreshFontList,
+                    "Reload Font List",
+                    buttonSize
+                );
 
                 ImGui.Combo("Size", ref _selectedSize, _sizes, _sizes.Length);
                 ImGui.SameLine();
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 3f);
-                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Plus, () => AddFont(_selectedFont, _selectedSize), "Add Font", buttonSize);
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Plus,
+                    () => AddFont(_selectedFont, _selectedSize),
+                    "Add Font",
+                    buttonSize
+                );
 
                 ImGui.Checkbox("Support Chinese/Japanese", ref _chinese);
                 ImGui.SameLine();
@@ -87,7 +115,16 @@ public class FontConfig : IConfigPage
                     ImGuiTableFlags.ScrollY |
                     ImGuiTableFlags.NoSavedSettings;
 
-                if (ImGui.BeginTable("##Font_Table", 5, tableFlags, new Vector2(size.X - padX * 2, size.Y - ImGui.GetCursorPosY() - padY * 2)))
+                if 
+                (
+                    ImGui.BeginTable
+                    (
+                        "##Font_Table",
+                        5,
+                        tableFlags,
+                        new Vector2(size.X - padX * 2, size.Y - ImGui.GetCursorPosY() - padY * 2)
+                    )
+                )
                 {
                     ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 0, 0);
                     ImGui.TableSetupColumn("Size", ImGuiTableColumnFlags.WidthFixed, 40, 1);
@@ -135,7 +172,14 @@ public class FontConfig : IConfigPage
                             if (!FontsManager.DefaultFontKeys.Contains(key))
                             {
                                 ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 1f);
-                                DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Trash, () => RemoveFont(key), "Remove Font", new Vector2(45, 0));
+                                DrawHelpers.DrawButton
+                                (
+                                    string.Empty,
+                                    FontAwesomeIcon.Trash,
+                                    () => RemoveFont(key),
+                                    "Remove Font",
+                                    new Vector2(45, 0)
+                                );
                             }
                         }
                     }
@@ -148,10 +192,8 @@ public class FontConfig : IConfigPage
         ImGui.EndChild();
     }
 
-    public void RefreshFontList()
-    {
+    public void RefreshFontList() =>
         _fonts = FontsManager.GetFontNamesFromPath(FontsManager.GetUserFontPath());
-    }
 
     private void AddFont(int fontIndex, int size)
     {

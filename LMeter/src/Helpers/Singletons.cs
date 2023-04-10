@@ -10,33 +10,34 @@ public interface IPluginDisposable : IDisposable { }
 
 public static class Singletons
 {
-    private static readonly Dictionary<Type, Func<object>> TypeInitializers = new Dictionary<Type, Func<object>>()
-    {
-    };
-
-    private static readonly ConcurrentDictionary<Type, object> ActiveInstances = new ConcurrentDictionary<Type, object>();
+    private static readonly Dictionary<Type, Func<object>> TypeInitializers = new ();
+    private static readonly ConcurrentDictionary<Type, object> ActiveInstances = new ();
 
     public static T Get<T>()
     {
-        return (T)ActiveInstances.GetOrAdd(typeof(T), (objectType) =>
-        {
-            object newInstance;
-            if (Singletons.TypeInitializers.TryGetValue(objectType, out Func<object>? initializer))
+        return (T) ActiveInstances.GetOrAdd
+        (
+            typeof(T), 
+            objectType =>
             {
-                newInstance = initializer();
-            }
-            else
-            {
-                throw new Exception($"No initializer found for Type '{objectType.FullName}'.");
-            }
+                object newInstance;
+                if (Singletons.TypeInitializers.TryGetValue(objectType, out Func<object>? initializer))
+                {
+                    newInstance = initializer();
+                }
+                else
+                {
+                    throw new Exception($"No initializer found for Type '{objectType.FullName}'.");
+                }
 
-            if (newInstance is null || newInstance is not T)
-            {
-                throw new Exception($"Received invalid result from initializer for type '{objectType.FullName}'");
-            }
+                if (newInstance is null || newInstance is not T)
+                {
+                    throw new Exception($"Received invalid result from initializer for type '{objectType.FullName}'");
+                }
 
-            return newInstance;
-        });
+                return newInstance;
+            }
+        );
     }
 
     public static void Register(object newSingleton)
@@ -61,7 +62,7 @@ public static class Singletons
             ((IACTClient) client2).Dispose();
         }
     }
-        
+
     public static void Dispose()
     {
         foreach (object singleton in ActiveInstances.Values)

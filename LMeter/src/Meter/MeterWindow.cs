@@ -25,7 +25,7 @@ public class MeterWindow : IConfigurable
     [JsonIgnore] private ACTEvent? _previewEvent = null;
     [JsonIgnore] private int _scrollPosition = 0;
     [JsonIgnore] private DateTime? _lastSortedTimestamp = null;
-    [JsonIgnore] private List<Combatant> _lastSortedCombatants = new List<Combatant>();
+    [JsonIgnore] private List<Combatant> _lastSortedCombatants = new ();
 
     [JsonIgnore] public string ID { get; init; }
 
@@ -96,7 +96,7 @@ public class MeterWindow : IConfigurable
         _lastSortedCombatants = new List<Combatant>();
         _lastSortedTimestamp = null;
     }
-        
+
     // Dont ask
     protected void UpdateDragData(Vector2 pos, Vector2 size, bool locked)
     {
@@ -143,52 +143,67 @@ public class MeterWindow : IConfigurable
 
         this.UpdateDragData(localPos, size, this.GeneralConfig.Lock);
         bool needsInput = !this.GeneralConfig.ClickThrough;
-        DrawHelpers.DrawInWindow($"##{this.ID}", localPos, size, needsInput, _locked || this.GeneralConfig.Lock, (drawList) =>
-        {
-            if (_unlocked)
+        DrawHelpers.DrawInWindow
+        (
+            $"##{this.ID}",
+            localPos,
+            size,
+            needsInput,
+            _locked || this.GeneralConfig.Lock,
+            drawList =>
             {
-                if (_lastFrameWasDragging)
+                if (_unlocked)
                 {
-                    localPos = ImGui.GetWindowPos();
-                    this.GeneralConfig.Position = localPos - pos;
+                    if (_lastFrameWasDragging)
+                    {
+                        localPos = ImGui.GetWindowPos();
+                        this.GeneralConfig.Position = localPos - pos;
 
-                    size = ImGui.GetWindowSize();
-                    this.GeneralConfig.Size = size;
-                }
-            }
-                
-            if (this.GeneralConfig.ShowBorder)
-            {
-                Vector2 borderPos = localPos;
-                Vector2 borderSize = size;
-                if (this.GeneralConfig.BorderAroundBars &&
-                    this.HeaderConfig.ShowHeader)
-                {
-                    borderPos = borderPos.AddY(this.HeaderConfig.HeaderHeight);
-                    borderSize = borderSize.AddY(-this.HeaderConfig.HeaderHeight);
+                        size = ImGui.GetWindowSize();
+                        this.GeneralConfig.Size = size;
+                    }
                 }
 
-                for (int i = 0; i < this.GeneralConfig.BorderThickness; i++)
+                if (this.GeneralConfig.ShowBorder)
                 {
-                    Vector2 offset = new Vector2(i, i);
-                    drawList.AddRect(borderPos + offset, borderPos + borderSize - offset, this.GeneralConfig.BorderColor.Base);
+                    Vector2 borderPos = localPos;
+                    Vector2 borderSize = size;
+                    if (this.GeneralConfig.BorderAroundBars &&
+                        this.HeaderConfig.ShowHeader)
+                    {
+                        borderPos = borderPos.AddY(this.HeaderConfig.HeaderHeight);
+                        borderSize = borderSize.AddY(-this.HeaderConfig.HeaderHeight);
+                    }
+
+                    for (int i = 0; i < this.GeneralConfig.BorderThickness; i++)
+                    {
+                        Vector2 offset = new Vector2(i, i);
+                        drawList.AddRect
+                        (
+                            borderPos + offset,
+                            borderPos + borderSize - offset,
+                            this.GeneralConfig.BorderColor.Base
+                        );
+                    }
+
+                    localPos += Vector2.One * this.GeneralConfig.BorderThickness;
+                    size -= Vector2.One * this.GeneralConfig.BorderThickness * 2;
                 }
 
-                localPos += Vector2.One * this.GeneralConfig.BorderThickness;
-                size -= Vector2.One * this.GeneralConfig.BorderThickness * 2;
+                if (this.GeneralConfig.Preview && !_lastFrameWasPreview)
+                {
+                    _previewEvent = ACTEvent.GetTestData();
+                }
+
+                ACTEvent? actEvent = this.GeneralConfig.Preview
+                    ? _previewEvent
+                    : IACTClient.Current.GetEvent(_eventIndex);
+
+                (localPos, size) = this.HeaderConfig.DrawHeader(localPos, size, actEvent?.Encounter, drawList);
+                drawList.AddRectFilled(localPos, localPos + size, this.GeneralConfig.BackgroundColor.Base);
+                this.DrawBars(drawList, localPos, size, actEvent);
             }
-
-            if (this.GeneralConfig.Preview && !_lastFrameWasPreview)
-            {
-                _previewEvent = ACTEvent.GetTestData();
-            }
-
-            ACTEvent? actEvent = this.GeneralConfig.Preview ? _previewEvent : IACTClient.Current.GetEvent(_eventIndex);
-
-            (localPos, size) = this.HeaderConfig.DrawHeader(localPos, size, actEvent?.Encounter, drawList);
-            drawList.AddRectFilled(localPos, localPos + size, this.GeneralConfig.BackgroundColor.Base);
-            this.DrawBars(drawList, localPos, size, actEvent);
-        });
+        );
 
         _lastFrameWasUnlocked = _unlocked;
         _lastFrameWasPreview = this.GeneralConfig.Preview;
@@ -232,16 +247,26 @@ public class MeterWindow : IConfigurable
 
                 ConfigColor barColor = this.BarConfig.BarColor;
                 ConfigColor jobColor = this.BarColorsConfig.GetColor(combatant.Job);
-                localPos = this.BarConfig.DrawBar(drawList, localPos, size, combatant, jobColor, barColor, top, current);
+                localPos = this.BarConfig.DrawBar
+                (
+                    drawList,
+                    localPos,
+                    size,
+                    combatant,
+                    jobColor,
+                    barColor,
+                    top,
+                    current
+                );
             }
         }
     }
-        
+
     private bool DrawContextMenu(string popupId, out int selectedIndex)
     {
         selectedIndex = -1;
         bool selected = false;
-            
+
         if (ImGui.BeginPopup(popupId))
         {
             if (!ImGui.IsAnyItemActive() && !ImGui.IsMouseClicked(ImGuiMouseButton.Left))
@@ -275,7 +300,7 @@ public class MeterWindow : IConfigurable
                 Singletons.Get<PluginManager>().Clear();
                 selected = true;
             }
-                
+
             if (ImGui.Selectable("Configure"))
             {
                 Singletons.Get<PluginManager>().ConfigureMeter(this);
@@ -290,36 +315,42 @@ public class MeterWindow : IConfigurable
 
     private List<Combatant> GetSortedCombatants(ACTEvent actEvent, MeterDataType dataType)
     {
-        if (actEvent.Combatants is null ||
+        if 
+        (
+            actEvent.Combatants is null ||
             _lastSortedTimestamp.HasValue &&
             _lastSortedTimestamp.Value == actEvent.Timestamp &&
-            !this.GeneralConfig.Preview)
+            !this.GeneralConfig.Preview
+        )
         {
             return _lastSortedCombatants;
         }
 
         List<Combatant> sortedCombatants = actEvent.Combatants.Values.ToList();
 
-        sortedCombatants.Sort((x, y) =>
-        {
-            float xFloat = dataType switch
+        sortedCombatants.Sort
+        (
+            (x, y) =>
             {
-                MeterDataType.Damage => x.DamageTotal?.Value ?? 0,
-                MeterDataType.Healing => x.EffectiveHealing?.Value ?? 0,
-                MeterDataType.DamageTaken => x.DamageTaken?.Value ?? 0,
-                _ => 0
-            };
+                float xFloat = dataType switch
+                {
+                    MeterDataType.Damage => x.DamageTotal?.Value ?? 0,
+                    MeterDataType.Healing => x.EffectiveHealing?.Value ?? 0,
+                    MeterDataType.DamageTaken => x.DamageTaken?.Value ?? 0,
+                    _ => 0
+                };
 
-            float yFloat = dataType switch
-            {
-                MeterDataType.Damage => y.DamageTotal?.Value ?? 0,
-                MeterDataType.Healing => y.EffectiveHealing?.Value ?? 0,
-                MeterDataType.DamageTaken => y.DamageTaken?.Value ?? 0,
-                _ => 0
-            };
-                
-            return (int)(yFloat - xFloat);
-        });
+                float yFloat = dataType switch
+                {
+                    MeterDataType.Damage => y.DamageTotal?.Value ?? 0,
+                    MeterDataType.Healing => y.EffectiveHealing?.Value ?? 0,
+                    MeterDataType.DamageTaken => y.DamageTaken?.Value ?? 0,
+                    _ => 0
+                };
+
+                return (int) (yFloat - xFloat);
+            }
+        );
 
         _lastSortedTimestamp = actEvent.Timestamp;
         _lastSortedCombatants = sortedCombatants;

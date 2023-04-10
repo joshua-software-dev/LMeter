@@ -53,7 +53,12 @@ namespace LMeter.Helpers
 
         public const string DalamudFontKey = "Dalamud Font";
 
-        public static readonly List<string> DefaultFontKeys = new List<string>() { "Expressway_24", "Expressway_20", "Expressway_16" };
+        public static readonly List<string> DefaultFontKeys = new ()
+        {
+            "Expressway_24",
+            "Expressway_20",
+            "Expressway_16"
+        };
         public static string DefaultBigFontKey => DefaultFontKeys[0];
         public static string DefaultMediumFontKey => DefaultFontKeys[1];
         public static string DefaultSmallFontKey => DefaultFontKeys[2];
@@ -111,10 +116,8 @@ namespace LMeter.Helpers
             _fontList = fontList.ToArray();
         }
 
-        public static bool ValidateFont(string[] fontOptions, int fontId, string fontKey)
-        {
-            return fontId < fontOptions.Length && fontOptions[fontId].Equals(fontKey);
-        }
+        public static bool ValidateFont(string[] fontOptions, int fontId, string fontKey) =>
+            fontId < fontOptions.Length && fontOptions[fontId].Equals(fontKey);
 
         public static FontScope PushFont(string fontKey)
         {
@@ -136,10 +139,8 @@ namespace LMeter.Helpers
             Singletons.Get<UiBuilder>().RebuildFonts();
         }
 
-        public static string[] GetFontList()
-        {
-            return Singletons.Get<FontsManager>()._fontList;
-        }
+        public static string[] GetFontList() =>
+            Singletons.Get<FontsManager>()._fontList;
 
         public int GetFontIndex(string fontKey)
         {
@@ -214,7 +215,7 @@ namespace LMeter.Helpers
             {
                 return;
             }
-            
+
             string[] pluginFonts;
             try
             {
@@ -257,11 +258,9 @@ namespace LMeter.Helpers
 
             return string.Empty;
         }
-        
-        public static string GetUserFontPath()
-        {
-            return $"{Plugin.ConfigFileDir}\\Fonts\\";
-        }
+
+        public static string GetUserFontPath() =>
+            $"{Plugin.ConfigFileDir}\\Fonts\\";
 
         public static string[] GetFontNamesFromPath(string? path)
         {

@@ -26,7 +26,7 @@ public class LMeterConfig : IConfigurable, IPluginDisposable
     public FontConfig FontConfig { get; init; }
 
     [JsonIgnore]
-    private AboutPage AboutPage { get; } = new AboutPage();
+    private AboutPage AboutPage { get; } = new ();
 
     public LMeterConfig()
     {
@@ -57,7 +57,5 @@ public class LMeterConfig : IConfigurable, IPluginDisposable
         yield return this.AboutPage;
     }
 
-    public void ImportPage(IConfigPage page)
-    {
-    }
+    public void ImportPage(IConfigPage page) { }
 }

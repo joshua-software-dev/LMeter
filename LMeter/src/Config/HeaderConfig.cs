@@ -26,7 +26,7 @@ public class HeaderConfig : IConfigPage
     public bool DurationShowOutline = true;
     public ConfigColor DurationOutlineColor = new ConfigColor(0, 0, 0, 0.5f);
     public DrawAnchor DurationAlign = DrawAnchor.Left;
-    public Vector2 DurationOffset = new Vector2(0, 0);
+    public Vector2 DurationOffset = new (0, 0);
     public int DurationFontId = 0;
     public string DurationFontKey = FontsManager.DalamudFontKey;
 
@@ -35,21 +35,21 @@ public class HeaderConfig : IConfigPage
     public bool NameShowOutline = true;
     public ConfigColor NameOutlineColor = new ConfigColor(0, 0, 0, 0.5f);
     public DrawAnchor NameAlign = DrawAnchor.Left;
-    public Vector2 NameOffset = new Vector2(0, 0);
+    public Vector2 NameOffset = new (0, 0);
     public int NameFontId = 0;
     public string NameFontKey = FontsManager.DalamudFontKey;
-        
+
     public bool ShowRaidStats = true;
     public ConfigColor RaidStatsColor = new ConfigColor(0.5f, 0.5f, 0.5f, 1f);
     public bool StatsShowOutline = true;
     public ConfigColor StatsOutlineColor = new ConfigColor(0, 0, 0, 0.5f);
     public DrawAnchor StatsAlign = DrawAnchor.Right;
-    public Vector2 StatsOffset = new Vector2(0, 0);
+    public Vector2 StatsOffset = new (0, 0);
     public int StatsFontId = 0;
     public string StatsFontKey = FontsManager.DalamudFontKey;
     public string RaidStatsFormat = "[dps]rdps [hps]rhps Deaths: [deaths]";
     public bool ThousandsSeparators = true;
-        
+
     public IConfigPage GetDefault()
     {
         HeaderConfig defaultConfig = new HeaderConfig();
@@ -68,10 +68,10 @@ public class HeaderConfig : IConfigPage
         {
             return (pos, size);
         }
-            
+
         Vector2 headerSize = new Vector2(size.X, this.HeaderHeight);
         drawList.AddRectFilled(pos, pos + headerSize, this.BackgroundColor.Base);
-            
+
         Vector2 durationPos = pos;
         Vector2 durationSize = Vector2.Zero;
         if (this.ShowEncounterDuration)
@@ -81,24 +81,50 @@ public class HeaderConfig : IConfigPage
                 string duration = encounter is null ? $" LMeter v{Plugin.Version}" : $" {encounter.Duration}";
                 durationSize = ImGui.CalcTextSize(duration);
                 durationPos = Utils.GetAnchoredPosition(durationPos, -headerSize, DrawAnchor.Left);
-                durationPos = Utils.GetAnchoredPosition(durationPos, durationSize, this.DurationAlign) + this.DurationOffset;
-                DrawHelpers.DrawText(drawList, duration, durationPos, this.DurationColor.Base, this.DurationShowOutline, this.DurationOutlineColor.Base);
+                durationPos = Utils.GetAnchoredPosition
+                (
+                    durationPos,
+                    durationSize,
+                    this.DurationAlign
+                ) + this.DurationOffset;
+
+                DrawHelpers.DrawText
+                (
+                    drawList,
+                    duration,
+                    durationPos,
+                    this.DurationColor.Base,
+                    this.DurationShowOutline,
+                    this.DurationOutlineColor.Base
+                );
             }
         }
 
         Vector2 raidStatsSize = Vector2.Zero;
         if (this.ShowRaidStats && encounter is not null)
         {
-            string text = encounter.GetFormattedString($" {this.RaidStatsFormat} ", this.ThousandsSeparators ? "N" : "F");
+            string text = encounter.GetFormattedString
+            (
+                $" {this.RaidStatsFormat} ",
+                this.ThousandsSeparators ? "N" : "F"
+            );
 
             if (!string.IsNullOrEmpty(text))
             {
                 using (FontsManager.PushFont(this.StatsFontKey))
                 {
                     raidStatsSize = ImGui.CalcTextSize(text);
-                    Vector2 statsPos = Utils.GetAnchoredPosition(pos + this.StatsOffset, -headerSize, DrawAnchor.Right);
+                    var statsPos = Utils.GetAnchoredPosition(pos + this.StatsOffset, -headerSize, DrawAnchor.Right);
                     statsPos = Utils.GetAnchoredPosition(statsPos, raidStatsSize, this.StatsAlign);
-                    DrawHelpers.DrawText(drawList, text, statsPos, this.RaidStatsColor.Base, this.StatsShowOutline, this.StatsOutlineColor.Base);
+                    DrawHelpers.DrawText
+                    (
+                        drawList,
+                        text,
+                        statsPos,
+                        this.RaidStatsColor.Base,
+                        this.StatsShowOutline,
+                        this.StatsOutlineColor.Base
+                    );
                 }
             }
         }
@@ -124,10 +150,18 @@ public class HeaderConfig : IConfigPage
 
                 Vector2 namePos = Utils.GetAnchoredPosition(pos.AddX(durationSize.X), -headerSize, DrawAnchor.Left);
                 namePos = Utils.GetAnchoredPosition(namePos, nameSize, this.NameAlign) + this.NameOffset;
-                DrawHelpers.DrawText(drawList, name, namePos, this.NameColor.Base, this.NameShowOutline, this.NameOutlineColor.Base);
+                DrawHelpers.DrawText
+                (
+                    drawList,
+                    name,
+                    namePos,
+                    this.NameColor.Base,
+                    this.NameShowOutline,
+                    this.NameOutlineColor.Base
+                );
             }
         }
-            
+
         return (pos.AddY(this.HeaderHeight), size.AddY(-this.HeaderHeight));
     }
 
@@ -149,7 +183,12 @@ public class HeaderConfig : IConfigPage
 
                 DrawHelpers.DrawNestIndicator(1);
                 Vector4 vector = this.BackgroundColor.Vector;
-                ImGui.ColorEdit4("Background Color", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Background Color",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BackgroundColor.Vector = vector;
 
                 ImGui.NewLine();
@@ -177,11 +216,22 @@ public class HeaderConfig : IConfigPage
                     this.DurationFontKey = fontOptions[this.DurationFontId];
 
                     DrawHelpers.DrawNestIndicator(2);
-                    ImGui.Combo("Text Align##Duration", ref Unsafe.As<DrawAnchor, int>(ref this.DurationAlign), _anchorOptions, _anchorOptions.Length);
+                    ImGui.Combo
+                    (
+                        "Text Align##Duration",
+                        ref Unsafe.As<DrawAnchor, int>(ref this.DurationAlign),
+                        _anchorOptions,
+                        _anchorOptions.Length
+                    );
 
                     DrawHelpers.DrawNestIndicator(2);
                     vector = this.DurationColor.Vector;
-                    ImGui.ColorEdit4("Text Color##Duration", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                    ImGui.ColorEdit4
+                    (
+                        "Text Color##Duration",
+                        ref vector,
+                        ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                    );
                     this.DurationColor.Vector = vector;
 
                     DrawHelpers.DrawNestIndicator(2);
@@ -190,7 +240,12 @@ public class HeaderConfig : IConfigPage
                     {
                         DrawHelpers.DrawNestIndicator(3);
                         vector = this.DurationOutlineColor.Vector;
-                        ImGui.ColorEdit4("Outline Color##Duration", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                        ImGui.ColorEdit4
+                        (
+                            "Outline Color##Duration",
+                            ref vector,
+                            ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                        );
                         this.DurationOutlineColor.Vector = vector;
                     }
                 }
@@ -220,11 +275,22 @@ public class HeaderConfig : IConfigPage
                     this.NameFontKey = fontOptions[this.NameFontId];
 
                     DrawHelpers.DrawNestIndicator(2);
-                    ImGui.Combo("Text Align##Name", ref Unsafe.As<DrawAnchor, int>(ref this.NameAlign), _anchorOptions, _anchorOptions.Length);
+                    ImGui.Combo
+                    (
+                        "Text Align##Name",
+                        ref Unsafe.As<DrawAnchor, int>(ref this.NameAlign),
+                        _anchorOptions,
+                        _anchorOptions.Length
+                    );
 
                     DrawHelpers.DrawNestIndicator(2);
                     vector = this.NameColor.Vector;
-                    ImGui.ColorEdit4("Text Color##Name", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                    ImGui.ColorEdit4
+                    (
+                        "Text Color##Name",
+                        ref vector,
+                        ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                    );
                     this.NameColor.Vector = vector;
 
                     DrawHelpers.DrawNestIndicator(2);
@@ -233,7 +299,12 @@ public class HeaderConfig : IConfigPage
                     {
                         DrawHelpers.DrawNestIndicator(3);
                         vector = this.NameOutlineColor.Vector;
-                        ImGui.ColorEdit4("Outline Color##Name", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                        ImGui.ColorEdit4
+                        (
+                            "Outline Color##Name",
+                            ref vector,
+                            ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                        );
                         this.NameOutlineColor.Vector = vector;
                     }
                 }
@@ -275,11 +346,22 @@ public class HeaderConfig : IConfigPage
                     this.StatsFontKey = fontOptions[this.StatsFontId];
 
                     DrawHelpers.DrawNestIndicator(2);
-                    ImGui.Combo("Text Align##Stats", ref Unsafe.As<DrawAnchor, int>(ref this.StatsAlign), _anchorOptions, _anchorOptions.Length);
+                    ImGui.Combo
+                    (
+                        "Text Align##Stats",
+                        ref Unsafe.As<DrawAnchor, int>(ref this.StatsAlign),
+                        _anchorOptions,
+                        _anchorOptions.Length
+                    );
 
                     DrawHelpers.DrawNestIndicator(2);
                     vector = this.RaidStatsColor.Vector;
-                    ImGui.ColorEdit4("Text Color##Stats", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                    ImGui.ColorEdit4
+                    (
+                        "Text Color##Stats",
+                        ref vector,
+                        ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                    );
                     this.RaidStatsColor.Vector = vector;
 
                     DrawHelpers.DrawNestIndicator(2);
@@ -288,7 +370,12 @@ public class HeaderConfig : IConfigPage
                     {
                         DrawHelpers.DrawNestIndicator(3);
                         vector = this.StatsOutlineColor.Vector;
-                        ImGui.ColorEdit4("Outline Color##Stats", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                        ImGui.ColorEdit4
+                        (
+                            "Outline Color##Stats",
+                            ref vector,
+                            ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                        );
                         this.StatsOutlineColor.Vector = vector;
                     }
                 }

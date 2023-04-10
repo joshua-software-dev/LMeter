@@ -68,7 +68,7 @@ public enum JobType
     DoH,
     DoL
 }
-    
+
 public enum DrawAnchor
 {
     Center = 0,

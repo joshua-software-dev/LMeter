@@ -18,7 +18,6 @@ using LMeter.Meter;
 using System.IO;
 using System.Reflection;
 using System;
-using SigScanner = Dalamud.Game.SigScanner;
 
 
 namespace LMeter;

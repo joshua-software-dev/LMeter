@@ -36,10 +36,8 @@ public class ACTConfig : IConfigPage
     public bool AutoEnd = false;
     public int AutoEndDelay = 3;
 
-    public ACTConfig()
-    {
+    public ACTConfig() =>
         this.ACTSocketAddress = _defaultSocketAddress;
-    }
 
     public void DrawConfig(Vector2 size, float padX, float padY)
     {
@@ -70,10 +68,23 @@ public class ACTConfig : IConfigPage
             else
             {
                 ImGui.Text($"ACT Status: {IACTClient.Current.Status}");
-                ImGui.InputTextWithHint("ACT Websocket Address", $"Default: '{_defaultSocketAddress}'", ref this.ACTSocketAddress, 64);
+                ImGui.InputTextWithHint
+                (
+                    "ACT Websocket Address",
+                    $"Default: '{_defaultSocketAddress}'",
+                    ref this.ACTSocketAddress,
+                    64
+                );
             }
 
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Sync, IACTClient.Current.RetryConnection, "Reconnect", buttonSize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.Sync,
+                IACTClient.Current.RetryConnection,
+                "Reconnect",
+                buttonSize
+            );
             ImGui.SameLine();
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
             ImGui.Text("Retry Connection");
@@ -97,8 +108,13 @@ public class ACTConfig : IConfigPage
             ImGui.Checkbox("Force ACT to end encounter after combat", ref this.AutoEnd);
             if (ImGui.IsItemHovered())
             {
-                ImGui.SetTooltip("It is recommended to disable ACT Command Sounds if you use this feature.\n" +
-                                 "The option can be found in ACT under Options -> Sound Settings.");
+                ImGui.SetTooltip
+                (
+                    """
+                    It is recommended to disable ACT Command Sounds if you use this feature.
+                    The option can be found in ACT under Options -> Sound Settings.
+                    """
+                );
             }
                 
             if (this.AutoEnd)
@@ -110,12 +126,26 @@ public class ACTConfig : IConfigPage
             }
 
             ImGui.NewLine();
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Stop, () => IACTClient.Current.EndEncounter(), null, buttonSize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.Stop,
+                IACTClient.Current.EndEncounter,
+                null,
+                buttonSize
+            );
             ImGui.SameLine();
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
             ImGui.Text("Force End Combat");
 
-            DrawHelpers.DrawButton(string.Empty, FontAwesomeIcon.Trash, () => Singletons.Get<PluginManager>().Clear(), null, buttonSize);
+            DrawHelpers.DrawButton
+            (
+                string.Empty,
+                FontAwesomeIcon.Trash,
+                () => Singletons.Get<PluginManager>().Clear(),
+                null,
+                buttonSize
+            );
             ImGui.SameLine();
             ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
             ImGui.Text("Clear LMeter");
@@ -128,8 +158,11 @@ public class ACTConfig : IConfigPage
     {
         if (this.LastReconnectAttempt.HasValue && IACTClient.Current.ConnectionIncompleteOrFailed())
         {
-            if (this.AutoReconnect &&
-                this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay))
+            if 
+            (
+                this.AutoReconnect &&
+                this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay)
+            )
             {
                 IACTClient.Current.RetryConnection();
                 this.LastReconnectAttempt = DateTime.UtcNow;
@@ -145,13 +178,15 @@ public class ACTConfig : IConfigPage
     {
         if (IACTClient.Current.ClientReady())
         {
-            if (this.AutoEnd &&
-                CharacterState.IsInCombat())
+            if (this.AutoEnd && CharacterState.IsInCombat())
             {
                 this.LastCombatTime = DateTime.UtcNow;
             }
-            else if (this.LastCombatTime is not null && 
-                     this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay))
+            else if 
+            (
+                this.LastCombatTime is not null && 
+                this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay)
+            )
             {
                 IACTClient.Current.EndEncounter();
                 this.LastCombatTime = null;

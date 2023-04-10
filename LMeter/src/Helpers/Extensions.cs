@@ -5,20 +5,14 @@ namespace LMeter.Helpers;
 
 public static class Extensions
 {
-    public static Vector2 AddX(this Vector2 v, float offset)
-    {
-        return new Vector2(v.X + offset, v.Y);
-    }
+    public static Vector2 AddX(this Vector2 v, float offset) =>
+        new(v.X + offset, v.Y);
 
-    public static Vector2 AddY(this Vector2 v, float offset)
-    {
-        return new Vector2(v.X, v.Y + offset);
-    }
+    public static Vector2 AddY(this Vector2 v, float offset) =>
+        new(v.X, v.Y + offset);
 
-    public static Vector4 AddTransparency(this Vector4 vec, float opacity)
-    {
-        return new Vector4(vec.X, vec.Y, vec.Z, vec.W * opacity);
-    }
+    public static Vector4 AddTransparency(this Vector4 vec, float opacity) =>
+        new(vec.X, vec.Y, vec.Z, vec.W * opacity);
 
     public static Vector4 AdjustColor(this Vector4 vec, float correctionFactor)
     {

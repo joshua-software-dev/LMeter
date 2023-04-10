@@ -10,12 +10,14 @@ namespace LMeter.Helpers;
 
 public class DrawHelpers
 {
-    public static void DrawButton(
+    public static void DrawButton
+    (
         string label,
         FontAwesomeIcon icon,
         Action clickAction,
         string? help = null,
-        Vector2? size = null)
+        Vector2? size = null
+    )
     {
         if (!string.IsNullOrEmpty(label))
         {
@@ -28,22 +30,22 @@ public class DrawHelpers
         {
             clickAction();
         }
-
         ImGui.PopFont();
+
         if (!string.IsNullOrEmpty(help) && ImGui.IsItemHovered())
         {
             ImGui.SetTooltip(help);
         }
     }
 
-    public static void DrawNotification(
+    public static void DrawNotification
+    (
         string message,
         NotificationType type = NotificationType.Success,
         uint durationInMs = 3000,
-        string title = "LMeter")
-    {
+        string title = "LMeter"
+    ) =>
         Singletons.Get<UiBuilder>().AddNotification(message, title, type, durationInMs);
-    }
 
     public static void DrawNestIndicator(int depth)
     {
@@ -66,11 +68,13 @@ public class DrawHelpers
         }
     }
 
-    public static void DrawIcon(
+    public static void DrawIcon
+    (
         uint iconId,
         Vector2 position,
         Vector2 size,
-        ImDrawListPtr drawList)
+        ImDrawListPtr drawList
+    )
     {
         TextureWrap? tex = Singletons.Get<TexturesCache>().GetTextureFromIconId(iconId, 0, true);
 
@@ -82,7 +86,8 @@ public class DrawHelpers
         drawList.AddImage(tex.ImGuiHandle, position, position + size, Vector2.Zero, Vector2.One);
     }
 
-    public static void DrawIcon(
+    public static void DrawIcon
+    (
         uint iconId,
         Vector2 position,
         Vector2 size,
@@ -90,9 +95,12 @@ public class DrawHelpers
         int stackCount,
         bool desaturate,
         float opacity,
-        ImDrawListPtr drawList)
+        ImDrawListPtr drawList
+    )
     {
-        TextureWrap? tex = Singletons.Get<TexturesCache>().GetTextureFromIconId(iconId, (uint)stackCount, true, desaturate, opacity);
+        TextureWrap? tex = Singletons
+            .Get<TexturesCache>()
+            .GetTextureFromIconId(iconId, (uint) stackCount, true, desaturate, opacity);
 
         if (tex is null)
         {
@@ -104,7 +112,7 @@ public class DrawHelpers
         drawList.AddImage(tex.ImGuiHandle, position, position + size, uv0, uv1);
     }
 
-    public static (Vector2, Vector2) GetTexCoordinates(TextureWrap texture, Vector2 size, bool cropIcon = true)
+    public static (Vector2, Vector2) GetTexCoordinates(TextureWrap? texture, Vector2 size, bool cropIcon = true)
     {
         if (texture == null)
         {
@@ -126,18 +134,19 @@ public class DrawHelpers
         return (uv0, uv1);
     }
 
-    public static void DrawInWindow(
+    public static void DrawInWindow
+    (
         string name,
         Vector2 pos,
         Vector2 size,
         bool needsInput,
         bool setPosition,
-        Action<ImDrawListPtr> drawAction)
-    {
+        Action<ImDrawListPtr> drawAction
+    ) =>
         DrawInWindow(name, pos, size, needsInput, false, setPosition, drawAction);
-    }
 
-    public static void DrawInWindow(
+    public static void DrawInWindow
+    (
         string name,
         Vector2 pos,
         Vector2 size,
@@ -145,7 +154,8 @@ public class DrawHelpers
         bool needsFocus,
         bool locked,
         Action<ImDrawListPtr> drawAction,
-        ImGuiWindowFlags extraFlags = ImGuiWindowFlags.None)
+        ImGuiWindowFlags extraFlags = ImGuiWindowFlags.None
+    )
     {
         ImGuiWindowFlags windowFlags =
             ImGuiWindowFlags.NoSavedSettings |
@@ -184,14 +194,16 @@ public class DrawHelpers
         ImGui.End();
     }
 
-    public static void DrawText(
+    public static void DrawText
+    (
         ImDrawListPtr drawList,
         string text,
         Vector2 pos,
         uint color,
         bool outline,
         uint outlineColor = 0xFF000000,
-        int thickness = 1)
+        int thickness = 1
+    )
     {
         // outline
         if (outline)

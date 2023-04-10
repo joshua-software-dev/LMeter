@@ -1,5 +1,4 @@
 using LMeter.Helpers;
-using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,18 +56,18 @@ public class ACTEvent
 public class Encounter
 {
     [JsonIgnore]
-    public static string[] TextTags { get; } = typeof(Encounter).GetFields().Select(x => $"[{x.Name.ToLower()}]").ToArray();
+    public static string[] TextTags { get; } =
+        typeof(Encounter).GetFields().Select(x => $"[{x.Name.ToLower()}]").ToArray();
 
     [JsonIgnore]
-    private static readonly Random _rand = new Random();
-        
-    [JsonIgnore]
-    private static readonly Dictionary<string, FieldInfo> _fields = typeof(Encounter).GetFields().ToDictionary((x) => x.Name.ToLower());
+    private static readonly Random _rand = new ();
 
-    public string GetFormattedString(string format, string numberFormat)
-    {
-        return TextTagFormatter.TextTagRegex.Replace(format, new TextTagFormatter(this, numberFormat, _fields).Evaluate);
-    }
+    [JsonIgnore]
+    private static readonly Dictionary<string, FieldInfo> _fields = 
+        typeof(Encounter).GetFields().ToDictionary(x => x.Name.ToLower());
+
+    public string GetFormattedString(string format, string numberFormat) =>
+        TextTagFormatter.TextTagRegex.Replace(format, new TextTagFormatter(this, numberFormat, _fields).Evaluate);
 
     [JsonProperty("title")]
     public string Title = string.Empty;
@@ -126,18 +125,18 @@ public class Encounter
 public class Combatant
 {
     [JsonIgnore]
-    public static string[] TextTags { get; } = typeof(Combatant).GetFields().Select(x => $"[{x.Name.ToLower()}]").ToArray();
+    public static string[] TextTags { get; } =
+        typeof(Combatant).GetFields().Select(x => $"[{x.Name.ToLower()}]").ToArray();
 
     [JsonIgnore]
-    private static readonly Random _rand = new Random();
+    private static readonly Random _rand = new ();
 
     [JsonIgnore]
-    private static readonly Dictionary<string, FieldInfo> _fields = typeof(Combatant).GetFields().ToDictionary((x) => x.Name.ToLower());
+    private static readonly Dictionary<string, FieldInfo> _fields =
+        typeof(Combatant).GetFields().ToDictionary((x) => x.Name.ToLower());
 
-    public string GetFormattedString(string format, string numberFormat)
-    {
-        return TextTagFormatter.TextTagRegex.Replace(format, new TextTagFormatter(this, numberFormat, _fields).Evaluate);
-    }
+    public string GetFormattedString(string format, string numberFormat) =>
+        TextTagFormatter.TextTagRegex.Replace(format, new TextTagFormatter(this, numberFormat, _fields).Evaluate);
 
     [JsonProperty("name")]
     public string Name = string.Empty;

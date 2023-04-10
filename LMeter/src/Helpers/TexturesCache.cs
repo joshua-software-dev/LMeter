@@ -30,12 +30,14 @@ public class TexturesCache : IPluginDisposable
         _uiBuilder = pluginInterface.UiBuilder;
     }
 
-    public TextureWrap? GetTextureFromIconId(
+    public TextureWrap? GetTextureFromIconId
+    (
         uint iconId,
         uint stackCount = 0,
         bool hdIcon = true,
         bool greyScale = false,
-        float opacity = 1f)
+        float opacity = 1f
+    )
     {
         string key = $"{iconId}{(greyScale ? "_g" : string.Empty)}{(opacity != 1f ? "_t" : string.Empty)}";
         if (_textureCache.TryGetValue(key, out var tuple))
@@ -73,9 +75,7 @@ public class TexturesCache : IPluginDisposable
                 return this.LoadPenumbraTexture(resolvedPath);
             }
         }
-        catch
-        {
-        }
+        catch { }
 
         try
         {
@@ -122,10 +122,10 @@ public class TexturesCache : IPluginDisposable
         {
             PluginLog.Error($"Error loading texture: {path} {ex.ToString()}");
         }
-            
+
         return null;
     }
-        
+
     private static byte[] GetRgbaImageData(byte[] imageData)
     {
         var dst = new byte[imageData.Length];
@@ -169,10 +169,10 @@ public class TexturesCache : IPluginDisposable
         {
             var v = BitConverter.ToUInt16(src.Slice(i, sizeof(UInt16)).ToArray(), 0);
 
-            var a = (uint)(v & 0x8000);
-            var r = (uint)(v & 0x7C00);
-            var g = (uint)(v & 0x03E0);
-            var b = (uint)(v & 0x001F);
+            var a = (uint) (v & 0x8000);
+            var r = (uint) (v & 0x7C00);
+            var g = (uint) (v & 0x03E0);
+            var b = (uint) (v & 0x001F);
 
             var rgb = ((r << 9) | (g << 6) | (b << 3));
             var argbValue = (a * 0x1FE00 | rgb | ((rgb >> 5) & 0x070707));
@@ -201,13 +201,13 @@ public class TexturesCache : IPluginDisposable
     {
         for (var i = 0; i < width * height; ++i)
         {
-            var r = (uint)(src[i] & 0xE0);
-            var g = (uint)(src[i] & 0x1C);
-            var b = (uint)(src[i] & 0x03);
+            var r = (uint) (src[i] & 0xE0);
+            var g = (uint) (src[i] & 0x1C);
+            var b = (uint) (src[i] & 0x03);
 
-            dst[i * 4 + 0] = (byte)(b | (b << 2) | (b << 4) | (b << 6));
-            dst[i * 4 + 1] = (byte)(g | (g << 3) | (g << 6));
-            dst[i * 4 + 2] = (byte)(r | (r << 3) | (r << 6));
+            dst[i * 4 + 0] = (byte) (b | (b << 2) | (b << 4) | (b << 6));
+            dst[i * 4 + 1] = (byte) (g | (g << 3) | (g << 6));
+            dst[i * 4 + 2] = (byte) (r | (r << 3) | (r << 6));
             dst[i * 4 + 3] = 0xFF;
         }
     }
@@ -230,7 +230,7 @@ public class TexturesCache : IPluginDisposable
             _textureCache.Clear();
         }
     }
-        
+
     private static TextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
     {
         UiBuilder uiBuilder = Singletons.Get<UiBuilder>();
@@ -249,7 +249,7 @@ public class TexturesCache : IPluginDisposable
         {
             return;
         }
-            
+
         for (int i = 0; i < bytes.Length; i += 4)
         {
             if (greyScale)
@@ -257,8 +257,8 @@ public class TexturesCache : IPluginDisposable
                 int r = bytes[i] >> 2;
                 int g = bytes[i + 1] >> 1;
                 int b = bytes[i + 2] >> 3;
-                byte lum = (byte)(r + g + b);
-                    
+                byte lum = (byte) (r + g + b);
+
                 bytes[i] = lum;
                 bytes[i + 1] = lum;
                 bytes[i + 2] = lum;
@@ -266,7 +266,7 @@ public class TexturesCache : IPluginDisposable
 
             if (opacity != 1)
             {
-                bytes[i + 3] = (byte)(bytes[i + 3] * opacity);
+                bytes[i + 3] = (byte) (bytes[i + 3] * opacity);
             }
         }
     }

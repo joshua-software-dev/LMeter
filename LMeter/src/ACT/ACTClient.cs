@@ -68,7 +68,7 @@ public class ACTClient : IACTClient
     public void EndEncounter()
     {
         ChatGui chat = Singletons.Get<ChatGui>();
-        XivChatEntry message = new XivChatEntry()
+        XivChatEntry message = new XivChatEntry
         {
             Message = "end",
             Type = XivChatType.Echo
@@ -84,7 +84,7 @@ public class ACTClient : IACTClient
         if (_config.ClearACT)
         {
             ChatGui chat = Singletons.Get<ChatGui>();
-            XivChatEntry message = new XivChatEntry()
+            XivChatEntry message = new XivChatEntry
             {
                 Message = "clear",
                 Type = XivChatType.Echo
@@ -125,12 +125,13 @@ public class ACTClient : IACTClient
         {
             _status = ConnectionStatus.Connecting;
             await _socket.ConnectAsync(new Uri(host), _cancellationTokenSource.Token);
-
-            await _socket.SendAsync(
+            await _socket.SendAsync
+            (
                 Encoding.UTF8.GetBytes(SubscriptionMessage),
                 WebSocketMessageType.Text,
                 endOfMessage: true,
-                _cancellationTokenSource.Token);
+                _cancellationTokenSource.Token
+            );
         }
         catch (Exception ex)
         {
@@ -173,22 +174,30 @@ public class ACTClient : IACTClient
                     {
                         string data = await reader.ReadToEndAsync();
                         PluginLog.Verbose(data);
-                            
+
                         if (!string.IsNullOrEmpty(data))
                         {
                             try
                             {
-                                ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent>(data);
+                                ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent?>(data);
 
-                                if (newEvent?.Encounter is not null &&
+                                if 
+                                (
+                                    newEvent?.Encounter is not null &&
                                     newEvent?.Combatants is not null &&
                                     newEvent.Combatants.Any() &&
-                                    (CharacterState.IsInCombat() || !newEvent.IsEncounterActive()))
+                                    (CharacterState.IsInCombat() || !newEvent.IsEncounterActive())
+                                )
                                 {
-                                    if (!(_lastEvent is not null &&
-                                          _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
-                                          _lastEvent.Encounter is not null &&
-                                          _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)))
+                                    var lastEventIsDifferentEncounterOrInvalid =
+                                    (
+                                        _lastEvent is not null &&
+                                        _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
+                                        _lastEvent.Encounter is not null &&
+                                        _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)
+                                    );
+
+                                    if (!lastEventIsDifferentEncounterOrInvalid)
                                     {
                                         if (!newEvent.IsEncounterActive())
                                         {
@@ -232,13 +241,13 @@ public class ACTClient : IACTClient
     {
         _status = ConnectionStatus.ShuttingDown;
         _lastEvent = null;
-        if (_socket.State == WebSocketState.Open ||
-            _socket.State == WebSocketState.Connecting)
+        if (_socket.State == WebSocketState.Open || _socket.State == WebSocketState.Connecting)
         {
             try
             {
                 // Close the websocket
-                _socket.CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None)
+                _socket
+                    .CloseOutputAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None)
                     .GetAwaiter()
                     .GetResult();
             }
@@ -248,11 +257,7 @@ public class ACTClient : IACTClient
                 _cancellationTokenSource.Cancel();
             }
 
-            if (_receiveTask is not null)
-            {
-                _receiveTask.Wait();
-            }
-
+            _receiveTask?.Wait();
             PluginLog.Information($"Closed ACT Connection");
         }
 

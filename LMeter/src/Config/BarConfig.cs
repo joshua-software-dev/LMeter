@@ -15,18 +15,18 @@ public class BarConfig : IConfigPage
 {
     [JsonIgnore]
     private static string[] _anchorOptions = Enum.GetNames(typeof(DrawAnchor));
-        
+
     public string Name => "Bars";
 
-    private static string[] _jobIconStyleOptions = new string[] { "Style 1", "Style 2" };
+    private static string[] _jobIconStyleOptions = { "Style 1", "Style 2" };
 
     public int BarCount = 8;
     public int BarGaps = 1;
 
     public bool ShowJobIcon = true;
     public int JobIconStyle = 0;
-    public Vector2 JobIconOffset = new Vector2(0, 0);
-        
+    public Vector2 JobIconOffset = new (0, 0);
+
     public bool ThousandsSeparators = true;
 
     public bool UseJobColor = true;
@@ -35,7 +35,7 @@ public class BarConfig : IConfigPage
     public bool ShowRankText = false;
     public string RankTextFormat = "[rank].";
     public DrawAnchor RankTextAlign = DrawAnchor.Right;
-    public Vector2 RankTextOffset = new Vector2(0, 0);
+    public Vector2 RankTextOffset = new (0, 0);
     public bool RankTextJobColor = false;
     public ConfigColor RankTextColor = new ConfigColor(1, 1, 1, 1);
     public bool RankTextShowOutline = true;
@@ -44,7 +44,7 @@ public class BarConfig : IConfigPage
     public int RankTextFontId = 0;
 
     public string LeftTextFormat = "[name]";
-    public Vector2 LeftTextOffset = new Vector2(0, 0);
+    public Vector2 LeftTextOffset = new (0, 0);
     public bool LeftTextJobColor = false;
     public ConfigColor BarNameColor = new ConfigColor(1, 1, 1, 1);
     public bool BarNameShowOutline = true;
@@ -54,14 +54,14 @@ public class BarConfig : IConfigPage
     public bool UseCharacterName = false;
 
     public string RightTextFormat = "[damagetotal:k.1]  ([encdps:k.1], [damagepct])";
-    public Vector2 RightTextOffset = new Vector2(0, 0);
+    public Vector2 RightTextOffset = new (0, 0);
     public bool RightTextJobColor = false;
     public ConfigColor BarDataColor = new ConfigColor(1, 1, 1, 1);
     public bool BarDataShowOutline = true;
     public ConfigColor BarDataOutlineColor = new ConfigColor(0, 0, 0, 0.5f);
     public string BarDataFontKey = FontsManager.DalamudFontKey;
     public int BarDataFontId = 0;
-        
+
     public IConfigPage GetDefault()
     {
         BarConfig defaultConfig = new BarConfig();
@@ -73,11 +73,12 @@ public class BarConfig : IConfigPage
 
         defaultConfig.RankTextFontKey = FontsManager.DefaultSmallFontKey;
         defaultConfig.RankTextFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
-            
+
         return defaultConfig;
     }
 
-    public Vector2 DrawBar(
+    public Vector2 DrawBar
+    (
         ImDrawListPtr drawList,
         Vector2 localPos,
         Vector2 size,
@@ -85,7 +86,8 @@ public class BarConfig : IConfigPage
         ConfigColor jobColor,
         ConfigColor barColor,
         float top,
-        float current)
+        float current
+    )
     {
         float barHeight = (size.Y - (this.BarCount - 1) * this.BarGaps) / this.BarCount;
         Vector2 barSize = new Vector2(size.X, barHeight);
@@ -103,20 +105,33 @@ public class BarConfig : IConfigPage
 
         if (this.ShowRankText)
         {
-            string rankText = combatant.GetFormattedString($"{this.RankTextFormat}", this.ThousandsSeparators ? "N" : "F");
+            string rankText = combatant.GetFormattedString
+            (
+                $"{this.RankTextFormat}",
+                this.ThousandsSeparators ? "N" : "F"
+            );
+
             using(FontsManager.PushFont(this.RankTextFontKey))
             {
                 textOffset += ImGui.CalcTextSize("00.").X;
                 Vector2 rankTextSize = ImGui.CalcTextSize(rankText);
                 Vector2 rankTextPos = Utils.GetAnchoredPosition(localPos, -barSize, DrawAnchor.Left);
-                rankTextPos = Utils.GetAnchoredPosition(rankTextPos, rankTextSize, this.RankTextAlign) + this.RankTextOffset;
-                DrawHelpers.DrawText(
+                rankTextPos = Utils.GetAnchoredPosition
+                (
+                    rankTextPos,
+                    rankTextSize,
+                    this.RankTextAlign
+                ) + this.RankTextOffset;
+
+                DrawHelpers.DrawText
+                (
                     drawList,
                     rankText,
                     rankTextPos.AddX(textOffset),
                     this.RankTextJobColor ? jobColor.Base : this.RankTextColor.Base,
                     this.RankTextShowOutline,
-                    this.RankTextOutlineColor.Base);
+                    this.RankTextOutlineColor.Base
+                );
             }
         }
 
@@ -128,7 +143,11 @@ public class BarConfig : IConfigPage
                 combatant.Name = playerName;
             }
 
-            string leftText = combatant.GetFormattedString($" {this.LeftTextFormat} ", this.ThousandsSeparators ? "N" : "F");
+            string leftText = combatant.GetFormattedString
+            (
+                $" {this.LeftTextFormat} ",
+                this.ThousandsSeparators ? "N" : "F"
+            );
             Vector2 nameTextSize = ImGui.CalcTextSize(leftText);
             Vector2 namePos = Utils.GetAnchoredPosition(localPos, -barSize, DrawAnchor.Left);
             namePos = Utils.GetAnchoredPosition(namePos, nameTextSize, DrawAnchor.Left) + this.LeftTextOffset;
@@ -143,17 +162,23 @@ public class BarConfig : IConfigPage
 
         using (FontsManager.PushFont(this.BarDataFontKey))
         {
-            string rightText = combatant.GetFormattedString($" {this.RightTextFormat} ", this.ThousandsSeparators ? "N" : "F");
+            string rightText = combatant.GetFormattedString
+            (
+                $" {this.RightTextFormat} ", 
+                this.ThousandsSeparators ? "N" : "F"
+            );
             Vector2 dataTextSize = ImGui.CalcTextSize(rightText);
             Vector2 dataPos = Utils.GetAnchoredPosition(localPos, -barSize, DrawAnchor.Right);
             dataPos = Utils.GetAnchoredPosition(dataPos, dataTextSize, DrawAnchor.Right) + this.RightTextOffset;
-            DrawHelpers.DrawText(
+            DrawHelpers.DrawText
+            (
                 drawList,
                 rightText,
                 dataPos,
                 this.RightTextJobColor ? jobColor.Base : this.BarDataColor.Base,
                 this.BarDataShowOutline,
-                this.BarDataOutlineColor.Base);
+                this.BarDataOutlineColor.Base
+            );
         }
 
         return localPos.AddY(barHeight + this.BarGaps);
@@ -179,7 +204,13 @@ public class BarConfig : IConfigPage
                 ImGui.DragFloat2("Job Icon Offset", ref this.JobIconOffset);
 
                 DrawHelpers.DrawNestIndicator(1);
-                ImGui.Combo("Job Icon Style", ref this.JobIconStyle, _jobIconStyleOptions, _jobIconStyleOptions.Length);
+                ImGui.Combo
+                (
+                    "Job Icon Style",
+                    ref this.JobIconStyle,
+                    _jobIconStyleOptions,
+                    _jobIconStyleOptions.Length
+                );
             }
 
             ImGui.Checkbox("Use Job Colors for Bars", ref this.UseJobColor);
@@ -188,10 +219,15 @@ public class BarConfig : IConfigPage
             {
                 DrawHelpers.DrawNestIndicator(1);
                 vector = this.BarColor.Vector;
-                ImGui.ColorEdit4("Bar Color", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Bar Color",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BarColor.Vector = vector;
             }
-                
+
             ImGui.Checkbox("Use Thousands Separators for Numbers", ref this.ThousandsSeparators);
 
             ImGui.NewLine();
@@ -209,7 +245,13 @@ public class BarConfig : IConfigPage
                 }
                     
                 DrawHelpers.DrawNestIndicator(1);
-                ImGui.Combo("Rank Text Align", ref Unsafe.As<DrawAnchor, int>(ref this.RankTextAlign), _anchorOptions, _anchorOptions.Length);
+                ImGui.Combo
+                (
+                    "Rank Text Align",
+                    ref Unsafe.As<DrawAnchor, int>(ref this.RankTextAlign),
+                    _anchorOptions,
+                    _anchorOptions.Length
+                );
 
                 DrawHelpers.DrawNestIndicator(1);
                 ImGui.DragFloat2("Rank Text Offset", ref this.RankTextOffset);
@@ -225,7 +267,7 @@ public class BarConfig : IConfigPage
                         }
                     }
                 }
-                    
+
                 DrawHelpers.DrawNestIndicator(1);
                 ImGui.Combo("Font##Rank", ref this.RankTextFontId, fontOptions, fontOptions.Length);
                 this.RankTextFontKey = fontOptions[this.RankTextFontId];
@@ -236,7 +278,12 @@ public class BarConfig : IConfigPage
                 {
                     DrawHelpers.DrawNestIndicator(2);
                     vector = this.RankTextColor.Vector;
-                    ImGui.ColorEdit4("Text Color##Rank", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                    ImGui.ColorEdit4
+                    (
+                        "Text Color##Rank",
+                        ref vector,
+                        ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                    );
                     this.RankTextColor.Vector = vector;
                 }
 
@@ -246,7 +293,12 @@ public class BarConfig : IConfigPage
                 {
                     DrawHelpers.DrawNestIndicator(2);
                     vector = this.RankTextOutlineColor.Vector;
-                    ImGui.ColorEdit4("Outline Color##Rank", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                    ImGui.ColorEdit4
+                    (
+                        "Outline Color##Rank",
+                        ref vector,
+                        ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                    );
                     this.RankTextOutlineColor.Vector = vector;
                 }
             }
@@ -275,17 +327,21 @@ public class BarConfig : IConfigPage
                     }
                 }
             }
-                
+
             ImGui.Combo("Font##Name", ref this.BarNameFontId, fontOptions, fontOptions.Length);
             this.BarNameFontKey = fontOptions[this.BarNameFontId];
-                
-                
+
             ImGui.Checkbox("Use Job Color##LeftTextJobColor", ref this.LeftTextJobColor);
             if (!this.LeftTextJobColor)
             {
                 DrawHelpers.DrawNestIndicator(1);
                 vector = this.BarNameColor.Vector;
-                ImGui.ColorEdit4("Text Color##Name", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Text Color##Name",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BarNameColor.Vector = vector;
             }
 
@@ -294,7 +350,12 @@ public class BarConfig : IConfigPage
             {
                 DrawHelpers.DrawNestIndicator(1);
                 vector = this.BarNameOutlineColor.Vector;
-                ImGui.ColorEdit4("Outline Color##Name", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Outline Color##Name",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BarNameOutlineColor.Vector = vector;
             }
 
@@ -321,16 +382,21 @@ public class BarConfig : IConfigPage
                     }
                 }
             }
-                
+
             ImGui.Combo("Font##Data", ref this.BarDataFontId, fontOptions, fontOptions.Length);
             this.BarDataFontKey = fontOptions[this.BarDataFontId];
-                
+
             ImGui.Checkbox("Use Job Color##RightTextJobColor", ref this.RightTextJobColor);
             if (!this.RightTextJobColor)
             {
                 DrawHelpers.DrawNestIndicator(1);
                 vector = this.BarDataColor.Vector;
-                ImGui.ColorEdit4("Text Color##Data", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Text Color##Data",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BarDataColor.Vector = vector;
             }
 
@@ -339,7 +405,12 @@ public class BarConfig : IConfigPage
             {
                 DrawHelpers.DrawNestIndicator(1);
                 vector = this.BarDataOutlineColor.Vector;
-                ImGui.ColorEdit4("Outline Color##Data", ref vector, ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar);
+                ImGui.ColorEdit4
+                (
+                    "Outline Color##Data",
+                    ref vector,
+                    ImGuiColorEditFlags.AlphaPreview | ImGuiColorEditFlags.AlphaBar
+                );
                 this.BarDataOutlineColor.Vector = vector;
             }
         }

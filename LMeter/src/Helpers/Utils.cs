@@ -54,7 +54,7 @@ public static class Utils
 
         return null;
     }
-        
+
     public static void OpenUrl(string url)
     {
         try

@@ -8,7 +8,7 @@ namespace LMeter.ACT;
 
 public class TextTagFormatter
 {
-    public static Regex TextTagRegex { get; } = new Regex(@"\[(\w*)(:k)?\.?(\d+)?\]", RegexOptions.Compiled);
+    public static Regex TextTagRegex { get; } = new (@"\[(\w*)(:k)?\.?(\d+)?\]", RegexOptions.Compiled);
 
     private string _format;
     private Dictionary<string, FieldInfo> _fields;
