@@ -1,78 +1,78 @@
-﻿using System;
+﻿using LMeter.ACT;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using LMeter.ACT;
+using System;
 
-namespace LMeter.Helpers
+
+namespace LMeter.Helpers;
+
+public interface IPluginDisposable : IDisposable { }
+
+public static class Singletons
 {
-    public interface IPluginDisposable : IDisposable { }
-
-    public static class Singletons
+    private static readonly Dictionary<Type, Func<object>> TypeInitializers = new Dictionary<Type, Func<object>>()
     {
-        private static readonly Dictionary<Type, Func<object>> TypeInitializers = new Dictionary<Type, Func<object>>()
-        {
-        };
+    };
 
-        private static readonly ConcurrentDictionary<Type, object> ActiveInstances = new ConcurrentDictionary<Type, object>();
+    private static readonly ConcurrentDictionary<Type, object> ActiveInstances = new ConcurrentDictionary<Type, object>();
 
-        public static T Get<T>()
+    public static T Get<T>()
+    {
+        return (T)ActiveInstances.GetOrAdd(typeof(T), (objectType) =>
         {
-            return (T)ActiveInstances.GetOrAdd(typeof(T), (objectType) =>
+            object newInstance;
+            if (Singletons.TypeInitializers.TryGetValue(objectType, out Func<object>? initializer))
             {
-                object newInstance;
-                if (Singletons.TypeInitializers.TryGetValue(objectType, out Func<object>? initializer))
-                {
-                    newInstance = initializer();
-                }
-                else
-                {
-                    throw new Exception($"No initializer found for Type '{objectType.FullName}'.");
-                }
-
-                if (newInstance is null || newInstance is not T)
-                {
-                    throw new Exception($"Received invalid result from initializer for type '{objectType.FullName}'");
-                }
-
-                return newInstance;
-            });
-        }
-
-        public static void Register(object newSingleton)
-        {
-            if (!ActiveInstances.TryAdd(newSingleton.GetType(), newSingleton))
-            {
-                throw new Exception($"Failed to register new singleton for type {newSingleton.GetType()}");
+                newInstance = initializer();
             }
-        }
-
-        public static void DeleteActClients()
-        {
-            ActiveInstances.TryRemove(typeof(ACTClient), out var client1);
-            if (client1 != null)
+            else
             {
-                ((IACTClient) client1).Dispose();
+                throw new Exception($"No initializer found for Type '{objectType.FullName}'.");
             }
 
-            ActiveInstances.TryRemove(typeof(IINACTClient), out var client2);
-            if (client2 != null)
+            if (newInstance is null || newInstance is not T)
             {
-                ((IACTClient) client2).Dispose();
+                throw new Exception($"Received invalid result from initializer for type '{objectType.FullName}'");
             }
+
+            return newInstance;
+        });
+    }
+
+    public static void Register(object newSingleton)
+    {
+        if (!ActiveInstances.TryAdd(newSingleton.GetType(), newSingleton))
+        {
+            throw new Exception($"Failed to register new singleton for type {newSingleton.GetType()}");
         }
+    }
+
+    public static void DeleteActClients()
+    {
+        ActiveInstances.TryRemove(typeof(ACTClient), out var client1);
+        if (client1 != null)
+        {
+            ((IACTClient) client1).Dispose();
+        }
+
+        ActiveInstances.TryRemove(typeof(IINACTClient), out var client2);
+        if (client2 != null)
+        {
+            ((IACTClient) client2).Dispose();
+        }
+    }
         
-        public static void Dispose()
+    public static void Dispose()
+    {
+        foreach (object singleton in ActiveInstances.Values)
         {
-            foreach (object singleton in ActiveInstances.Values)
+            // Only dispose the disposable objects that we own
+            if (singleton is IPluginDisposable disposable)
             {
-                // Only dispose the disposable objects that we own
-                if (singleton is IPluginDisposable disposable)
-                {
-                    disposable.Dispose();
-                }
+                disposable.Dispose();
             }
-
-            ActiveInstances.Clear();
         }
+
+        ActiveInstances.Clear();
     }
 }

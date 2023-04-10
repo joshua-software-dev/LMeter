@@ -1,11 +1,12 @@
-﻿using ImGuiNET;
-using System;
+﻿using Dalamud.Interface;
+using Dalamud.Logging;
+using ImGuiNET;
 using System.Collections.Generic;
 using System.IO;
-using Dalamud.Logging;
 using System.Linq;
 using System.Reflection;
-using Dalamud.Interface;
+using System;
+
 
 namespace LMeter.Helpers
 {

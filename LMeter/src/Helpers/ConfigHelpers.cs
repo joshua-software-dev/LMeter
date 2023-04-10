@@ -1,202 +1,202 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
-using Dalamud.Interface.Internal.Notifications;
+﻿using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using ImGuiNET;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using LMeter.Config;
+using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.IO.Compression;
+using System.IO;
+using System.Text;
+using System;
 
-namespace LMeter.Helpers
+
+namespace LMeter.Helpers;
+
+public static class ConfigHelpers
 {
-    public static class ConfigHelpers
+    private static readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
     {
-        private static readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
-        {
-            TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
-            TypeNameHandling = TypeNameHandling.Objects,
-            ObjectCreationHandling = ObjectCreationHandling.Replace,
-            SerializationBinder = new LMeterSerializationBinder()
-        };
+        TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
+        TypeNameHandling = TypeNameHandling.Objects,
+        ObjectCreationHandling = ObjectCreationHandling.Replace,
+        SerializationBinder = new LMeterSerializationBinder()
+    };
 
-        public static void ExportToClipboard<T>(T toExport)
-        {
-            string? exportString = ConfigHelpers.GetExportString(toExport);
+    public static void ExportToClipboard<T>(T toExport)
+    {
+        string? exportString = ConfigHelpers.GetExportString(toExport);
 
-            if (exportString is not null)
-            {
-                ImGui.SetClipboardText(exportString);
-                DrawHelpers.DrawNotification("Export string copied to clipboard.");
-            }
-            else
-            {
-                DrawHelpers.DrawNotification("Failed to Export!", NotificationType.Error);
-            }
+        if (exportString is not null)
+        {
+            ImGui.SetClipboardText(exportString);
+            DrawHelpers.DrawNotification("Export string copied to clipboard.");
         }
-
-        public static string? GetExportString<T>(T toExport)
+        else
         {
-            try
-            {
-                string jsonString = JsonConvert.SerializeObject(toExport, Formatting.None, _serializerSettings);
-                using (MemoryStream outputStream = new MemoryStream())
-                {
-                    using (DeflateStream compressionStream = new DeflateStream(outputStream, CompressionLevel.Optimal))
-                    {
-                        using (StreamWriter writer = new StreamWriter(compressionStream, Encoding.UTF8))
-                        {
-                            writer.Write(jsonString);
-                        }
-                    }
-
-                    return Convert.ToBase64String(outputStream.ToArray());
-                }
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error(ex.ToString());
-            }
-
-            return null;
+            DrawHelpers.DrawNotification("Failed to Export!", NotificationType.Error);
         }
+    }
 
-        public static T? GetFromImportString<T>(string importString)
+    public static string? GetExportString<T>(T toExport)
+    {
+        try
         {
-            if (string.IsNullOrEmpty(importString)) return default;
-
-            try
+            string jsonString = JsonConvert.SerializeObject(toExport, Formatting.None, _serializerSettings);
+            using (MemoryStream outputStream = new MemoryStream())
             {
-                byte[] bytes = Convert.FromBase64String(importString);
-
-                string decodedJsonString;
-                using (MemoryStream inputStream = new MemoryStream(bytes))
+                using (DeflateStream compressionStream = new DeflateStream(outputStream, CompressionLevel.Optimal))
                 {
-                    using (DeflateStream compressionStream = new DeflateStream(inputStream, CompressionMode.Decompress))
+                    using (StreamWriter writer = new StreamWriter(compressionStream, Encoding.UTF8))
                     {
-                        using (StreamReader reader = new StreamReader(compressionStream, Encoding.UTF8))
-                        {
-                            decodedJsonString = reader.ReadToEnd();
-                        }
+                        writer.Write(jsonString);
                     }
                 }
 
-                T? importedObj = JsonConvert.DeserializeObject<T>(decodedJsonString, _serializerSettings);
-                return importedObj;
+                return Convert.ToBase64String(outputStream.ToArray());
             }
-            catch (Exception ex)
-            {
-                PluginLog.Error(ex.ToString());
-            }
-
-            return default;
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(ex.ToString());
         }
 
-        public static LMeterConfig LoadConfig(string path)
+        return null;
+    }
+
+    public static T? GetFromImportString<T>(string importString)
+    {
+        if (string.IsNullOrEmpty(importString)) return default;
+
+        try
         {
-            LMeterConfig? config = null;
+            byte[] bytes = Convert.FromBase64String(importString);
 
-            try
+            string decodedJsonString;
+            using (MemoryStream inputStream = new MemoryStream(bytes))
             {
-                if (File.Exists(path))
+                using (DeflateStream compressionStream = new DeflateStream(inputStream, CompressionMode.Decompress))
                 {
-                    string jsonString = File.ReadAllText(path);
-                    config = JsonConvert.DeserializeObject<LMeterConfig>(jsonString, _serializerSettings);
-                }
-            }
-            catch (Exception ex)
-            {
-                PluginLog.Error(ex.ToString());
-
-                string backupPath = $"{path}.bak";
-                if (File.Exists(path))
-                {
-                    try
+                    using (StreamReader reader = new StreamReader(compressionStream, Encoding.UTF8))
                     {
-                        File.Copy(path, backupPath);
-                        PluginLog.Information($"Backed up LMeter config to '{backupPath}'.");
-                    }
-                    catch
-                    {
-                        PluginLog.Warning($"Unable to back up LMeter config.");
+                        decodedJsonString = reader.ReadToEnd();
                     }
                 }
             }
 
-            return config ?? new LMeterConfig();
+            T? importedObj = JsonConvert.DeserializeObject<T>(decodedJsonString, _serializerSettings);
+            return importedObj;
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(ex.ToString());
         }
 
-        public static void SaveConfig()
-        {
-            ConfigHelpers.SaveConfig(Singletons.Get<LMeterConfig>());
-        }
+        return default;
+    }
 
-        public static void SaveConfig(LMeterConfig config)
+    public static LMeterConfig LoadConfig(string path)
+    {
+        LMeterConfig? config = null;
+
+        try
         {
-            try
+            if (File.Exists(path))
             {
-                string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
-                File.WriteAllText(Plugin.ConfigFilePath, jsonString);
+                string jsonString = File.ReadAllText(path);
+                config = JsonConvert.DeserializeObject<LMeterConfig>(jsonString, _serializerSettings);
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(ex.ToString());
+
+            string backupPath = $"{path}.bak";
+            if (File.Exists(path))
             {
-                PluginLog.Error(ex.ToString());
+                try
+                {
+                    File.Copy(path, backupPath);
+                    PluginLog.Information($"Backed up LMeter config to '{backupPath}'.");
+                }
+                catch
+                {
+                    PluginLog.Warning($"Unable to back up LMeter config.");
+                }
+            }
+        }
+
+        return config ?? new LMeterConfig();
+    }
+
+    public static void SaveConfig()
+    {
+        ConfigHelpers.SaveConfig(Singletons.Get<LMeterConfig>());
+    }
+
+    public static void SaveConfig(LMeterConfig config)
+    {
+        try
+        {
+            string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
+            File.WriteAllText(Plugin.ConfigFilePath, jsonString);
+        }
+        catch (Exception ex)
+        {
+            PluginLog.Error(ex.ToString());
+        }
+    }
+}
+
+/// <summary>
+/// Because the game blocks the json serializer from loading assemblies at runtime, we define
+/// a custom SerializationBinder to ignore the assembly name for the types defined by this plugin.
+/// </summary>
+public class LMeterSerializationBinder : ISerializationBinder
+{
+    // TODO: Make this automatic somehow?
+    private static List<Type> _configTypes = new List<Type>()
+    {
+    };
+
+    private readonly Dictionary<Type, string> typeToName = new Dictionary<Type, string>();
+    private readonly Dictionary<string, Type> nameToType = new Dictionary<string, Type>();
+
+    public LMeterSerializationBinder()
+    {
+        foreach (Type type in _configTypes)
+        {
+            if (type.FullName is not null)
+            {
+                this.typeToName.Add(type, type.FullName);
+                this.nameToType.Add(type.FullName, type);
             }
         }
     }
 
-    /// <summary>
-    /// Because the game blocks the json serializer from loading assemblies at runtime, we define
-    /// a custom SerializationBinder to ignore the assembly name for the types defined by this plugin.
-    /// </summary>
-    public class LMeterSerializationBinder : ISerializationBinder
+    public void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
     {
-        // TODO: Make this automatic somehow?
-        private static List<Type> _configTypes = new List<Type>()
+        if (this.typeToName.TryGetValue(serializedType, out string? name))
         {
-        };
-
-        private readonly Dictionary<Type, string> typeToName = new Dictionary<Type, string>();
-        private readonly Dictionary<string, Type> nameToType = new Dictionary<string, Type>();
-
-        public LMeterSerializationBinder()
+            assemblyName = null;
+            typeName = name;
+        }
+        else
         {
-            foreach (Type type in _configTypes)
-            {
-                if (type.FullName is not null)
-                {
-                    this.typeToName.Add(type, type.FullName);
-                    this.nameToType.Add(type.FullName, type);
-                }
-            }
+            assemblyName = serializedType.Assembly.FullName;
+            typeName = serializedType.FullName;
+        }
+    }
+
+    public Type BindToType(string? assemblyName, string? typeName)
+    {
+        if (typeName is not null &&
+            this.nameToType.TryGetValue(typeName, out Type? type))
+        {
+            return type;
         }
 
-        public void BindToName(Type serializedType, out string? assemblyName, out string? typeName)
-        {
-            if (this.typeToName.TryGetValue(serializedType, out string? name))
-            {
-                assemblyName = null;
-                typeName = name;
-            }
-            else
-            {
-                assemblyName = serializedType.Assembly.FullName;
-                typeName = serializedType.FullName;
-            }
-        }
-
-        public Type BindToType(string? assemblyName, string? typeName)
-        {
-            if (typeName is not null &&
-                this.nameToType.TryGetValue(typeName, out Type? type))
-            {
-                return type;
-            }
-
-            return Type.GetType($"{typeName}, {assemblyName}", true) ??
-                throw new TypeLoadException($"Unable to load type '{typeName}' from assembly '{assemblyName}'");
-        }
+        return Type.GetType($"{typeName}, {assemblyName}", true) ??
+               throw new TypeLoadException($"Unable to load type '{typeName}' from assembly '{assemblyName}'");
     }
 }

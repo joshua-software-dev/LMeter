@@ -1,61 +1,61 @@
-﻿using System.Numerics;
-using ImGuiNET;
+﻿using ImGuiNET;
 using Newtonsoft.Json;
+using System.Numerics;
 
-namespace LMeter.Config
+
+namespace LMeter.Config;
+
+public class ConfigColor
 {
-    public class ConfigColor
-    {
-        [JsonIgnore] private float[] _colorMapRatios = { -.8f, -.3f, .1f };
+    [JsonIgnore] private float[] _colorMapRatios = { -.8f, -.3f, .1f };
         
-        // Constructor for deserialization
-        public ConfigColor() : this(Vector4.Zero) { }
+    // Constructor for deserialization
+    public ConfigColor() : this(Vector4.Zero) { }
 
-        public ConfigColor(Vector4 vector, float[]? colorMapRatios = null)
+    public ConfigColor(Vector4 vector, float[]? colorMapRatios = null)
+    {
+        if (colorMapRatios != null && colorMapRatios.Length == 3)
         {
-            if (colorMapRatios != null && colorMapRatios.Length == 3)
+            _colorMapRatios = colorMapRatios;
+        }
+
+        this.Vector = vector;
+    }
+
+    public ConfigColor(float r, float g, float b, float a, float[]? colorMapRatios = null) : this(new Vector4(r, g, b, a), colorMapRatios)
+    {
+    }
+
+    [JsonIgnore] private Vector4 _vector;
+    public Vector4 Vector
+    {
+        get => _vector;
+        set
+        {
+            if (_vector == value)
             {
-                _colorMapRatios = colorMapRatios;
+                return;
             }
 
-            this.Vector = vector;
+            _vector = value;
+
+            Update();
         }
+    }
 
-        public ConfigColor(float r, float g, float b, float a, float[]? colorMapRatios = null) : this(new Vector4(r, g, b, a), colorMapRatios)
-        {
-        }
+    [JsonIgnore] public uint Base { get; private set; }
 
-        [JsonIgnore] private Vector4 _vector;
-        public Vector4 Vector
-        {
-            get => _vector;
-            set
-            {
-                if (_vector == value)
-                {
-                    return;
-                }
+    [JsonIgnore] public uint Background { get; private set; }
 
-                _vector = value;
+    [JsonIgnore] public uint TopGradient { get; private set; }
 
-                Update();
-            }
-        }
+    [JsonIgnore] public uint BottomGradient { get; private set; }
 
-        [JsonIgnore] public uint Base { get; private set; }
-
-        [JsonIgnore] public uint Background { get; private set; }
-
-        [JsonIgnore] public uint TopGradient { get; private set; }
-
-        [JsonIgnore] public uint BottomGradient { get; private set; }
-
-        private void Update()
-        {
-            Base = ImGui.ColorConvertFloat4ToU32(_vector);
-            // Background = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[0]));
-            // TopGradient = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[1]));
-            // BottomGradient = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[2]));
-        }
+    private void Update()
+    {
+        Base = ImGui.ColorConvertFloat4ToU32(_vector);
+        // Background = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[0]));
+        // TopGradient = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[1]));
+        // BottomGradient = ImGui.ColorConvertFloat4ToU32(_vector.AdjustColor(_colorMapRatios[2]));
     }
 }
