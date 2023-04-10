@@ -1,4 +1,5 @@
 using Dalamud.Game.ClientState;
+using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.ACT;
 using LMeter.Helpers;
@@ -202,7 +203,9 @@ public class BarConfig : IConfigPage
 
                 if (ImGui.IsItemHovered())
                 {
+                    ImGui.PushFont(UiBuilder.MonoFont);
                     ImGui.SetTooltip(Utils.GetTagsTooltip(Combatant.TextTags));
+                    ImGui.PopFont();
                 }
                     
                 DrawHelpers.DrawNestIndicator(1);
@@ -254,7 +257,9 @@ public class BarConfig : IConfigPage
 
             if (ImGui.IsItemHovered())
             {
+                ImGui.PushFont(UiBuilder.MonoFont);
                 ImGui.SetTooltip(Utils.GetTagsTooltip(Combatant.TextTags));
+                ImGui.PopFont();
             }
 
             ImGui.DragFloat2("Left Text Offset", ref this.LeftTextOffset);
@@ -298,7 +303,9 @@ public class BarConfig : IConfigPage
 
             if (ImGui.IsItemHovered())
             {
+                ImGui.PushFont(UiBuilder.MonoFont);
                 ImGui.SetTooltip(Utils.GetTagsTooltip(Combatant.TextTags));
+                ImGui.PopFont();
             }
 
             ImGui.DragFloat2("Right Text Offset", ref this.RightTextOffset);

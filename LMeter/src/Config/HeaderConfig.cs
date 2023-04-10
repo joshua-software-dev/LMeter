@@ -1,3 +1,4 @@
+using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.ACT;
 using LMeter.Helpers;
@@ -246,7 +247,9 @@ public class HeaderConfig : IConfigPage
                     ImGui.InputText("Raid Stats Format", ref this.RaidStatsFormat, 128);
                     if (ImGui.IsItemHovered())
                     {
+                        ImGui.PushFont(UiBuilder.MonoFont);
                         ImGui.SetTooltip(Utils.GetTagsTooltip(Encounter.TextTags));
+                        ImGui.PopFont();
                     }
                         
                     DrawHelpers.DrawNestIndicator(2);
