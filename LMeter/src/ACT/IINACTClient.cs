@@ -1,13 +1,15 @@
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
+using Dalamud.Interface.Colors;
+using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin;
+using ImGuiNET;
 using LMeter.Config;
 using LMeter.Helpers;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
-using System.Linq;
 using System;
 
 
@@ -16,10 +18,10 @@ namespace LMeter.ACT;
 public enum SubscriptionStatus
 {
     NotConnected,
-    Connecting,
     ConnectionFailed,
+    Connecting,
     Connected,
-    SubscriptionRequested,
+    Subscribing,
     Subscribed,
     Unsubscribing,
     ShuttingDown
@@ -29,7 +31,6 @@ public class IINACTClient : IACTClient
 {
     private readonly ACTConfig _config;
     private readonly DalamudPluginInterface _dpi;
-    private ACTEvent? _lastEvent;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
 
     private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
@@ -40,8 +41,9 @@ public class IINACTClient : IACTClient
     private static readonly JObject SubscriptionMessageObject = JObject.Parse(ACTClient.SubscriptionMessage);
 
     private SubscriptionStatus _status;
-    public string Status => _status.ToString();
-
+    private string? _lastErrorMessage;
+    
+    public ACTEvent? LastEvent { get; set; }
     public List<ACTEvent> PastEvents { get; private set; }
 
     public IINACTClient(ACTConfig config, DalamudPluginInterface dpi)
@@ -61,6 +63,132 @@ public class IINACTClient : IACTClient
     public bool ConnectionIncompleteOrFailed() =>
         _status == SubscriptionStatus.NotConnected || _status == SubscriptionStatus.ConnectionFailed;
 
+    public void DrawConnectionStatus()
+    {
+        ImGui.Text($"IINACT Status: {_status}");
+
+        if
+        (
+            _status != SubscriptionStatus.ConnectionFailed &&
+            _status != SubscriptionStatus.Connecting && 
+            _status != SubscriptionStatus.Connected &&
+            _status != SubscriptionStatus.Subscribing &&
+            _status != SubscriptionStatus.Subscribed
+        )
+        {
+            return;
+        }
+        
+        ImGui.SameLine();
+        ImGui.Text
+        (
+            _status switch
+            {
+                SubscriptionStatus.ConnectionFailed => "0/4",
+                SubscriptionStatus.Connecting => "1/4",
+                SubscriptionStatus.Connected => "2/4",
+                SubscriptionStatus.Subscribing => "3/4",
+                SubscriptionStatus.Subscribed => "4/4",
+                _ => throw new ArgumentOutOfRangeException()
+            }
+        );
+        
+        if (_status == SubscriptionStatus.ConnectionFailed)
+        {
+            ImGui.SameLine();
+            ImGui.PushFont(UiBuilder.IconFont);
+            ImGui.Text("");
+            ImGui.PopFont();
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip(_lastErrorMessage);
+            }
+        }
+
+        var fontScale = ImGui.GetIO().FontGlobalScale;
+        var failColor = ImGui.GetColorU32(ImGuiColors.DalamudRed);
+        var loadingColor = ImGui.GetColorU32(ImGuiColors.DalamudGrey);
+        var successColor = ImGui.GetColorU32(ImGuiColors.DalamudGrey3);
+
+        ImGui.BeginTable("IINACT connection status", 4, ImGuiTableFlags.Borders);
+        ImGui.TableSetupColumn("1", ImGuiTableColumnFlags.None, 25 * fontScale);
+        ImGui.TableSetupColumn("2", ImGuiTableColumnFlags.None, 25 * fontScale);
+        ImGui.TableSetupColumn("3", ImGuiTableColumnFlags.None, 25 * fontScale);
+        ImGui.TableSetupColumn("4", ImGuiTableColumnFlags.None, 25 * fontScale);
+        ImGui.TableNextRow();
+
+        for (var i = 2; i < 6; i++)
+        {
+            var iterStatus = (SubscriptionStatus) i; 
+            ImGui.TableNextColumn();
+            if (_status == SubscriptionStatus.ConnectionFailed)
+            {
+                ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, failColor);
+                ImGui.Text(iterStatus.ToString());
+                ImGui.SameLine();
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.Text("");
+                ImGui.PopFont();
+            }
+            if ((int) _status > i || _status == SubscriptionStatus.Subscribed)
+            {
+                ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, successColor);
+                ImGui.Text(iterStatus.ToString());
+                ImGui.SameLine();
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.Text("");
+                ImGui.PopFont();
+            }
+            else if ((int) _status == i)
+            {
+                ImGui.TableSetBgColor(ImGuiTableBgTarget.CellBg, loadingColor);
+                ImGui.Text(iterStatus.ToString());
+                ImGui.SameLine();
+                ImGui.PushFont(UiBuilder.IconFont);
+                ImGui.Text("");
+                ImGui.PopFont();
+            }
+            
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetTooltip
+                (
+                    iterStatus switch
+                    {
+                        SubscriptionStatus.Connecting => 
+                            """
+                            LMeter attempts to connect to IINACT, if it fails the 
+                            connection attempt ends.
+                            """,
+                        SubscriptionStatus.Connected => 
+                            """
+                            LMeter successfully connected to IINACT. While connection 
+                            was established, in this state no data will be sent until 
+                            LMeter explicitly requests for that data.
+                            """,
+                        SubscriptionStatus.Subscribing => 
+                            """
+                            LMeter sends a second message to IINACT requesting that all 
+                            "CombatEvent" data be sent whenever IINACT generates such 
+                            an event.
+                            """,
+                        SubscriptionStatus.Subscribed => 
+                            """
+                            LMeter successfully sent a message to IINACT requesting 
+                            "CombatEvent" data. There was no connection error upon this 
+                            request, however IINACT does not reply on successful 
+                            subscription state change.
+                            """,
+                        _ => throw new ArgumentOutOfRangeException()
+                    }
+                );
+            }
+        }
+
+        ImGui.EndTable();
+    }
+
     public ACTEvent? GetEvent(int index = -1)
     {
         if (index >= 0 && index < PastEvents.Count)
@@ -68,7 +196,7 @@ public class IINACTClient : IACTClient
             return PastEvents[index];
         }
             
-        return _lastEvent;
+        return LastEvent;
     }
 
     public void EndEncounter()
@@ -85,7 +213,7 @@ public class IINACTClient : IACTClient
 
     public void Clear()
     {
-        _lastEvent = null;
+        LastEvent = null;
         PastEvents = new List<ACTEvent>();
         if (_config.ClearACT)
         {
@@ -132,8 +260,10 @@ public class IINACTClient : IACTClient
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
-            PluginLog.Information("IINACT server was not found or was not finished starting");
-            PluginLog.Verbose(ex.ToString());
+            _lastErrorMessage = "IINACT server was not found or was not finished starting.";
+            PluginLog.Information(_lastErrorMessage);
+            _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
+            PluginLog.Verbose(_lastErrorMessage);
             return false;
         }
         _status = SubscriptionStatus.Connected;
@@ -149,11 +279,13 @@ public class IINACTClient : IACTClient
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
-            PluginLog.Information("Failed to setup IINACT subscription!");
-            PluginLog.Verbose(ex.ToString());
+            _lastErrorMessage = "Failed to setup IINACT subscription!";
+            PluginLog.Information(_lastErrorMessage);
+            _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
+            PluginLog.Verbose(_lastErrorMessage);
             return false;
         }
-        _status = SubscriptionStatus.SubscriptionRequested;
+        _status = SubscriptionStatus.Subscribing;
 
         try
         {
@@ -168,8 +300,10 @@ public class IINACTClient : IACTClient
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
-            PluginLog.Information("Failed to finalize IINACT subscription!");
-            PluginLog.Verbose(ex.ToString());
+            _lastErrorMessage = "Failed to finalize IINACT subscription!";
+            PluginLog.Information(_lastErrorMessage);
+            _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
+            PluginLog.Verbose(_lastErrorMessage);
             return false;
         }
     }
@@ -179,49 +313,15 @@ public class IINACTClient : IACTClient
         try
         {
             ACTEvent? newEvent = data.ToObject<ACTEvent?>();
-
-            if 
-            (
-                newEvent?.Encounter is not null &&
-                newEvent?.Combatants is not null &&
-                newEvent.Combatants.Any() &&
-                (CharacterState.IsInCombat() || !newEvent.IsEncounterActive())
-            )
-            {
-                var lastEventIsDifferentEncounterOrInvalid =
-                (
-                    _lastEvent is not null &&
-                    _lastEvent.IsEncounterActive() == newEvent.IsEncounterActive() &&
-                    _lastEvent.Encounter is not null &&
-                    _lastEvent.Encounter.Duration.Equals(newEvent.Encounter.Duration)
-                );
-
-                if (!lastEventIsDifferentEncounterOrInvalid)
-                {
-                    if (!newEvent.IsEncounterActive())
-                    {
-                        PastEvents.Add(newEvent);
-
-                        while (PastEvents.Count > _config.EncounterHistorySize)
-                        {
-                            PastEvents.RemoveAt(0);
-                        }
-                    }
-
-                    newEvent.Timestamp = DateTime.UtcNow;
-                    _lastEvent = newEvent;
-                }
-            }
+            return ((IACTClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
         }
         catch (Exception ex)
         {
             PluginLog.Verbose(ex.ToString());
             return false;
         }
-
-        return true;
     }
-        
+
     public void Shutdown()
     {
         _status = SubscriptionStatus.Unsubscribing;

@@ -58,16 +58,10 @@ public class ACTConfig : IConfigPage
                 IACTClient client = IACTClient.GetNewClient(); // Singleton Registry is done internally here
                 client.Start();
             }
-
-            Vector2 buttonSize = new Vector2(40, 0);
-
-            if (IINACTMode)
+            
+            IACTClient.Current.DrawConnectionStatus();
+            if (!IINACTMode)
             {
-                ImGui.Text($"IINACT Status: " + IACTClient.Current.Status);
-            }
-            else
-            {
-                ImGui.Text($"ACT Status: {IACTClient.Current.Status}");
                 ImGui.InputTextWithHint
                 (
                     "ACT Websocket Address",
@@ -77,6 +71,7 @@ public class ACTConfig : IConfigPage
                 );
             }
 
+            var buttonSize = new Vector2(40, 0);
             DrawHelpers.DrawButton
             (
                 string.Empty,
