@@ -3,46 +3,46 @@ using Dalamud.Plugin;
 using LMeter.Config;
 using LMeter.Helpers;
 using System.Collections.Generic;
-using System.Linq;
 using System;
+using System.Linq;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
-public interface IACTClient : IPluginDisposable
+public interface IActClient : IPluginDisposable
 {
-    public static IACTClient Current => 
-        Singletons.Get<LMeterConfig>().ACTConfig.IINACTMode 
-            ? Singletons.Get<IINACTClient>() 
-            : Singletons.Get<ACTClient>();
+    public static IActClient Current =>
+        Singletons.Get<LMeterConfig>().ActConfig.IinactMode 
+            ? Singletons.Get<IinactClient>() 
+            : Singletons.Get<ActWebSocketClient>();
 
-    public static IACTClient GetNewClient()
+    public static IActClient GetNewClient()
     {
         Singletons.DeleteActClients();
 
-        ACTConfig config = Singletons.Get<LMeterConfig>().ACTConfig;
+        ActConfig config = Singletons.Get<LMeterConfig>().ActConfig;
         DalamudPluginInterface dpi = Singletons.Get<DalamudPluginInterface>();
 
-        IACTClient client = config.IINACTMode
-            ? new IINACTClient(config, dpi)
-            : new ACTClient(config, dpi);
+        IActClient client = config.IinactMode
+            ? new IinactClient(config, dpi)
+            : new ActWebSocketClient(config, dpi);
         Singletons.Register(client);
         return client;
     }
 
-    public ACTEvent? LastEvent { get; set; }
-    public List<ACTEvent> PastEvents { get; }
+    public ActEvent? LastEvent { get; set; }
+    public List<ActEvent> PastEvents { get; }
 
     public void Clear();
     public bool ClientReady();
     public bool ConnectionIncompleteOrFailed();
     public void DrawConnectionStatus();
     public void EndEncounter();
-    public ACTEvent? GetEvent(int index = -1);
+    public ActEvent? GetEvent(int index = -1);
     public void Start();
     public void RetryConnection();
 
-    public bool ParseNewEvent(ACTEvent? newEvent, int encounterHistorySize)
+    public bool ParseNewEvent(ActEvent? newEvent, int encounterHistorySize)
     {
         try
         {

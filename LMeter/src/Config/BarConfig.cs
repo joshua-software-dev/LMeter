@@ -1,7 +1,7 @@
 using Dalamud.Game.ClientState;
 using Dalamud.Interface;
 using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Helpers;
 using System.Numerics;
 using System.Runtime.CompilerServices;

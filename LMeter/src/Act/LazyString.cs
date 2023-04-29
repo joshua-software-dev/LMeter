@@ -2,7 +2,7 @@ using LMeter.Helpers;
 using System;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
 public class LazyString<T>
 {

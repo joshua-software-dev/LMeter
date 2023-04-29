@@ -1,5 +1,5 @@
 ﻿using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Helpers;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -67,7 +67,7 @@ public class VisibilityConfig : IConfigPage
             return false;
         }
 
-        if (this.HideIfNotConnected && !IACTClient.Current.ClientReady())
+        if (this.HideIfNotConnected && !IActClient.Current.ClientReady())
         {
             return false;
         }

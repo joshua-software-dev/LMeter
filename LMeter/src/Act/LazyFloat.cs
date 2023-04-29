@@ -2,7 +2,7 @@ using System.Globalization;
 using System;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
 public class LazyFloat
 {

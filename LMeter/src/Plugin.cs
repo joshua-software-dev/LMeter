@@ -11,7 +11,7 @@ using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using ImGuiScene;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Config;
 using LMeter.Helpers;
 using LMeter.Meter;
@@ -88,7 +88,7 @@ public class Plugin : IDalamudPlugin
         Singletons.Register(new FontsManager(pluginInterface.UiBuilder, config.FontConfig.Fonts.Values));
 
         // Connect to ACT
-        IACTClient actClient = IACTClient.GetNewClient(); // Singleton Registry is done internally here
+        IActClient actClient = IActClient.GetNewClient(); // Singleton Registry is done internally here
         actClient.Start();
 
         // Create profile on first load

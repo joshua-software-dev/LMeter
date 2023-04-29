@@ -4,7 +4,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Config;
 using LMeter.Helpers;
 using LMeter.Meter;
@@ -83,8 +83,8 @@ public class PluginManager : IPluginDisposable
 
         _windowSystem.Draw();
 
-        _config.ACTConfig.TryReconnect();
-        _config.ACTConfig.TryEndEncounter();
+        _config.ActConfig.TryReconnect();
+        _config.ActConfig.TryEndEncounter();
 
         ImGuiHelpers.ForceNextWindowMainViewport();
         ImGui.SetNextWindowPos(Vector2.Zero);
@@ -102,7 +102,7 @@ public class PluginManager : IPluginDisposable
 
     public void Clear()
     {
-        IACTClient.Current.Clear();
+        IActClient.Current.Clear();
         foreach (var meter in _config.MeterList.Meters)
         {
             meter.Clear();
@@ -139,7 +139,7 @@ public class PluginManager : IPluginDisposable
         switch (arguments)
         {
             case "end":
-                IACTClient.Current.EndEncounter();
+                IActClient.Current.EndEncounter();
                 break;
             case "clear":
                 this.Clear();

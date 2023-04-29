@@ -6,9 +6,9 @@ using System.Reflection;
 using System;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
-public class ACTEvent
+public class ActEvent
 {
     [JsonIgnore]
     private bool _parsedActive = false;
@@ -43,11 +43,11 @@ public class ACTEvent
         return _active;
     }
 
-    public static ACTEvent GetTestData()
+    public static ActEvent GetTestData()
     {
-        return new ACTEvent()
+        return new ActEvent()
         {
-            Encounter = LMeter.ACT.Encounter.GetTestData(),
+            Encounter = Encounter.GetTestData(),
             Combatants = Combatant.GetTestData()
         };
     }

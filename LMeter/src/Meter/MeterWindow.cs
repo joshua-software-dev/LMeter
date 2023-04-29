@@ -1,5 +1,5 @@
 using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Config;
 using LMeter.Helpers;
 using Newtonsoft.Json;
@@ -22,7 +22,7 @@ public class MeterWindow : IConfigurable
     [JsonIgnore] private bool _dragging = false;
     [JsonIgnore] private bool _locked = false;
     [JsonIgnore] private int _eventIndex = -1;
-    [JsonIgnore] private ACTEvent? _previewEvent = null;
+    [JsonIgnore] private ActEvent? _previewEvent = null;
     [JsonIgnore] private int _scrollPosition = 0;
     [JsonIgnore] private DateTime? _lastSortedTimestamp = null;
     [JsonIgnore] private List<Combatant> _lastSortedCombatants = new ();
@@ -192,12 +192,12 @@ public class MeterWindow : IConfigurable
 
                 if (this.GeneralConfig.Preview && !_lastFrameWasPreview)
                 {
-                    _previewEvent = ACTEvent.GetTestData();
+                    _previewEvent = ActEvent.GetTestData();
                 }
 
-                ACTEvent? actEvent = this.GeneralConfig.Preview
+                ActEvent? actEvent = this.GeneralConfig.Preview
                     ? _previewEvent
-                    : IACTClient.Current.GetEvent(_eventIndex);
+                    : IActClient.Current.GetEvent(_eventIndex);
 
                 (localPos, size) = this.HeaderConfig.DrawHeader(localPos, size, actEvent?.Encounter, drawList);
                 drawList.AddRectFilled(localPos, localPos + size, this.GeneralConfig.BackgroundColor.Base);
@@ -210,7 +210,7 @@ public class MeterWindow : IConfigurable
         _lastFrameWasCombat = combat;
     }
 
-    private void DrawBars(ImDrawListPtr drawList, Vector2 localPos, Vector2 size, ACTEvent? actEvent)
+    private void DrawBars(ImDrawListPtr drawList, Vector2 localPos, Vector2 size, ActEvent? actEvent)
     {                
         if (actEvent?.Combatants is not null && actEvent.Combatants.Any())
         {
@@ -279,7 +279,7 @@ public class MeterWindow : IConfigurable
                 selected = true;
             }
 
-            List<ACTEvent> events = IACTClient.Current.PastEvents;
+            List<ActEvent> events = IActClient.Current.PastEvents;
             if (events.Count > 0)
             {
                 ImGui.Separator();
@@ -313,7 +313,7 @@ public class MeterWindow : IConfigurable
         return selected;
     }
 
-    private List<Combatant> GetSortedCombatants(ACTEvent actEvent, MeterDataType dataType)
+    private List<Combatant> GetSortedCombatants(ActEvent actEvent, MeterDataType dataType)
     {
         if 
         (

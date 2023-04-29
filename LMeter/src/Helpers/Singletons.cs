@@ -1,4 +1,4 @@
-﻿using LMeter.ACT;
+﻿using LMeter.Act;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System;
@@ -50,16 +50,16 @@ public static class Singletons
 
     public static void DeleteActClients()
     {
-        ActiveInstances.TryRemove(typeof(ACTClient), out var client1);
+        ActiveInstances.TryRemove(typeof(ActWebSocketClient), out var client1);
         if (client1 != null)
         {
-            ((IACTClient) client1).Dispose();
+            ((IActClient) client1).Dispose();
         }
 
-        ActiveInstances.TryRemove(typeof(IINACTClient), out var client2);
+        ActiveInstances.TryRemove(typeof(IinactClient), out var client2);
         if (client2 != null)
         {
-            ((IACTClient) client2).Dispose();
+            ((IActClient) client2).Dispose();
         }
     }
 

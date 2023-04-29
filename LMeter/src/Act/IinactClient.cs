@@ -13,7 +13,7 @@ using System.Collections.Generic;
 using System;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
 public enum SubscriptionStatus
 {
@@ -27,31 +27,31 @@ public enum SubscriptionStatus
     ShuttingDown
 }
 
-public class IINACTClient : IACTClient
+public class IinactClient : IActClient
 {
-    private readonly ACTConfig _config;
+    private readonly ActConfig _config;
     private readonly DalamudPluginInterface _dpi;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
 
     private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
-    private const string IINACTListeningIpcEndpoint = "IINACT.Server.Listening";
-    private const string IINACTSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
-    private const string IINACTUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
-    private const string IINACTProviderEditEndpoint = "IINACT.IpcProvider." + LMeterSubscriptionIpcEndpoint;
-    private static readonly JObject SubscriptionMessageObject = JObject.Parse(ACTClient.SubscriptionMessage);
+    private const string IinactListeningIpcEndpoint = "IINACT.Server.Listening";
+    private const string IinactSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
+    private const string IinactUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
+    private const string IinactProviderEditEndpoint = "IINACT.IpcProvider." + LMeterSubscriptionIpcEndpoint;
+    private static readonly JObject SubscriptionMessageObject = JObject.Parse(ActWebSocketClient.SubscriptionMessage);
 
     private SubscriptionStatus _status;
     private string? _lastErrorMessage;
     
-    public ACTEvent? LastEvent { get; set; }
-    public List<ACTEvent> PastEvents { get; private set; }
+    public ActEvent? LastEvent { get; set; }
+    public List<ActEvent> PastEvents { get; private set; }
 
-    public IINACTClient(ACTConfig config, DalamudPluginInterface dpi)
+    public IinactClient(ActConfig config, DalamudPluginInterface dpi)
     {
         _config = config;
         _dpi = dpi;
         _status = SubscriptionStatus.NotConnected;
-        PastEvents = new List<ACTEvent>();
+        PastEvents = new List<ActEvent>();
 
         subscriptionReceiver = _dpi.GetIpcProvider<JObject, bool>(LMeterSubscriptionIpcEndpoint);
         subscriptionReceiver.RegisterFunc(ReceiveIpcMessage);
@@ -78,7 +78,7 @@ public class IINACTClient : IACTClient
         {
             return;
         }
-        
+
         ImGui.SameLine();
         ImGui.Text
         (
@@ -92,7 +92,7 @@ public class IINACTClient : IACTClient
                 _ => throw new ArgumentOutOfRangeException()
             }
         );
-        
+
         if (_status == SubscriptionStatus.ConnectionFailed)
         {
             ImGui.SameLine();
@@ -149,7 +149,7 @@ public class IINACTClient : IACTClient
                 ImGui.Text("");
                 ImGui.PopFont();
             }
-            
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip
@@ -189,7 +189,7 @@ public class IINACTClient : IACTClient
         ImGui.EndTable();
     }
 
-    public ACTEvent? GetEvent(int index = -1)
+    public ActEvent? GetEvent(int index = -1)
     {
         if (index >= 0 && index < PastEvents.Count)
         {
@@ -214,8 +214,8 @@ public class IINACTClient : IACTClient
     public void Clear()
     {
         LastEvent = null;
-        PastEvents = new List<ACTEvent>();
-        if (_config.ClearACT)
+        PastEvents = new List<ActEvent>();
+        if (_config.ClearAct)
         {
             ChatGui chat = Singletons.Get<ChatGui>();
             XivChatEntry message = new XivChatEntry()
@@ -253,7 +253,7 @@ public class IINACTClient : IACTClient
 
         try
         {
-            var connectSuccess = _dpi.GetIpcSubscriber<bool>(IINACTListeningIpcEndpoint).InvokeFunc();
+            var connectSuccess = _dpi.GetIpcSubscriber<bool>(IinactListeningIpcEndpoint).InvokeFunc();
             PluginLog.Verbose("Check if IINACT installed and running: " + connectSuccess);
             if (!connectSuccess) return false;
         }
@@ -271,7 +271,7 @@ public class IINACTClient : IACTClient
         try
         {
             var subscribeSuccess = _dpi
-                .GetIpcSubscriber<string, bool>(IINACTSubscribeIpcEndpoint)
+                .GetIpcSubscriber<string, bool>(IinactSubscribeIpcEndpoint)
                 .InvokeFunc(LMeterSubscriptionIpcEndpoint);
             PluginLog.Verbose("Setup default empty IINACT subscription successfully: " + subscribeSuccess);
             if (!subscribeSuccess) return false;
@@ -290,9 +290,9 @@ public class IINACTClient : IACTClient
         try
         {
             // no way to check this, hoping blindly that it always works ¯\_(ツ)_/¯
-            PluginLog.Verbose($"""Updating subscription using endpoint: `{IINACTProviderEditEndpoint}`""");
+            PluginLog.Verbose($"""Updating subscription using endpoint: `{IinactProviderEditEndpoint}`""");
             _dpi
-                .GetIpcSubscriber<JObject, bool>(IINACTProviderEditEndpoint)
+                .GetIpcSubscriber<JObject, bool>(IinactProviderEditEndpoint)
                 .InvokeAction(SubscriptionMessageObject);
             PluginLog.Verbose($"""Subscription update message sent""");
             return true;
@@ -312,8 +312,8 @@ public class IINACTClient : IACTClient
     {
         try
         {
-            ACTEvent? newEvent = data.ToObject<ACTEvent?>();
-            return ((IACTClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
+            ActEvent? newEvent = data.ToObject<ActEvent?>();
+            return ((IActClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
         }
         catch (Exception ex)
         {
@@ -328,7 +328,7 @@ public class IINACTClient : IACTClient
         try
         {
             var success = _dpi
-                .GetIpcSubscriber<string, bool>(IINACTUnsubscribeIpcEndpoint)
+                .GetIpcSubscriber<string, bool>(IinactUnsubscribeIpcEndpoint)
                 .InvokeFunc(LMeterSubscriptionIpcEndpoint);
 
             PluginLog.Information(

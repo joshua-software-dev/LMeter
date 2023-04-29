@@ -1,6 +1,6 @@
 using Dalamud.Interface;
 using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Helpers;
 using Newtonsoft.Json;
 using System.Numerics;

@@ -1,6 +1,6 @@
 using Dalamud.Interface;
 using ImGuiNET;
-using LMeter.ACT;
+using LMeter.Act;
 using LMeter.Helpers;
 using Newtonsoft.Json;
 using System.Numerics;
@@ -9,7 +9,7 @@ using System;
 
 namespace LMeter.Config;
 
-public class ACTConfig : IConfigPage
+public class ActConfig : IConfigPage
 {
     [JsonIgnore]
     private const string _defaultSocketAddress = "ws://127.0.0.1:10501/ws";
@@ -22,22 +22,25 @@ public class ACTConfig : IConfigPage
 
     public string Name => "ACT";
         
-    public IConfigPage GetDefault() => new ACTConfig();
+    public IConfigPage GetDefault() => new ActConfig();
 
-    public bool IINACTMode = false;
-    public string ACTSocketAddress;
+    [JsonProperty("IINACTMode")]
+    public bool IinactMode = false;
+    [JsonProperty("ACTSocketAddress")]
+    public string ActSocketAddress;
 
     public int EncounterHistorySize = 15;
 
     public bool AutoReconnect = false;
     public int ReconnectDelay = 30;
 
-    public bool ClearACT = false;
+    [JsonProperty("ClearACT")]
+    public bool ClearAct = false;
     public bool AutoEnd = false;
     public int AutoEndDelay = 3;
 
-    public ACTConfig() =>
-        this.ACTSocketAddress = _defaultSocketAddress;
+    public ActConfig() =>
+        this.ActSocketAddress = _defaultSocketAddress;
 
     public void DrawConfig(Vector2 size, float padX, float padY)
     {
@@ -46,27 +49,27 @@ public class ACTConfig : IConfigPage
             ImGui.Text("ACT Connection Mode:");
 
             var newClientRequested = false;
-            var iinactModeNum = IINACTMode ? 1 : 0;
+            var iinactModeNum = IinactMode ? 1 : 0;
 
             newClientRequested |= ImGui.RadioButton("ACT WebSocket", ref iinactModeNum, 0);
             ImGui.SameLine();
             newClientRequested |= ImGui.RadioButton("IINACT", ref iinactModeNum, 1);
 
-            IINACTMode = iinactModeNum == 1;
+            IinactMode = iinactModeNum == 1;
             if (newClientRequested)
             {
-                IACTClient client = IACTClient.GetNewClient(); // Singleton Registry is done internally here
+                IActClient client = IActClient.GetNewClient(); // Singleton Registry is done internally here
                 client.Start();
             }
             
-            IACTClient.Current.DrawConnectionStatus();
-            if (!IINACTMode)
+            IActClient.Current.DrawConnectionStatus();
+            if (!IinactMode)
             {
                 ImGui.InputTextWithHint
                 (
                     "ACT Websocket Address",
                     $"Default: '{_defaultSocketAddress}'",
-                    ref this.ACTSocketAddress,
+                    ref this.ActSocketAddress,
                     64
                 );
             }
@@ -76,7 +79,7 @@ public class ACTConfig : IConfigPage
             (
                 string.Empty,
                 FontAwesomeIcon.Sync,
-                IACTClient.Current.RetryConnection,
+                IActClient.Current.RetryConnection,
                 "Reconnect",
                 buttonSize
             );
@@ -99,7 +102,7 @@ public class ACTConfig : IConfigPage
             ImGui.PopItemWidth();
 
             ImGui.NewLine();
-            ImGui.Checkbox("Clear ACT when clearing LMeter", ref this.ClearACT);
+            ImGui.Checkbox("Clear ACT when clearing LMeter", ref this.ClearAct);
             ImGui.Checkbox("Force ACT to end encounter after combat", ref this.AutoEnd);
             if (ImGui.IsItemHovered())
             {
@@ -125,7 +128,7 @@ public class ACTConfig : IConfigPage
             (
                 string.Empty,
                 FontAwesomeIcon.Stop,
-                IACTClient.Current.EndEncounter,
+                IActClient.Current.EndEncounter,
                 null,
                 buttonSize
             );
@@ -151,7 +154,7 @@ public class ACTConfig : IConfigPage
 
     public void TryReconnect()
     {
-        if (this.LastReconnectAttempt.HasValue && IACTClient.Current.ConnectionIncompleteOrFailed())
+        if (this.LastReconnectAttempt.HasValue && IActClient.Current.ConnectionIncompleteOrFailed())
         {
             if 
             (
@@ -159,7 +162,7 @@ public class ACTConfig : IConfigPage
                 this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay)
             )
             {
-                IACTClient.Current.RetryConnection();
+                IActClient.Current.RetryConnection();
                 this.LastReconnectAttempt = DateTime.UtcNow;
             }
         }
@@ -171,7 +174,7 @@ public class ACTConfig : IConfigPage
 
     public void TryEndEncounter()
     {
-        if (IACTClient.Current.ClientReady())
+        if (IActClient.Current.ClientReady())
         {
             if (this.AutoEnd && CharacterState.IsInCombat())
             {
@@ -183,7 +186,7 @@ public class ACTConfig : IConfigPage
                 this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay)
             )
             {
-                IACTClient.Current.EndEncounter();
+                IActClient.Current.EndEncounter();
                 this.LastCombatTime = null;
             }
         }

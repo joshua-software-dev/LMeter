@@ -21,7 +21,7 @@ public class LMeterConfig : IConfigurable, IPluginDisposable
 
     public MeterListConfig MeterList { get; init; }
 
-    public ACTConfig ACTConfig { get; init; }
+    public ActConfig ActConfig { get; init; }
 
     public FontConfig FontConfig { get; init; }
 
@@ -31,7 +31,7 @@ public class LMeterConfig : IConfigurable, IPluginDisposable
     public LMeterConfig()
     {
         this.MeterList = new MeterListConfig();
-        this.ACTConfig = new ACTConfig();
+        this.ActConfig = new ActConfig();
         this.FontConfig = new FontConfig();
     }
 
@@ -52,7 +52,7 @@ public class LMeterConfig : IConfigurable, IPluginDisposable
     public IEnumerable<IConfigPage> GetConfigPages()
     {
         yield return this.MeterList;
-        yield return this.ACTConfig;
+        yield return this.ActConfig;
         yield return this.FontConfig;
         yield return this.AboutPage;
     }

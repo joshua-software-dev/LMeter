@@ -17,7 +17,7 @@ using System.Threading;
 using System;
 
 
-namespace LMeter.ACT;
+namespace LMeter.Act;
 
 public enum ConnectionStatus
 {
@@ -30,10 +30,10 @@ public enum ConnectionStatus
     ShuttingDown
 }
 
-public class ACTClient : IACTClient
+public class ActWebSocketClient : IActClient
 {
     private ArraySegment<byte> _buffer;
-    private ACTConfig _config;
+    private ActConfig _config;
     private ClientWebSocket _socket;
     private CancellationTokenSource _cancellationTokenSource;
     private Task? _receiveTask;
@@ -42,16 +42,16 @@ public class ACTClient : IACTClient
     private string? _lastErrorMessage;
 
     public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
-    public ACTEvent? LastEvent { get; set; }
-    public List<ACTEvent> PastEvents { get; private set; }
+    public ActEvent? LastEvent { get; set; }
+    public List<ActEvent> PastEvents { get; private set; }
 
-    public ACTClient(ACTConfig config, DalamudPluginInterface dpi)
+    public ActWebSocketClient(ActConfig config, DalamudPluginInterface dpi)
     {
         _config = config;
         _socket = new ClientWebSocket();
         _cancellationTokenSource = new CancellationTokenSource();
         _status = ConnectionStatus.NotConnected;
-        PastEvents = new List<ACTEvent>();
+        PastEvents = new List<ActEvent>();
     }
 
     public bool ClientReady() =>
@@ -186,7 +186,7 @@ public class ACTClient : IACTClient
         ImGui.EndTable();
     }
 
-    public ACTEvent? GetEvent(int index = -1)
+    public ActEvent? GetEvent(int index = -1)
     {
         if (index >= 0 && index < PastEvents.Count)
         {
@@ -211,8 +211,8 @@ public class ACTClient : IACTClient
     public void Clear()
     {
         LastEvent = null;
-        PastEvents = new List<ACTEvent>();
-        if (_config.ClearACT)
+        PastEvents = new List<ActEvent>();
+        if (_config.ClearAct)
         {
             ChatGui chat = Singletons.Get<ChatGui>();
             XivChatEntry message = new XivChatEntry
@@ -235,13 +235,13 @@ public class ACTClient : IACTClient
     {
         if (_status != ConnectionStatus.NotConnected)
         {
-            PluginLog.Error("Cannot start, ACTClient needs to be reset!");
+            PluginLog.Error("Cannot start, ActWebSocketClient needs to be reset!");
             return;
         }
 
         try
         {
-            _receiveTask = Task.Run(() => this.Connect(_config.ACTSocketAddress));
+            _receiveTask = Task.Run(() => this.Connect(_config.ActSocketAddress));
         }
         catch (Exception ex)
         {
@@ -335,8 +335,8 @@ public class ACTClient : IACTClient
 
                 try
                 {
-                    ACTEvent? newEvent = JsonConvert.DeserializeObject<ACTEvent?>(data);
-                    ((IACTClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
+                    ActEvent? newEvent = JsonConvert.DeserializeObject<ActEvent?>(data);
+                    ((IActClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
                 }
                 catch (Exception ex)
                 {
