@@ -27,7 +27,7 @@ public enum SubscriptionStatus
     ShuttingDown
 }
 
-public class IinactClient : IActClient
+public class IinactClient : ActEventParser, IActClient
 {
     private readonly ActConfig _config;
     private readonly DalamudPluginInterface _dpi;
@@ -42,9 +42,6 @@ public class IinactClient : IActClient
 
     private SubscriptionStatus _status;
     private string? _lastErrorMessage;
-    
-    public ActEvent? LastEvent { get; set; }
-    public List<ActEvent> PastEvents { get; private set; }
 
     public IinactClient(ActConfig config, DalamudPluginInterface dpi)
     {
@@ -313,7 +310,7 @@ public class IinactClient : IActClient
         try
         {
             ActEvent? newEvent = data.ToObject<ActEvent?>();
-            return ((IActClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
+            return this.ParseNewEvent(newEvent, _config.EncounterHistorySize);
         }
         catch (Exception ex)
         {

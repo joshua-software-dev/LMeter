@@ -30,7 +30,7 @@ public enum ConnectionStatus
     ShuttingDown
 }
 
-public class ActWebSocketClient : IActClient
+public class ActWebSocketClient : ActEventParser, IActClient
 {
     private ArraySegment<byte> _buffer;
     private ActConfig _config;
@@ -42,8 +42,6 @@ public class ActWebSocketClient : IActClient
     private string? _lastErrorMessage;
 
     public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
-    public ActEvent? LastEvent { get; set; }
-    public List<ActEvent> PastEvents { get; private set; }
 
     public ActWebSocketClient(ActConfig config, DalamudPluginInterface dpi)
     {
@@ -336,7 +334,7 @@ public class ActWebSocketClient : IActClient
                 try
                 {
                     ActEvent? newEvent = JsonConvert.DeserializeObject<ActEvent?>(data);
-                    ((IActClient) this).ParseNewEvent(newEvent, _config.EncounterHistorySize);
+                    this.ParseNewEvent(newEvent, _config.EncounterHistorySize);
                 }
                 catch (Exception ex)
                 {
