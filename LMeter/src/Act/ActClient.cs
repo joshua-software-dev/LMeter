@@ -19,14 +19,13 @@ public class ActClient
         _config = config;
         _dpi = dpi;
 
-        Current = null!;
-        GetNewActClient();
+        Current = GetNewActClient();
     }
 
-    public void GetNewActClient() 
+    public IActClient GetNewActClient() 
     {
-        Current.Dispose();
-        Current = _config.IinactMode
+        Current?.Dispose();
+        return Current = _config.IinactMode
             ? new IinactClient(_chatGui, _config, _dpi)
             : new ActWebSocketClient(_chatGui, _config, _dpi);
     }
