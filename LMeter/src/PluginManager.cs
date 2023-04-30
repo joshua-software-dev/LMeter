@@ -1,3 +1,4 @@
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
@@ -15,18 +16,12 @@ using System;
 
 namespace LMeter;
 
-public class PluginManager : IPluginDisposable
+public class PluginManager : IDisposable
 {
     private readonly Vector2 _origin = ImGui.GetMainViewport().Size / 2f;
     private readonly Vector2 _configSize = new (550, 550);
-
-    private ClientState _clientState;
-    private DalamudPluginInterface _pluginInterface;
-    private CommandManager _commandManager;
-    private WindowSystem _windowSystem;
-    private ConfigWindow _configRoot;
-    private LMeterConfig _config;
-
+    private readonly ConfigWindow _configRoot;
+    private readonly WindowSystem _windowSystem;
     private readonly ImGuiWindowFlags _mainWindowFlags = 
         ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar |
@@ -36,20 +31,42 @@ public class PluginManager : IPluginDisposable
         ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoSavedSettings;
 
+    private readonly CommandManager _commandManager;
+    private readonly LMeterConfig _config;
+
+    public readonly ActClient ActClient;
+    public readonly ClientState ClientState;
+    public readonly Condition Condition;
+    public readonly FontsManager FontsManager;
+    public readonly DalamudPluginInterface PluginInterface;
+    public readonly TexturesCache TexCache;
+
+    public static PluginManager Instance { get; private set; } = null!;
+
     public PluginManager
     (
+        ActClient actClient,
         ClientState clientState,
         CommandManager commandManager,
+        Condition condition,
+        LMeterConfig config,
+        FontsManager fontsManager,
         DalamudPluginInterface pluginInterface,
-        LMeterConfig config
+        TexturesCache texCache
     )
     {
-        _clientState = clientState;
+        PluginManager.Instance = this;
+        
+        ActClient = actClient;
+        ClientState = clientState;
         _commandManager = commandManager;
-        _pluginInterface = pluginInterface;
+        Condition = condition;
         _config = config;
+        FontsManager = fontsManager;
+        PluginInterface = pluginInterface;
+        TexCache = texCache;
 
-        _configRoot = new ConfigWindow("ConfigRoot", _origin, _configSize);
+        _configRoot = new ConfigWindow(_config, "ConfigRoot", _origin, _configSize);
         _windowSystem = new WindowSystem("LMeter");
         _windowSystem.AddWindow(_configRoot);
 
@@ -69,14 +86,14 @@ public class PluginManager : IPluginDisposable
             }
         );
 
-        _clientState.Logout += OnLogout;
-        _pluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
-        _pluginInterface.UiBuilder.Draw += Draw;
+        ClientState.Logout += OnLogout;
+        PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
+        PluginInterface.UiBuilder.Draw += Draw;
     }
 
     private void Draw()
     {
-        if (_clientState.IsLoggedIn && (_clientState.LocalPlayer == null || CharacterState.IsCharacterBusy()))
+        if (ClientState.IsLoggedIn && (ClientState.LocalPlayer == null || CharacterState.IsCharacterBusy()))
         {
             return;
         }
@@ -102,7 +119,7 @@ public class PluginManager : IPluginDisposable
 
     public void Clear()
     {
-        IActClient.Current.Clear();
+        ActClient.Current.Clear();
         foreach (var meter in _config.MeterList.Meters)
         {
             meter.Clear();
@@ -132,14 +149,14 @@ public class PluginManager : IPluginDisposable
     }
 
     private void OnLogout(object? sender, EventArgs? args) =>
-        ConfigHelpers.SaveConfig();
+        ConfigHelpers.SaveConfig(_config);
 
     private void PluginCommand(string command, string arguments)
     {
         switch (arguments)
         {
             case "end":
-                IActClient.Current.EndEncounter();
+                ActClient.Current.EndEncounter();
                 break;
             case "clear":
                 this.Clear();
@@ -206,11 +223,16 @@ public class PluginManager : IPluginDisposable
         if (disposing)
         {
             // Don't modify order
-            _pluginInterface.UiBuilder.Draw -= Draw;
-            _pluginInterface.UiBuilder.OpenConfigUi -= OpenConfigUi;
-            _clientState.Logout -= OnLogout;
+            PluginInterface.UiBuilder.Draw -= Draw;
+            PluginInterface.UiBuilder.OpenConfigUi -= OpenConfigUi;
+            ClientState.Logout -= OnLogout;
             _commandManager.RemoveHandler("/lm");
             _windowSystem.RemoveAllWindows();
+
+            ActClient.Current.Dispose();
+            _config.Dispose();
+            FontsManager.Dispose();
+            TexCache.Dispose();
         }
     }
 }

@@ -24,6 +24,7 @@ namespace LMeter;
 
 public class Plugin : IDalamudPlugin
 {
+    private readonly PluginManager _pluginManager;
     public static string Changelog { get; private set; } = string.Empty;
     public static string ConfigFileDir { get; private set; } = string.Empty;
     public const string ConfigFileName = "LMeter.json";
@@ -53,24 +54,8 @@ public class Plugin : IDalamudPlugin
         Plugin.ConfigFileDir = pluginInterface.GetPluginConfigDirectory();
         Plugin.ConfigFilePath = Path.Combine(pluginInterface.GetPluginConfigDirectory(), Plugin.ConfigFileName);
 
-        // Register Dalamud APIs
-        Singletons.Register(clientState);
-        Singletons.Register(commandManager);
-        Singletons.Register(condition);
-        Singletons.Register(pluginInterface);
-        Singletons.Register(dataManager);
-        Singletons.Register(framework);
-        Singletons.Register(gameGui);
-        Singletons.Register(jobGauges);
-        Singletons.Register(objectTable);
-        Singletons.Register(partyList);
-        Singletons.Register(sigScanner);
-        Singletons.Register(targetManager);
-        Singletons.Register(chatGui);
-        Singletons.Register(pluginInterface.UiBuilder);
-
         // Init TexturesCache
-        Singletons.Register(new TexturesCache(pluginInterface));
+        var texCache = new TexturesCache(dataManager, pluginInterface);
 
         // Load Icon Texure
         Plugin.IconTexture = LoadIconTexture(pluginInterface.UiBuilder);
@@ -82,14 +67,13 @@ public class Plugin : IDalamudPlugin
         FontsManager.CopyPluginFontsToUserPath();
         LMeterConfig config = ConfigHelpers.LoadConfig(Plugin.ConfigFilePath);
         config.FontConfig.RefreshFontList();
-        Singletons.Register(config);
 
         // Initialize Fonts
-        Singletons.Register(new FontsManager(pluginInterface.UiBuilder, config.FontConfig.Fonts.Values));
+        var fontsManager = new FontsManager(pluginInterface.UiBuilder, config.FontConfig.Fonts.Values);
 
         // Connect to ACT
-        IActClient actClient = IActClient.GetNewClient(); // Singleton Registry is done internally here
-        actClient.Start();
+        var actClient = new ActClient(chatGui, config.ActConfig, pluginInterface);
+        actClient.Current.Start();
 
         // Create profile on first load
         if (config.FirstLoad && config.MeterList.Meters.Count == 0)
@@ -99,9 +83,19 @@ public class Plugin : IDalamudPlugin
         config.FirstLoad = false;
 
         // Start the plugin
-        Singletons.Register(new PluginManager(clientState, commandManager, pluginInterface, config));
+        _pluginManager = new PluginManager
+        (
+            actClient,
+            clientState,
+            commandManager,
+            condition,
+            config,
+            fontsManager,
+            pluginInterface,
+            texCache
+        );
     }
-        
+
     private static TextureWrap? LoadIconTexture(UiBuilder uiBuilder)
     {
         string? pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -179,7 +173,7 @@ public class Plugin : IDalamudPlugin
     {
         if (disposing)
         {
-            Singletons.Dispose();
+            _pluginManager.Dispose();
         }
     }
 }

@@ -1,6 +1,5 @@
 using Dalamud.Interface;
 using ImGuiNET;
-using LMeter.Act;
 using LMeter.Helpers;
 using Newtonsoft.Json;
 using System.Numerics;
@@ -58,11 +57,11 @@ public class ActConfig : IConfigPage
             IinactMode = iinactModeNum == 1;
             if (newClientRequested)
             {
-                IActClient client = IActClient.GetNewClient(); // Singleton Registry is done internally here
-                client.Start();
+                PluginManager.Instance.ActClient.GetNewActClient();
+                PluginManager.Instance.ActClient.Current.Start();
             }
             
-            IActClient.Current.DrawConnectionStatus();
+            PluginManager.Instance.ActClient.Current.DrawConnectionStatus();
             if (!IinactMode)
             {
                 ImGui.InputTextWithHint
@@ -79,7 +78,7 @@ public class ActConfig : IConfigPage
             (
                 string.Empty,
                 FontAwesomeIcon.Sync,
-                IActClient.Current.RetryConnection,
+                PluginManager.Instance.ActClient.Current.RetryConnection,
                 "Reconnect",
                 buttonSize
             );
@@ -128,7 +127,7 @@ public class ActConfig : IConfigPage
             (
                 string.Empty,
                 FontAwesomeIcon.Stop,
-                IActClient.Current.EndEncounter,
+                PluginManager.Instance.ActClient.Current.EndEncounter,
                 null,
                 buttonSize
             );
@@ -140,7 +139,7 @@ public class ActConfig : IConfigPage
             (
                 string.Empty,
                 FontAwesomeIcon.Trash,
-                () => Singletons.Get<PluginManager>().Clear(),
+                PluginManager.Instance.Clear,
                 null,
                 buttonSize
             );
@@ -154,7 +153,11 @@ public class ActConfig : IConfigPage
 
     public void TryReconnect()
     {
-        if (this.LastReconnectAttempt.HasValue && IActClient.Current.ConnectionIncompleteOrFailed())
+        if 
+        (
+            this.LastReconnectAttempt.HasValue &&
+            PluginManager.Instance.ActClient.Current.ConnectionIncompleteOrFailed()
+        )
         {
             if 
             (
@@ -162,7 +165,7 @@ public class ActConfig : IConfigPage
                 this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay)
             )
             {
-                IActClient.Current.RetryConnection();
+                PluginManager.Instance.ActClient.Current.RetryConnection();
                 this.LastReconnectAttempt = DateTime.UtcNow;
             }
         }
@@ -174,7 +177,7 @@ public class ActConfig : IConfigPage
 
     public void TryEndEncounter()
     {
-        if (IActClient.Current.ClientReady())
+        if (PluginManager.Instance.ActClient.Current.ClientReady())
         {
             if (this.AutoEnd && CharacterState.IsInCombat())
             {
@@ -186,7 +189,7 @@ public class ActConfig : IConfigPage
                 this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay)
             )
             {
-                IActClient.Current.EndEncounter();
+                PluginManager.Instance.ActClient.Current.EndEncounter();
                 this.LastCombatTime = null;
             }
         }

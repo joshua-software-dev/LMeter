@@ -6,8 +6,9 @@ using System;
 
 namespace LMeter.Helpers;
 
-public interface IPluginDisposable : IDisposable { }
+// public interface IPluginDisposable : IDisposable { }
 
+/*
 public static class Singletons
 {
     private static readonly Dictionary<Type, Func<object>> TypeInitializers = new ();
@@ -77,3 +78,4 @@ public static class Singletons
         ActiveInstances.Clear();
     }
 }
+*/

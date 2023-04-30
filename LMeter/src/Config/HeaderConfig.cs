@@ -52,13 +52,14 @@ public class HeaderConfig : IConfigPage
 
     public IConfigPage GetDefault()
     {
+        var fontsManager = PluginManager.Instance.FontsManager;
         HeaderConfig defaultConfig = new HeaderConfig();
         defaultConfig.DurationFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.DurationFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.DurationFontId = fontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
         defaultConfig.NameFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.NameFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.NameFontId = fontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
         defaultConfig.StatsFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.StatsFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.StatsFontId = fontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
         return defaultConfig;
     }
 
@@ -76,7 +77,7 @@ public class HeaderConfig : IConfigPage
         Vector2 durationSize = Vector2.Zero;
         if (this.ShowEncounterDuration)
         {
-            using (FontsManager.PushFont(this.DurationFontKey))
+            using (PluginManager.Instance.FontsManager.PushFont(this.DurationFontKey))
             {
                 string duration = encounter is null ? $" LMeter v{Plugin.Version}" : $" {encounter.Duration}";
                 durationSize = ImGui.CalcTextSize(duration);
@@ -111,7 +112,7 @@ public class HeaderConfig : IConfigPage
 
             if (!string.IsNullOrEmpty(text))
             {
-                using (FontsManager.PushFont(this.StatsFontKey))
+                using (PluginManager.Instance.FontsManager.PushFont(this.StatsFontKey))
                 {
                     raidStatsSize = ImGui.CalcTextSize(text);
                     var statsPos = Utils.GetAnchoredPosition(pos + this.StatsOffset, -headerSize, DrawAnchor.Right);
@@ -131,7 +132,7 @@ public class HeaderConfig : IConfigPage
 
         if (this.ShowEncounterName && encounter is not null && !string.IsNullOrEmpty(encounter.Title))
         {
-            using (FontsManager.PushFont(this.NameFontKey))
+            using (PluginManager.Instance.FontsManager.PushFont(this.NameFontKey))
             {
                 string name = $" {encounter.Title}";
                 Vector2 nameSize = ImGui.CalcTextSize(name);
@@ -167,7 +168,7 @@ public class HeaderConfig : IConfigPage
 
     public void DrawConfig(Vector2 size, float padX, float padY)
     {
-        string[] fontOptions = FontsManager.GetFontList();
+        string[] fontOptions = PluginManager.Instance.FontsManager.GetFontList();
         if (fontOptions.Length == 0)
         {
             return;

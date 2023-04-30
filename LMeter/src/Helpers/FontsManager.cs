@@ -44,7 +44,7 @@ namespace LMeter.Helpers
         }
     }
 
-    public class FontsManager : IPluginDisposable
+    public class FontsManager : IDisposable
     {
         private IEnumerable<FontData> _fontData;
         private Dictionary<string, ImFontPtr> _imGuiFonts;
@@ -119,28 +119,27 @@ namespace LMeter.Helpers
         public static bool ValidateFont(string[] fontOptions, int fontId, string fontKey) =>
             fontId < fontOptions.Length && fontOptions[fontId].Equals(fontKey);
 
-        public static FontScope PushFont(string fontKey)
+        public FontScope PushFont(string fontKey)
         {
-            FontsManager manager = Singletons.Get<FontsManager>();
             if (string.IsNullOrEmpty(fontKey) ||
                 fontKey.Equals(DalamudFontKey) ||
-                !manager._imGuiFonts.Keys.Contains(fontKey))
+                !_imGuiFonts.ContainsKey(fontKey))
             {
                 return new FontScope(false);
             }
 
-            ImGui.PushFont(manager._imGuiFonts[fontKey]);
+            ImGui.PushFont(this._imGuiFonts[fontKey]);
             return new FontScope(true);
         }
 
         public void UpdateFonts(IEnumerable<FontData> fonts)
         {
             _fontData = fonts;
-            Singletons.Get<UiBuilder>().RebuildFonts();
+            _uiBuilder.RebuildFonts();
         }
 
-        public static string[] GetFontList() =>
-            Singletons.Get<FontsManager>()._fontList;
+        public string[] GetFontList() =>
+            this._fontList;
 
         public int GetFontIndex(string fontKey)
         {

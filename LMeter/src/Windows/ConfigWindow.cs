@@ -19,8 +19,9 @@ public class ConfigWindow : Window
     private string _name = string.Empty;
     private Vector2 _windowSize;
     private Stack<IConfigurable> _configStack;
+    private readonly LMeterConfig _config;
 
-    public ConfigWindow(string id, Vector2 position, Vector2 size) : base(id)
+    public ConfigWindow(LMeterConfig config, string id, Vector2 position, Vector2 size) : base(id)
     {
         this.Flags =
             ImGuiWindowFlags.NoScrollbar |
@@ -38,6 +39,7 @@ public class ConfigWindow : Window
 
         _windowSize = size;
         _configStack = new Stack<IConfigurable>();
+        _config = config;
     }
 
     public void PushConfig(IConfigurable configItem)
@@ -245,11 +247,10 @@ public class ConfigWindow : Window
 
     public override void OnClose()
     {
-        ConfigHelpers.SaveConfig();
+        ConfigHelpers.SaveConfig(_config);
         _configStack.Clear();
 
-        var config = Singletons.Get<LMeterConfig>();
-        foreach (var meter in config.MeterList.Meters)
+        foreach (var meter in _config.MeterList.Meters)
         {
             meter.GeneralConfig.Preview = false;
         }

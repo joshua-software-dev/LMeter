@@ -190,10 +190,8 @@ public class MeterListConfig : IConfigPage
         _input = string.Empty;
     }
 
-    private void EditMeter(MeterWindow meter)
-    {
-        Singletons.Get<PluginManager>().Edit(meter);
-    }
+    private void EditMeter(MeterWindow meter) =>
+        PluginManager.Instance.Edit(meter);
 
     private void DeleteMeter(MeterWindow meter)
     {

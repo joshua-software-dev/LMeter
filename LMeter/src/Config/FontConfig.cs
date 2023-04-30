@@ -203,13 +203,13 @@ public class FontConfig : IConfigPage
         if (!this.Fonts.ContainsKey(key))
         {
             this.Fonts.Add(key, newFont);
-            Singletons.Get<FontsManager>().UpdateFonts(this.Fonts.Values);
+            PluginManager.Instance.FontsManager.UpdateFonts(this.Fonts.Values);
         }
     }
 
     private void RemoveFont(string key)
     {
         this.Fonts.Remove(key);
-        Singletons.Get<FontsManager>().UpdateFonts(this.Fonts.Values);
+        PluginManager.Instance.FontsManager.UpdateFonts(this.Fonts.Values);
     }
 }

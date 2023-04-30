@@ -7,7 +7,7 @@ using System;
 namespace LMeter.Config;
 
 [JsonObject]
-public class LMeterConfig : IConfigurable, IPluginDisposable
+public class LMeterConfig : IConfigurable, IDisposable
 {
     public string Name
     { 

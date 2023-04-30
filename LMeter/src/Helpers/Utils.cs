@@ -28,7 +28,7 @@ public static class Utils
         };
     }
 
-    public static GameObject? FindTargetOfTarget(GameObject? player, GameObject? target)
+    public static GameObject? FindTargetOfTarget(ObjectTable objectTable, GameObject? player, GameObject? target)
     {
         if (target == null)
         {
@@ -42,7 +42,6 @@ public static class Utils
 
         // only the first 200 elements in the array are relevant due to the order in which SE packs data into the array
         // we do a step of 2 because its always an actor followed by its companion
-        ObjectTable objectTable = Singletons.Get<ObjectTable>();
         for (int i = 0; i < 200; i += 2)
         {
             GameObject? actor = objectTable[i];

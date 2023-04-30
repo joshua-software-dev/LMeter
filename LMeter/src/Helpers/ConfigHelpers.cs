@@ -129,11 +129,6 @@ public static class ConfigHelpers
         return config ?? new LMeterConfig();
     }
 
-    public static void SaveConfig()
-    {
-        ConfigHelpers.SaveConfig(Singletons.Get<LMeterConfig>());
-    }
-
     public static void SaveConfig(LMeterConfig config)
     {
         try

@@ -17,16 +17,19 @@ using static Lumina.Data.Files.TexFile;
 
 namespace LMeter.Helpers;
 
-public class TexturesCache : IPluginDisposable
+public class TexturesCache : IDisposable
 {
     private Dictionary<string, Tuple<TextureWrap, float>> _textureCache;
     private ICallGateSubscriber<string, string> _penumbraPathResolver;
+    private DataManager _dataManager;
     private UiBuilder _uiBuilder;
 
-    public TexturesCache(DalamudPluginInterface pluginInterface)
+    public TexturesCache(DataManager dataManager, DalamudPluginInterface pluginInterface)
     {
         _textureCache = new Dictionary<string, Tuple<TextureWrap, float>>();
         _penumbraPathResolver = pluginInterface.GetIpcSubscriber<string, string>("Penumbra.ResolveDefaultPath");
+
+        _dataManager = dataManager;
         _uiBuilder = pluginInterface.UiBuilder;
     }
 
@@ -79,7 +82,7 @@ public class TexturesCache : IPluginDisposable
 
         try
         {
-            TexFile? iconFile = Singletons.Get<DataManager>().GetFile<TexFile>(path);
+            TexFile? iconFile = _dataManager.GetFile<TexFile>(path);
             if (iconFile is null)
             {
                 return null;
@@ -231,16 +234,15 @@ public class TexturesCache : IPluginDisposable
         }
     }
 
-    private static TextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
+    private TextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
     {
-        UiBuilder uiBuilder = Singletons.Get<UiBuilder>();
         byte[] bytes = tex.GetRgbaImageData();
         if (greyScale || opacity < 1f)
         {
             ConvertBytes(ref bytes, greyScale, opacity);
         }
 
-        return uiBuilder.LoadImageRaw(bytes, tex.Header.Width, tex.Header.Height, 4);
+        return _uiBuilder.LoadImageRaw(bytes, tex.Header.Width, tex.Header.Height, 4);
     }
 
     private static void ConvertBytes(ref byte[] bytes, bool greyScale, float opacity)

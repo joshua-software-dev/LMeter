@@ -1,4 +1,3 @@
-using Dalamud.Game.ClientState;
 using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.Act;
@@ -66,13 +65,13 @@ public class BarConfig : IConfigPage
     {
         BarConfig defaultConfig = new BarConfig();
         defaultConfig.BarNameFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.BarNameFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.BarNameFontId = PluginManager.Instance.FontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
 
         defaultConfig.BarDataFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.BarDataFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.BarDataFontId = PluginManager.Instance.FontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
 
         defaultConfig.RankTextFontKey = FontsManager.DefaultSmallFontKey;
-        defaultConfig.RankTextFontId = Singletons.Get<FontsManager>().GetFontIndex(FontsManager.DefaultSmallFontKey);
+        defaultConfig.RankTextFontId = PluginManager.Instance.FontsManager.GetFontIndex(FontsManager.DefaultSmallFontKey);
 
         return defaultConfig;
     }
@@ -111,7 +110,7 @@ public class BarConfig : IConfigPage
                 this.ThousandsSeparators ? "N" : "F"
             );
 
-            using(FontsManager.PushFont(this.RankTextFontKey))
+            using(PluginManager.Instance.FontsManager.PushFont(this.RankTextFontKey))
             {
                 textOffset += ImGui.CalcTextSize("00.").X;
                 Vector2 rankTextSize = ImGui.CalcTextSize(rankText);
@@ -135,9 +134,9 @@ public class BarConfig : IConfigPage
             }
         }
 
-        using (FontsManager.PushFont(this.BarNameFontKey))
+        using (PluginManager.Instance.FontsManager.PushFont(this.BarNameFontKey))
         {
-            string playerName = Singletons.Get<ClientState>().LocalPlayer?.Name.ToString() ?? "YOU";
+            string playerName = PluginManager.Instance.ClientState.LocalPlayer?.Name.ToString() ?? "YOU";
             if (this.UseCharacterName && combatant.Name.Contains("YOU"))
             {
                 combatant.Name = playerName;
@@ -160,7 +159,7 @@ public class BarConfig : IConfigPage
                 this.BarNameOutlineColor.Base);
         }
 
-        using (FontsManager.PushFont(this.BarDataFontKey))
+        using (PluginManager.Instance.FontsManager.PushFont(this.BarDataFontKey))
         {
             string rightText = combatant.GetFormattedString
             (
@@ -185,8 +184,8 @@ public class BarConfig : IConfigPage
     }
 
     public void DrawConfig(Vector2 size, float padX, float padY)
-    {            
-        string[] fontOptions = FontsManager.GetFontList();
+    {
+        string[] fontOptions = PluginManager.Instance.FontsManager.GetFontList();
         if (fontOptions.Length == 0)
         {
             return;

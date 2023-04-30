@@ -197,7 +197,7 @@ public class MeterWindow : IConfigurable
 
                 ActEvent? actEvent = this.GeneralConfig.Preview
                     ? _previewEvent
-                    : IActClient.Current.GetEvent(_eventIndex);
+                    : PluginManager.Instance.ActClient.Current.GetEvent(_eventIndex);
 
                 (localPos, size) = this.HeaderConfig.DrawHeader(localPos, size, actEvent?.Encounter, drawList);
                 drawList.AddRectFilled(localPos, localPos + size, this.GeneralConfig.BackgroundColor.Base);
@@ -279,7 +279,7 @@ public class MeterWindow : IConfigurable
                 selected = true;
             }
 
-            List<ActEvent> events = IActClient.Current.PastEvents;
+            List<ActEvent> events = PluginManager.Instance.ActClient.Current.PastEvents;
             if (events.Count > 0)
             {
                 ImGui.Separator();
@@ -297,13 +297,13 @@ public class MeterWindow : IConfigurable
             ImGui.Separator();
             if (ImGui.Selectable("Clear Data"))
             {
-                Singletons.Get<PluginManager>().Clear();
+                PluginManager.Instance.Clear();
                 selected = true;
             }
 
             if (ImGui.Selectable("Configure"))
             {
-                Singletons.Get<PluginManager>().ConfigureMeter(this);
+                PluginManager.Instance.ConfigureMeter(this);
                 selected = true;
             }
 

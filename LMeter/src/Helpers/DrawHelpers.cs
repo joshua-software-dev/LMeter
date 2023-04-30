@@ -45,7 +45,7 @@ public class DrawHelpers
         uint durationInMs = 3000,
         string title = "LMeter"
     ) =>
-        Singletons.Get<UiBuilder>().AddNotification(message, title, type, durationInMs);
+        PluginManager.Instance.PluginInterface.UiBuilder.AddNotification(message, title, type, durationInMs);
 
     public static void DrawNestIndicator(int depth)
     {
@@ -76,7 +76,7 @@ public class DrawHelpers
         ImDrawListPtr drawList
     )
     {
-        TextureWrap? tex = Singletons.Get<TexturesCache>().GetTextureFromIconId(iconId, 0, true);
+        TextureWrap? tex = PluginManager.Instance.TexCache.GetTextureFromIconId(iconId, 0, true);
 
         if (tex is null)
         {
@@ -98,9 +98,14 @@ public class DrawHelpers
         ImDrawListPtr drawList
     )
     {
-        TextureWrap? tex = Singletons
-            .Get<TexturesCache>()
-            .GetTextureFromIconId(iconId, (uint) stackCount, true, desaturate, opacity);
+        TextureWrap? tex = PluginManager.Instance.TexCache.GetTextureFromIconId
+        (
+            iconId,
+            (uint) stackCount,
+            true,
+            desaturate,
+            opacity
+        );
 
         if (tex is null)
         {

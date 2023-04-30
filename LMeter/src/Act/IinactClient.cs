@@ -7,7 +7,6 @@ using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin;
 using ImGuiNET;
 using LMeter.Config;
-using LMeter.Helpers;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System;
@@ -29,6 +28,7 @@ public enum SubscriptionStatus
 
 public class IinactClient : ActEventParser, IActClient
 {
+    private readonly ChatGui _chatGui;
     private readonly ActConfig _config;
     private readonly DalamudPluginInterface _dpi;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
@@ -43,8 +43,9 @@ public class IinactClient : ActEventParser, IActClient
     private SubscriptionStatus _status;
     private string? _lastErrorMessage;
 
-    public IinactClient(ActConfig config, DalamudPluginInterface dpi)
+    public IinactClient(ChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
     {
+        _chatGui = chatGui;
         _config = config;
         _dpi = dpi;
         _status = SubscriptionStatus.NotConnected;
@@ -198,14 +199,13 @@ public class IinactClient : ActEventParser, IActClient
 
     public void EndEncounter()
     {
-        ChatGui chat = Singletons.Get<ChatGui>();
         XivChatEntry message = new XivChatEntry()
         {
             Message = "end",
             Type = XivChatType.Echo
         };
 
-        chat.PrintChat(message);
+        _chatGui.PrintChat(message);
     }
 
     public void Clear()
@@ -214,14 +214,13 @@ public class IinactClient : ActEventParser, IActClient
         PastEvents = new List<ActEvent>();
         if (_config.ClearAct)
         {
-            ChatGui chat = Singletons.Get<ChatGui>();
             XivChatEntry message = new XivChatEntry()
             {
                 Message = "clear",
                 Type = XivChatType.Echo
             };
 
-            chat.PrintChat(message);
+            _chatGui.PrintChat(message);
         }
     }
 

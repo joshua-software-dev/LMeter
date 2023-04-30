@@ -1,5 +1,4 @@
 ﻿using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +12,7 @@ public static class CharacterState
 
     public static bool IsCharacterBusy()
     {
-        Condition condition = Singletons.Get<Condition>();
+        Condition condition = PluginManager.Instance.Condition;
         return 
             condition[ConditionFlag.WatchingCutscene] ||
             condition[ConditionFlag.WatchingCutscene78] ||
@@ -24,32 +23,23 @@ public static class CharacterState
             condition[ConditionFlag.OccupiedSummoningBell];
     }
 
-    public static bool IsInCombat()
-    {
-        Condition condition = Singletons.Get<Condition>();
-        return condition[ConditionFlag.InCombat];
-    }
+    public static bool IsInCombat() =>
+        PluginManager.Instance.Condition[ConditionFlag.InCombat];
 
-    public static bool IsInDuty()
-    {
-        Condition condition = Singletons.Get<Condition>();
-        return condition[ConditionFlag.BoundByDuty];
-    }
+    public static bool IsInDuty() =>
+        PluginManager.Instance.Condition[ConditionFlag.BoundByDuty];
 
-    public static bool IsPerforming()
-    {
-        Condition condition = Singletons.Get<Condition>();
-        return condition[ConditionFlag.Performing];
-    }
+    public static bool IsPerforming() =>
+        PluginManager.Instance.Condition[ConditionFlag.Performing];
 
     public static bool IsInGoldenSaucer()
     {
-        return _goldenSaucerIDs.Any(id => id == Singletons.Get<ClientState>().TerritoryType);
+        return _goldenSaucerIDs.Any(id => id == PluginManager.Instance.ClientState.TerritoryType);
     }
 
     public static Job GetCharacterJob()
     {
-        var player = Singletons.Get<ClientState>().LocalPlayer;
+        var player = PluginManager.Instance.ClientState.LocalPlayer;
         if (player is null)
         {
             return Job.UKN;

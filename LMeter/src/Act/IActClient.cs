@@ -1,30 +1,12 @@
-using Dalamud.Plugin;
-using LMeter.Config;
-using LMeter.Helpers;
+using System.Collections.Generic;
+using System;
 
 
 namespace LMeter.Act;
 
-public interface IActClient : IPluginDisposable
+public interface IActClient : IDisposable
 {
-    public static IActClient Current =>
-        Singletons.Get<LMeterConfig>().ActConfig.IinactMode 
-            ? Singletons.Get<IinactClient>() 
-            : Singletons.Get<ActWebSocketClient>();
-
-    public static IActClient GetNewClient()
-    {
-        Singletons.DeleteActClients();
-
-        ActConfig config = Singletons.Get<LMeterConfig>().ActConfig;
-        DalamudPluginInterface dpi = Singletons.Get<DalamudPluginInterface>();
-
-        IActClient client = config.IinactMode
-            ? new IinactClient(config, dpi)
-            : new ActWebSocketClient(config, dpi);
-        Singletons.Register(client);
-        return client;
-    }
+    public List<ActEvent> PastEvents { get; set; }
 
     public void Clear();
     public bool ClientReady();
