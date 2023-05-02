@@ -25,17 +25,15 @@ public class DrawHelpers
             ImGui.SameLine();
         }
 
-        ImGui.PushFont(UiBuilder.IconFont);
-        if (ImGui.Button(icon.ToIconString(), size ?? Vector2.Zero))
+        using (PluginManager.Instance.FontsManager.PushFont(UiBuilder.IconFont))
         {
-            clickAction();
+            if (ImGui.Button(icon.ToIconString(), size ?? Vector2.Zero))
+            {
+                clickAction();
+            }
         }
-        ImGui.PopFont();
 
-        if (!string.IsNullOrEmpty(help) && ImGui.IsItemHovered())
-        {
-            ImGui.SetTooltip(help);
-        }
+        if (!string.IsNullOrEmpty(help) && ImGui.IsItemHovered()) ImGui.SetTooltip(help);
     }
 
     public static void DrawNotification
@@ -52,8 +50,8 @@ public class DrawHelpers
         // This draws the L shaped symbols and padding to the left of config items collapsible under a checkbox.
         // Shift cursor to the right to pad for children with depth more than 1.
         // 26 is an arbitrary value I found to be around half the width of a checkbox
-        Vector2 oldCursor = ImGui.GetCursorPos();
-        Vector2 offset = new Vector2(26 * Math.Max((depth - 1), 0), 2);
+        var oldCursor = ImGui.GetCursorPos();
+        var offset = new Vector2(26 * Math.Max((depth - 1), 0), 2);
         ImGui.SetCursorPos(oldCursor + offset);
         ImGui.TextColored(new Vector4(229f / 255f, 57f / 255f, 57f / 255f, 1f), "\u2002\u2514");
         ImGui.SameLine();
@@ -62,7 +60,7 @@ public class DrawHelpers
 
     public static void DrawSpacing(int spacingSize)
     {
-        for (int i = 0; i < spacingSize; i++)
+        for (var i = 0; i < spacingSize; i++)
         {
             ImGui.NewLine();
         }
@@ -76,7 +74,7 @@ public class DrawHelpers
         ImDrawListPtr drawList
     )
     {
-        TextureWrap? tex = PluginManager.Instance.TexCache.GetTextureFromIconId(iconId, 0, true);
+        var tex = PluginManager.Instance.TexCache.GetTextureFromIconId(iconId, 0, true);
 
         if (tex is null)
         {
@@ -98,7 +96,7 @@ public class DrawHelpers
         ImDrawListPtr drawList
     )
     {
-        TextureWrap? tex = PluginManager.Instance.TexCache.GetTextureFromIconId
+        var tex = PluginManager.Instance.TexCache.GetTextureFromIconId
         (
             iconId,
             (uint) stackCount,
@@ -112,29 +110,34 @@ public class DrawHelpers
             return;
         }
 
-        (Vector2 uv0, Vector2 uv1) = GetTexCoordinates(tex, size, cropIcon);
+        (Vector2 uv0, Vector2 uv1) = GetTexCoordinates(tex, cropIcon);
 
         drawList.AddImage(tex.ImGuiHandle, position, position + size, uv0, uv1);
     }
 
-    public static (Vector2, Vector2) GetTexCoordinates(TextureWrap? texture, Vector2 size, bool cropIcon = true)
+    public static (Vector2, Vector2) GetTexCoordinates(TextureWrap? texture, bool cropIcon = true)
     {
-        if (texture == null)
-        {
-            return (Vector2.Zero, Vector2.Zero);
-        }
+        if (texture == null) return (Vector2.Zero, Vector2.Zero);
 
         // Status = 24x32, show from 2,7 until 22,26
         //show from 0,0 until 24,32 for uncropped status icon
 
-        float uv0x = cropIcon ? 4f : 1f;
-        float uv0y = cropIcon ? 14f : 1f;
+        var uv0x = cropIcon
+            ? 4f
+            : 1f;
+        var uv0y = cropIcon
+            ? 14f
+            : 1f;
 
-        float uv1x = cropIcon ? 4f : 1f;
-        float uv1y = cropIcon ? 12f : 1f;
+        var uv1x = cropIcon
+            ? 4f
+            : 1f;
+        var uv1y = cropIcon
+            ? 12f
+            : 1f;
 
-        Vector2 uv0 = new(uv0x / texture.Width, uv0y / texture.Height);
-        Vector2 uv1 = new(1f - uv1x / texture.Width, 1f - uv1y / texture.Height);
+        var uv0 = new Vector2(uv0x / texture.Width, uv0y / texture.Height);
+        var uv1 = new Vector2(1f - uv1x / texture.Width, 1f - uv1y / texture.Height);
 
         return (uv0, uv1);
     }
@@ -169,15 +172,9 @@ public class DrawHelpers
             ImGuiWindowFlags.NoBackground |
             extraFlags;
 
-        if (!needsInput)
-        {
-            windowFlags |= ImGuiWindowFlags.NoInputs;
-        }
+        if (!needsInput) windowFlags |= ImGuiWindowFlags.NoInputs;
 
-        if (!needsFocus)
-        {
-            windowFlags |= ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus;
-        }
+        if (!needsFocus) windowFlags |= ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus;
 
         if (locked)
         {
@@ -190,10 +187,7 @@ public class DrawHelpers
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
         ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
 
-        if (ImGui.Begin(name, windowFlags))
-        {
-            drawAction(ImGui.GetWindowDrawList());
-        }
+        if (ImGui.Begin(name, windowFlags)) drawAction(ImGui.GetWindowDrawList());
 
         ImGui.PopStyleVar(3);
         ImGui.End();
@@ -213,7 +207,7 @@ public class DrawHelpers
         // outline
         if (outline)
         {
-            for (int i = 1; i < thickness + 1; i++)
+            for (var i = 1; i < thickness + 1; i++)
             {
                 drawList.AddText(new Vector2(pos.X - i, pos.Y + i), outlineColor, text);
                 drawList.AddText(new Vector2(pos.X, pos.Y + i), outlineColor, text);

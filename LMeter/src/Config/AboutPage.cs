@@ -7,9 +7,11 @@ namespace LMeter.Config;
 
 public class AboutPage : IConfigPage
 {
-    public string Name => "About / Changelog";
+    public string Name =>
+        "About / Changelog";
 
-    public IConfigPage GetDefault() => new AboutPage();
+    public IConfigPage GetDefault() =>
+        new AboutPage();
 
     public void DrawConfig(Vector2 size, float padX, float padY)
     {
@@ -17,23 +19,24 @@ public class AboutPage : IConfigPage
         {
             if (ImGui.BeginChild("##AboutPage", new Vector2(size.X, size.Y), true))
             {
-                Vector2 headerSize = Vector2.Zero;
+                var headerSize = Vector2.Zero;
                 if (Plugin.IconTexture is not null)
                 {
-                    Vector2 iconSize = new Vector2(Plugin.IconTexture.Width, Plugin.IconTexture.Height);
+                    var iconSize = new Vector2(Plugin.IconTexture.Width, Plugin.IconTexture.Height);
                     string versionText = 
                         $"""
                         LMeter
                         v{Plugin.Version}
                         git: {Plugin.GitHash}
                         """;
-                    Vector2 textSize = ImGui.CalcTextSize(versionText);
+                    var textSize = ImGui.CalcTextSize(versionText);
                     headerSize = new Vector2(size.X, iconSize.Y + textSize.Y);
 
-                    bool iconActivated = false;
+                    var iconActivated = false;
                     try
                     {
                         iconActivated = ImGui.BeginChild("##Icon", headerSize, false);
+
                         if (iconActivated)
                         {
                             ImDrawListPtr drawList = ImGui.GetWindowDrawList();
@@ -50,7 +53,7 @@ public class AboutPage : IConfigPage
                 }
 
                 ImGui.Text("Changelog");
-                Vector2 changeLogSize = new Vector2(size.X - padX * 2, size.Y - ImGui.GetCursorPosY() - padY - 30);
+                var changeLogSize = new Vector2(size.X - padX * 2, size.Y - ImGui.GetCursorPosY() - padY - 30);
 
                 if (ImGui.BeginChild("##Changelog", changeLogSize, true))
                 {
@@ -59,7 +62,7 @@ public class AboutPage : IConfigPage
                 }
                 ImGui.NewLine();
 
-                Vector2 buttonSize = new Vector2
+                var buttonSize = new Vector2
                 (
                     x: (size.X - padX * 2 - padX * 2) / 3, 
                     y: 30 - padY * 2
@@ -69,13 +72,13 @@ public class AboutPage : IConfigPage
                 ImGui.SameLine((size.X - (buttonSize.X * 2)) * 0.5f); // start buttons centered
                 if (ImGui.Button("Github", buttonSize))
                 {
-                    Utils.OpenUrl("https://github.com/joshua-software-dev/LMeter");
+                    Utils.OpenUrl(MagicValues.GitRepoUrl);
                 }
 
                 ImGui.SameLine();
                 if (ImGui.Button("Discord", buttonSize))
                 {
-                    Utils.OpenUrl("https://discord.gg/C6fptVuFzZ");
+                    Utils.OpenUrl(MagicValues.DiscordUrl);
                 }
                 ImGui.PopStyleVar();
             }

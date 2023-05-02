@@ -16,9 +16,9 @@ public static class Extensions
 
     public static Vector4 AdjustColor(this Vector4 vec, float correctionFactor)
     {
-        float red = vec.X;
-        float green = vec.Y;
-        float blue = vec.Z;
+        var red = vec.X;
+        var green = vec.Y;
+        var blue = vec.Z;
 
         if (correctionFactor < 0)
         {

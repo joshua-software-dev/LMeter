@@ -93,10 +93,7 @@ public class PluginManager : IDisposable
 
     private void Draw()
     {
-        if (ClientState.IsLoggedIn && (ClientState.LocalPlayer == null || CharacterState.IsCharacterBusy()))
-        {
-            return;
-        }
+        if (ClientState.IsLoggedIn && (ClientState.LocalPlayer == null || CharacterState.IsCharacterBusy())) return;
 
         _windowSystem.Draw();
 
@@ -126,10 +123,8 @@ public class PluginManager : IDisposable
         }
     }
 
-    public void Edit(IConfigurable configItem)
-    {
+    public void Edit(IConfigurable configItem) =>
         _configRoot.PushConfig(configItem);
-    }
 
     public void ConfigureMeter(MeterWindow meter)
     {
@@ -142,10 +137,7 @@ public class PluginManager : IDisposable
 
     private void OpenConfigUi()
     {
-        if (!_configRoot.IsOpen)
-        {
-            _configRoot.PushConfig(_config);
-        }
+        if (!_configRoot.IsOpen) _configRoot.PushConfig(_config);
     }
 
     private void OnLogout(object? sender, EventArgs? args) =>
@@ -175,20 +167,20 @@ public class PluginManager : IDisposable
 
     private static int GetIntArg(string argument)
     {
-        string[] args = argument.Split(" ");
+        var args = argument.Split(" ");
         return
             args.Length > 1 &&
-            int.TryParse(args[1], out int num) 
+            int.TryParse(args[1], out var num) 
                 ? num 
                 : 0;
     }
 
     private static bool? GetBoolArg(string argument, int index = 1)
     {
-        string[] args = argument.Split(" ");
+        var args = argument.Split(" ");
         if (args.Length > index)
         {
-            string arg = args[index].ToLower();
+            var arg = args[index].ToLower();
             return
                 arg.Equals("on")
                     ? true

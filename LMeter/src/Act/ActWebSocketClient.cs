@@ -32,7 +32,7 @@ public enum ConnectionStatus
 public class ActWebSocketClient : ActEventParser, IActClient
 {
     private ArraySegment<byte> _buffer;
-    private ActConfig _config;
+    private readonly ActConfig _config;
     private ClientWebSocket _socket;
     private CancellationTokenSource _cancellationTokenSource;
     private Task? _receiveTask;
@@ -197,7 +197,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
     public void EndEncounter()
     {
-        XivChatEntry message = new XivChatEntry
+        var message = new XivChatEntry
         {
             Message = "end",
             Type = XivChatType.Echo
@@ -212,7 +212,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         PastEvents = new List<ActEvent>();
         if (_config.ClearAct)
         {
-            XivChatEntry message = new XivChatEntry
+            var message = new XivChatEntry
             {
                 Message = "clear",
                 Type = XivChatType.Echo
@@ -332,7 +332,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
                 try
                 {
-                    ActEvent? newEvent = JsonConvert.DeserializeObject<ActEvent?>(data);
+                    var newEvent = JsonConvert.DeserializeObject<ActEvent?>(data);
                     this.ParseNewEvent(newEvent, _config.EncounterHistorySize);
                 }
                 catch (Exception ex)

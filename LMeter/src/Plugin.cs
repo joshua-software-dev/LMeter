@@ -40,13 +40,6 @@ public class Plugin : IDalamudPlugin
         Condition condition,
         DalamudPluginInterface pluginInterface,
         DataManager dataManager,
-        Framework framework,
-        GameGui gameGui,
-        JobGauges jobGauges,
-        ObjectTable objectTable,
-        PartyList partyList,
-        SigScanner sigScanner,
-        TargetManager targetManager,
         ChatGui chatGui
     )
     {
@@ -75,13 +68,6 @@ public class Plugin : IDalamudPlugin
         var actClient = new ActClient(chatGui, config.ActConfig, pluginInterface);
         actClient.Current.Start();
 
-        // Create profile on first load
-        if (config.FirstLoad && config.MeterList.Meters.Count == 0)
-        {
-            config.MeterList.Meters.Add(MeterWindow.GetDefaultMeter("Profile 1"));
-        }
-        config.FirstLoad = false;
-
         // Start the plugin
         _pluginManager = new PluginManager
         (
@@ -94,56 +80,50 @@ public class Plugin : IDalamudPlugin
             pluginInterface,
             texCache
         );
+
+        // Create profile on first load
+        if (config.FirstLoad && config.MeterList.Meters.Count == 0)
+        {
+            config.MeterList.Meters.Add(MeterWindow.GetDefaultMeter("Profile 1"));
+        }
+        config.FirstLoad = false;
     }
 
     private static TextureWrap? LoadIconTexture(UiBuilder uiBuilder)
     {
-        string? pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        if (string.IsNullOrEmpty(pluginPath))
-        {
-            return null;
-        }
+        var pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (string.IsNullOrEmpty(pluginPath)) return null;
 
-        string iconPath = Path.Combine(pluginPath, "Media", "Images", "icon_small.png");
-        if (!File.Exists(iconPath))
-        {
-            return null;
-        }
+        var iconPath = Path.Combine(pluginPath, "Media", "Images", "icon_small.png");
+        if (!File.Exists(iconPath)) return null;
 
-        TextureWrap? texture = null;
         try
         {
-            texture = uiBuilder.LoadImage(iconPath);
+            return uiBuilder.LoadImage(iconPath);
         }
         catch (Exception ex)
         {
-            PluginLog.Warning($"Failed to load LMeter Icon {ex.ToString()}");
+            PluginLog.Warning($"Failed to load LMeter Icon {ex}");
         }
 
-        return texture;
+        return null;
     }
 
     private static string LoadChangelog()
     {
-        string? pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        var pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        if (string.IsNullOrEmpty(pluginPath)) return string.Empty;
 
-        if (string.IsNullOrEmpty(pluginPath))
-        {
-            return string.Empty;
-        }
-
-        string changelogPath = Path.Combine(pluginPath, "Media", "Text", "changelog.md");
-
+        var changelogPath = Path.Combine(pluginPath, "Media", "Text", "changelog.md");
         if (File.Exists(changelogPath))
         {
             try
             {
-                string changelog = File.ReadAllText(changelogPath);
-                return changelog.Replace("# ", string.Empty);
+                return File.ReadAllText(changelogPath).Replace("# ", string.Empty);
             }
             catch (Exception ex)
             {
-                PluginLog.Warning($"Error loading changelog: {ex.ToString()}");
+                PluginLog.Warning($"Error loading changelog: {ex}");
             }
         }
 
@@ -171,9 +151,6 @@ public class Plugin : IDalamudPlugin
 
     protected virtual void Dispose(bool disposing)
     {
-        if (disposing)
-        {
-            _pluginManager.Dispose();
-        }
+        if (disposing) _pluginManager.Dispose();
     }
 }

@@ -25,10 +25,11 @@ public static class ConfigHelpers
 
     public static void ExportToClipboard<T>(T toExport)
     {
-        string? exportString = ConfigHelpers.GetExportString(toExport);
+        var exportString = GetExportString(toExport);
 
-        if (exportString is not null)
+        if (!string.IsNullOrEmpty(exportString))
         {
+            PluginLog.Log(exportString);
             ImGui.SetClipboardText(exportString);
             DrawHelpers.DrawNotification("Export string copied to clipboard.");
         }
@@ -42,19 +43,15 @@ public static class ConfigHelpers
     {
         try
         {
-            string jsonString = JsonConvert.SerializeObject(toExport, Formatting.None, _serializerSettings);
-            using (MemoryStream outputStream = new MemoryStream())
+            var jsonString = JsonConvert.SerializeObject(toExport, Formatting.None, _serializerSettings);
+            using var outputStream = new MemoryStream();
             {
-                using (DeflateStream compressionStream = new DeflateStream(outputStream, CompressionLevel.Optimal))
-                {
-                    using (StreamWriter writer = new StreamWriter(compressionStream, Encoding.UTF8))
-                    {
-                        writer.Write(jsonString);
-                    }
-                }
-
-                return Convert.ToBase64String(outputStream.ToArray());
+                using var compressionStream = new DeflateStream(outputStream, CompressionLevel.Optimal);
+                using var writer = new StreamWriter(compressionStream, Encoding.UTF8);
+                writer.Write(jsonString);
             }
+
+            return Convert.ToBase64String(outputStream.ToArray());
         }
         catch (Exception ex)
         {
@@ -64,28 +61,18 @@ public static class ConfigHelpers
         return null;
     }
 
-    public static T? GetFromImportString<T>(string importString)
+    public static T? GetFromImportString<T>(string? importString)
     {
         if (string.IsNullOrEmpty(importString)) return default;
 
         try
         {
-            byte[] bytes = Convert.FromBase64String(importString);
-
-            string decodedJsonString;
-            using (MemoryStream inputStream = new MemoryStream(bytes))
-            {
-                using (DeflateStream compressionStream = new DeflateStream(inputStream, CompressionMode.Decompress))
-                {
-                    using (StreamReader reader = new StreamReader(compressionStream, Encoding.UTF8))
-                    {
-                        decodedJsonString = reader.ReadToEnd();
-                    }
-                }
-            }
-
-            T? importedObj = JsonConvert.DeserializeObject<T>(decodedJsonString, _serializerSettings);
-            return importedObj;
+            var bytes = Convert.FromBase64String(importString);
+            using var inputStream = new MemoryStream(bytes);
+            using var compressionStream = new DeflateStream(inputStream, CompressionMode.Decompress);
+            using var reader = new StreamReader(compressionStream, Encoding.UTF8);
+            var decodedJsonString = reader.ReadToEnd();
+            return JsonConvert.DeserializeObject<T?>(decodedJsonString, _serializerSettings);
         }
         catch (Exception ex)
         {
@@ -95,7 +82,7 @@ public static class ConfigHelpers
         return default;
     }
 
-    public static LMeterConfig LoadConfig(string path)
+    public static LMeterConfig LoadConfig(string? path)
     {
         LMeterConfig? config = null;
 
@@ -103,15 +90,14 @@ public static class ConfigHelpers
         {
             if (File.Exists(path))
             {
-                string jsonString = File.ReadAllText(path);
-                config = JsonConvert.DeserializeObject<LMeterConfig>(jsonString, _serializerSettings);
+                config = JsonConvert.DeserializeObject<LMeterConfig>(File.ReadAllText(path), _serializerSettings);
             }
         }
         catch (Exception ex)
         {
             PluginLog.Error(ex.ToString());
 
-            string backupPath = $"{path}.bak";
+            var backupPath = $"{path}.bak";
             if (File.Exists(path))
             {
                 try
@@ -133,7 +119,7 @@ public static class ConfigHelpers
     {
         try
         {
-            string jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
+            var jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
             File.WriteAllText(Plugin.ConfigFilePath, jsonString);
         }
         catch (Exception ex)
@@ -150,14 +136,14 @@ public static class ConfigHelpers
 public class LMeterSerializationBinder : ISerializationBinder
 {
     // TODO: Make this automatic somehow?
-    private static List<Type> _configTypes = new ();
+    private static readonly List<Type> _configTypes = new ();
 
     private readonly Dictionary<Type, string> typeToName = new ();
     private readonly Dictionary<string, Type> nameToType = new ();
 
     public LMeterSerializationBinder()
     {
-        foreach (Type type in _configTypes)
+        foreach (var type in _configTypes)
         {
             if (type.FullName is not null)
             {

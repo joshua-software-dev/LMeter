@@ -33,12 +33,10 @@ public class ActEvent
 
     public bool IsEncounterActive()
     {
-        if (_parsedActive)
-        {
-            return _active;
-        }
-            
-        bool.TryParse(this.IsActive, out _active);
+        if (_parsedActive) return _active;
+
+        if (bool.TryParse(this.IsActive, out _active)) return false;
+
         _parsedActive = true;
         return _active;
     }

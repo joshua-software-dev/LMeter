@@ -19,16 +19,14 @@ namespace LMeter.Helpers;
 
 public class TexturesCache : IDisposable
 {
-    private Dictionary<string, Tuple<TextureWrap, float>> _textureCache;
-    private ICallGateSubscriber<string, string> _penumbraPathResolver;
-    private DataManager _dataManager;
-    private UiBuilder _uiBuilder;
+    private readonly Dictionary<string, Tuple<TextureWrap, float>> _textureCache = new ();
+    private readonly ICallGateSubscriber<string, string> _penumbraPathResolver;
+    private readonly DataManager _dataManager;
+    private readonly UiBuilder _uiBuilder;
 
     public TexturesCache(DataManager dataManager, DalamudPluginInterface pluginInterface)
     {
-        _textureCache = new Dictionary<string, Tuple<TextureWrap, float>>();
         _penumbraPathResolver = pluginInterface.GetIpcSubscriber<string, string>("Penumbra.ResolveDefaultPath");
-
         _dataManager = dataManager;
         _uiBuilder = pluginInterface.UiBuilder;
     }
@@ -42,23 +40,17 @@ public class TexturesCache : IDisposable
         float opacity = 1f
     )
     {
-        string key = $"{iconId}{(greyScale ? "_g" : string.Empty)}{(opacity != 1f ? "_t" : string.Empty)}";
+        var key = $"{iconId}{(greyScale ? "_g" : string.Empty)}{(opacity != 1f ? "_t" : string.Empty)}";
         if (_textureCache.TryGetValue(key, out var tuple))
         {
             var (texture, cachedOpacity) = tuple;
-            if (cachedOpacity == opacity)
-            {
-                return texture;
-            }
+            if (cachedOpacity == opacity) return texture;
 
             _textureCache.Remove(key);
         }
 
-        TextureWrap? newTexture = this.LoadTexture(iconId + stackCount, hdIcon, greyScale, opacity);
-        if (newTexture == null)
-        {
-            return null;
-        }
+        var newTexture = this.LoadTexture(iconId + stackCount, hdIcon, greyScale, opacity);
+        if (newTexture == null) return null;
 
         _textureCache.Add(key, new Tuple<TextureWrap, float>(newTexture, opacity));
         return newTexture;
@@ -66,12 +58,11 @@ public class TexturesCache : IDisposable
 
     private TextureWrap? LoadTexture(uint id, bool hdIcon, bool greyScale, float opacity = 1f)
     {
-        TextureWrap? textureWrap = null;
-        string path = $"ui/icon/{id / 1000 * 1000:000000}/{id:000000}{(hdIcon ? "_hr1" : string.Empty)}.tex";
+        var path = $"ui/icon/{id / 1000 * 1000:000000}/{id:000000}{(hdIcon ? "_hr1" : string.Empty)}.tex";
 
         try
         {
-            string resolvedPath = _penumbraPathResolver.InvokeFunc(path);
+            var resolvedPath = _penumbraPathResolver.InvokeFunc(path);
 
             if (!string.IsNullOrEmpty(resolvedPath) && !resolvedPath.Equals(path))
             {
@@ -82,7 +73,7 @@ public class TexturesCache : IDisposable
 
         try
         {
-            TexFile? iconFile = _dataManager.GetFile<TexFile>(path);
+            var iconFile = _dataManager.GetFile<TexFile>(path);
             if (iconFile is null)
             {
                 return null;
@@ -95,7 +86,7 @@ public class TexturesCache : IDisposable
             PluginLog.Warning(ex.ToString());
         }
 
-        return textureWrap;
+        return null;
     }
 
     private TextureWrap? LoadPenumbraTexture(string path)
@@ -107,23 +98,20 @@ public class TexturesCache : IDisposable
 
             // read header
             int headerSize = Unsafe.SizeOf<TexHeader>();
-            ReadOnlySpan<byte> headerData = reader.ReadBytes(headerSize);
-            TexHeader Header = MemoryMarshal.Read<TexHeader>(headerData);
+            var headerData = reader.ReadBytes(headerSize).AsSpan();
+            var header = MemoryMarshal.Read<TexHeader>(headerData);
 
             // read image data
-            byte[] rawImageData = reader.ReadBytes((int)fileStream.Length - headerSize);
-            byte[] imageData = new byte[Header.Width * Header.Height * 4];
+            var rawImageData = reader.ReadBytes((int)fileStream.Length - headerSize);
+            var imageData = new byte[header.Width * header.Height * 4];
 
-            if (!ProcessTexture(Header.Format, rawImageData, imageData, Header.Width, Header.Height))
-            {
-                return null;
-            }
+            if (!ProcessTexture(header.Format, rawImageData, imageData, header.Width, header.Height)) return null;
 
-            return _uiBuilder.LoadImageRaw(GetRgbaImageData(imageData), Header.Width, Header.Height, 4);
+            return _uiBuilder.LoadImageRaw(GetRgbaImageData(imageData), header.Width, header.Height, 4);
         }
         catch (Exception ex)
         {
-            PluginLog.Error($"Error loading texture: {path} {ex.ToString()}");
+            PluginLog.Error($"Error loading texture: {path} {ex}");
         }
 
         return null;
@@ -148,23 +136,48 @@ public class TexturesCache : IDisposable
     {
         switch (format)
         {
-            case TextureFormat.DXT1: Decompress(SquishOptions.DXT1, src, dst, width, height); return true;
-            case TextureFormat.DXT3: Decompress(SquishOptions.DXT3, src, dst, width, height); return true;
-            case TextureFormat.DXT5: Decompress(SquishOptions.DXT5, src, dst, width, height); return true;
-            case TextureFormat.B5G5R5A1: ProcessB5G5R5A1(src, dst, width, height); return true;
-            case TextureFormat.B4G4R4A4: ProcessB4G4R4A4(src, dst, width, height); return true;
-            case TextureFormat.L8: ProcessR3G3B2(src, dst, width, height); return true;
-            case TextureFormat.B8G8R8A8: Array.Copy(src, dst, dst.Length); return true;
+            case TextureFormat.DXT1:
+            {
+                Decompress(SquishOptions.DXT1, src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.DXT3:
+            {
+                Decompress(SquishOptions.DXT3, src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.DXT5:
+            {
+                Decompress(SquishOptions.DXT5, src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.B5G5R5A1:
+            {
+                ProcessB5G5R5A1(src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.B4G4R4A4:
+            {
+                ProcessB4G4R4A4(src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.L8:
+            {
+                ProcessR3G3B2(src, dst, width, height);
+                return true;
+            }
+            case TextureFormat.B8G8R8A8:
+            {
+                Array.Copy(src, dst, dst.Length);
+                return true;
+            }
         }
 
         return false;
     }
-        
-    private static void Decompress(SquishOptions squishOptions, byte[] src, byte[] dst, int width, int height)
-    {
-        var decompressed = Squish.DecompressImage(src, width, height, squishOptions);
-        Array.Copy(decompressed, dst, dst.Length);
-    }
+
+    private static void Decompress(SquishOptions squishOptions, byte[] src, byte[] dst, int width, int height) =>
+        Array.Copy(Squish.DecompressImage(src, width, height, squishOptions), dst, dst.Length);
 
     private static void ProcessB5G5R5A1(Span<byte> src, byte[] dst, int width, int height)
     {
@@ -182,7 +195,7 @@ public class TexturesCache : IDisposable
 
             for (var j = 0; j < 4; ++j)
             {
-                dst[i * 2 + j] = (byte)(argbValue >> (8 * j));
+                dst[i * 2 + j] = (byte) (argbValue >> (8 * j));
             }
         }
     }
@@ -236,23 +249,18 @@ public class TexturesCache : IDisposable
 
     private TextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
     {
-        byte[] bytes = tex.GetRgbaImageData();
-        if (greyScale || opacity < 1f)
-        {
-            ConvertBytes(ref bytes, greyScale, opacity);
-        }
+        var bytes = tex.GetRgbaImageData();
+
+        if (greyScale || opacity < 1f) ConvertBytes(ref bytes, greyScale, opacity);
 
         return _uiBuilder.LoadImageRaw(bytes, tex.Header.Width, tex.Header.Height, 4);
     }
 
     private static void ConvertBytes(ref byte[] bytes, bool greyScale, float opacity)
     {
-        if (bytes.Length % 4 != 0 || opacity > 1 || opacity < 0)
-        {
-            return;
-        }
+        if (bytes.Length % 4 != 0 || opacity > 1 || opacity < 0) return;
 
-        for (int i = 0; i < bytes.Length; i += 4)
+        for (var i = 0; i < bytes.Length; i += 4)
         {
             if (greyScale)
             {

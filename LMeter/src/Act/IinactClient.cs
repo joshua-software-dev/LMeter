@@ -199,7 +199,7 @@ public class IinactClient : ActEventParser, IActClient
 
     public void EndEncounter()
     {
-        XivChatEntry message = new XivChatEntry()
+        var message = new XivChatEntry()
         {
             Message = "end",
             Type = XivChatType.Echo
@@ -212,9 +212,10 @@ public class IinactClient : ActEventParser, IActClient
     {
         LastEvent = null;
         PastEvents = new List<ActEvent>();
+
         if (_config.ClearAct)
         {
-            XivChatEntry message = new XivChatEntry()
+            var message = new XivChatEntry()
             {
                 Message = "clear",
                 Type = XivChatType.Echo
@@ -239,6 +240,7 @@ public class IinactClient : ActEventParser, IActClient
         }
 
         if (!Connect()) return;
+
         _status = SubscriptionStatus.Subscribed;;
         PluginLog.Information("Successfully subscribed to IINACT");
     }
@@ -308,7 +310,7 @@ public class IinactClient : ActEventParser, IActClient
     {
         try
         {
-            ActEvent? newEvent = data.ToObject<ActEvent?>();
+            var newEvent = data.ToObject<ActEvent?>();
             return this.ParseNewEvent(newEvent, _config.EncounterHistorySize);
         }
         catch (Exception ex)
@@ -321,6 +323,7 @@ public class IinactClient : ActEventParser, IActClient
     public void Shutdown()
     {
         _status = SubscriptionStatus.Unsubscribing;
+
         try
         {
             var success = _dpi

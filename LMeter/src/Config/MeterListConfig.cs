@@ -14,18 +14,14 @@ namespace LMeter.Config;
 public class MeterListConfig : IConfigPage
 {
     private const float MenuBarHeight = 40;
-
     [JsonIgnore]
     private string _input = string.Empty;
-
-    public string Name => "Profiles";
-
+    public string Name =>
+        "Profiles";
     public List<MeterWindow> Meters { get; set; }
 
-    public MeterListConfig()
-    {
+    public MeterListConfig() =>
         this.Meters = new List<MeterWindow>();
-    }
 
     public IConfigPage GetDefault() =>
         new MeterListConfig();
@@ -57,36 +53,39 @@ public class MeterListConfig : IConfigPage
 
     private void DrawCreateMenu(Vector2 size, float padX)
     {
-        Vector2 buttonSize = new Vector2(40, 0);
-        float textInputWidth = size.X - buttonSize.X * 2 - padX * 4;
+        var buttonSize = new Vector2(40, 0);
+        var textInputWidth = size.X - buttonSize.X * 2 - padX * 4;
 
-        if (ImGui.BeginChild("##Buttons", new Vector2(size.X, MenuBarHeight), true))
+        if (!ImGui.BeginChild("##Buttons", new Vector2(size.X, MenuBarHeight), true))
         {
-            ImGui.PushItemWidth(textInputWidth);
-            ImGui.InputTextWithHint("##Input", "Profile Name/Import String", ref _input, 10000);
-            ImGui.PopItemWidth();
-
-            ImGui.SameLine();
-            DrawHelpers.DrawButton
-            (
-                string.Empty,
-                FontAwesomeIcon.Plus,
-                () => CreateMeter(_input),
-                "Create new Meter",
-                buttonSize
-            );
-
-            ImGui.SameLine();
-            DrawHelpers.DrawButton
-            (
-                string.Empty,
-                FontAwesomeIcon.Download,
-                () => ImportMeter(_input),
-                "Import new Meter",
-                buttonSize
-            );
-            ImGui.PopItemWidth();
+            ImGui.EndChild();
+            return;
         }
+
+        ImGui.PushItemWidth(textInputWidth);
+        ImGui.InputTextWithHint("##Input", "Profile Name/Import String", ref _input, 10000);
+        ImGui.PopItemWidth();
+
+        ImGui.SameLine();
+        DrawHelpers.DrawButton
+        (
+            string.Empty,
+            FontAwesomeIcon.Plus,
+            () => CreateMeter(_input),
+            "Create new Meter",
+            buttonSize
+        );
+
+        ImGui.SameLine();
+        DrawHelpers.DrawButton
+        (
+            string.Empty,
+            FontAwesomeIcon.Download,
+            () => ImportMeter(_input),
+            "Import new Meter",
+            buttonSize
+        );
+        ImGui.PopItemWidth();
 
         ImGui.EndChild();
     }
@@ -101,91 +100,94 @@ public class MeterListConfig : IConfigPage
             ImGuiTableFlags.ScrollY |
             ImGuiTableFlags.NoSavedSettings;
 
-        if (ImGui.BeginTable("##Meter_Table", 3, flags, new Vector2(size.X, size.Y - MenuBarHeight)))
+        if (!ImGui.BeginTable("##Meter_Table", 3, flags, new Vector2(size.X, size.Y - MenuBarHeight)))
         {
-            Vector2 buttonsize = new Vector2(30, 0);
-            float actionsWidth = buttonsize.X * 3 + padX * 2;
+            ImGui.EndChild();
+            return;
+        }
 
-            ImGui.TableSetupColumn("   #", ImGuiTableColumnFlags.WidthFixed, 18, 0);
-            ImGui.TableSetupColumn("Profile Name", ImGuiTableColumnFlags.WidthStretch, 0, 1);
-            ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, actionsWidth, 2);
+        var buttonSize = new Vector2(30, 0);
+        var actionsWidth = buttonSize.X * 3 + padX * 2;
 
-            ImGui.TableSetupScrollFreeze(0, 1);
-            ImGui.TableHeadersRow();
+        ImGui.TableSetupColumn("   #", ImGuiTableColumnFlags.WidthFixed, 18, 0);
+        ImGui.TableSetupColumn("Profile Name", ImGuiTableColumnFlags.WidthStretch, 0, 1);
+        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthFixed, actionsWidth, 2);
 
-            for (int i = 0; i < this.Meters.Count; i++)
+        ImGui.TableSetupScrollFreeze(0, 1);
+        ImGui.TableHeadersRow();
+
+        for (var i = 0; i < this.Meters.Count; i++)
+        {
+            var meter = this.Meters[i];
+
+            if 
+            (
+                !string.IsNullOrEmpty(_input) &&
+                !meter.Name.Contains(_input, StringComparison.OrdinalIgnoreCase)
+            )
             {
-                MeterWindow meter = this.Meters[i];
-
-                if (!string.IsNullOrEmpty(_input) &&
-                    !meter.Name.Contains(_input, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                ImGui.PushID(i.ToString());
-                ImGui.TableNextRow(ImGuiTableRowFlags.None, 28);
-
-                if (ImGui.TableSetColumnIndex(0))
-                {
-                    string num = $"  {i + 1}.";
-                    float columnWidth = ImGui.GetColumnWidth();
-                    Vector2 cursorPos = ImGui.GetCursorPos();
-                    Vector2 textSize = ImGui.CalcTextSize(num);
-                    ImGui.SetCursorPos(new Vector2(cursorPos.X + columnWidth - textSize.X, cursorPos.Y + 3f));
-                    ImGui.Text(num);
-                }
-
-                if (ImGui.TableSetColumnIndex(1))
-                {
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 3f);
-                    ImGui.Text(meter.Name);
-                }
-
-                if (ImGui.TableSetColumnIndex(2))
-                {
-                    ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 1f);
-                    DrawHelpers.DrawButton
-                    (
-                        string.Empty,
-                        FontAwesomeIcon.Pen,
-                        () => EditMeter(meter),
-                        "Edit",
-                        buttonsize
-                    );
-
-                    ImGui.SameLine();
-                    DrawHelpers.DrawButton
-                    (
-                        string.Empty,
-                        FontAwesomeIcon.Upload,
-                        () => ExportMeter(meter),
-                        "Export",
-                        buttonsize
-                    );
-
-                    ImGui.SameLine();
-                    DrawHelpers.DrawButton
-                    (
-                        string.Empty,
-                        FontAwesomeIcon.Trash,
-                        () => DeleteMeter(meter),
-                        "Delete",
-                        buttonsize
-                    );
-                }
+                continue;
             }
 
-            ImGui.EndTable();
+            ImGui.PushID(i.ToString());
+            ImGui.TableNextRow(ImGuiTableRowFlags.None, 28);
+
+            if (ImGui.TableSetColumnIndex(0))
+            {
+                var num = $"  {i + 1}.";
+                var columnWidth = ImGui.GetColumnWidth();
+                var cursorPos = ImGui.GetCursorPos();
+                var textSize = ImGui.CalcTextSize(num);
+                ImGui.SetCursorPos(new Vector2(cursorPos.X + columnWidth - textSize.X, cursorPos.Y + 3f));
+                ImGui.Text(num);
+            }
+
+            if (ImGui.TableSetColumnIndex(1))
+            {
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 3f);
+                ImGui.Text(meter.Name);
+            }
+
+            if (ImGui.TableSetColumnIndex(2))
+            {
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 1f);
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Pen,
+                    () => EditMeter(meter),
+                    "Edit",
+                    buttonSize
+                );
+
+                ImGui.SameLine();
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Upload,
+                    () => ExportMeter(meter),
+                    "Export",
+                    buttonSize
+                );
+
+                ImGui.SameLine();
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Trash,
+                    () => DeleteMeter(meter),
+                    "Delete",
+                    buttonSize
+                );
+            }
         }
+
+        ImGui.EndTable();
     }
 
     private void CreateMeter(string name)
     {
-        if (!string.IsNullOrEmpty(name))
-        {
-            this.Meters.Add(MeterWindow.GetDefaultMeter(name));
-        }
+        if (!string.IsNullOrEmpty(name)) this.Meters.Add(MeterWindow.GetDefaultMeter(name));
 
         _input = string.Empty;
     }
@@ -193,20 +195,18 @@ public class MeterListConfig : IConfigPage
     private void EditMeter(MeterWindow meter) =>
         PluginManager.Instance.Edit(meter);
 
-    private void DeleteMeter(MeterWindow meter)
-    {
+    private void DeleteMeter(MeterWindow meter) =>
         this.Meters.Remove(meter);
-    }
 
     private void ImportMeter(string input)
     {
-        string importString = input;
+        var importString = input;
         if (string.IsNullOrWhiteSpace(importString))
         {
             importString = ImGui.GetClipboardText();
         }
 
-        MeterWindow? newMeter = ConfigHelpers.GetFromImportString<MeterWindow>(importString);
+        var newMeter = ConfigHelpers.GetFromImportString<MeterWindow?>(importString);
         if (newMeter is not null)
         {
             this.Meters.Add(newMeter);
@@ -219,8 +219,6 @@ public class MeterListConfig : IConfigPage
         _input = string.Empty;
     }
 
-    private void ExportMeter(MeterWindow meter)
-    {
+    private void ExportMeter(MeterWindow meter) =>
         ConfigHelpers.ExportToClipboard(meter);
-    }
 }

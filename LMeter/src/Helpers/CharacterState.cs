@@ -10,18 +10,14 @@ public static class CharacterState
 {
     private static readonly uint[] _goldenSaucerIDs = { 144, 388, 389, 390, 391, 579, 792, 899, 941 };
 
-    public static bool IsCharacterBusy()
-    {
-        Condition condition = PluginManager.Instance.Condition;
-        return 
-            condition[ConditionFlag.WatchingCutscene] ||
-            condition[ConditionFlag.WatchingCutscene78] ||
-            condition[ConditionFlag.OccupiedInCutSceneEvent] ||
-            condition[ConditionFlag.CreatingCharacter] ||
-            condition[ConditionFlag.BetweenAreas] ||
-            condition[ConditionFlag.BetweenAreas51] ||
-            condition[ConditionFlag.OccupiedSummoningBell];
-    }
+    public static bool IsCharacterBusy() =>
+        PluginManager.Instance.Condition[ConditionFlag.WatchingCutscene] ||
+        PluginManager.Instance.Condition[ConditionFlag.WatchingCutscene78] ||
+        PluginManager.Instance.Condition[ConditionFlag.OccupiedInCutSceneEvent] ||
+        PluginManager.Instance.Condition[ConditionFlag.CreatingCharacter] ||
+        PluginManager.Instance.Condition[ConditionFlag.BetweenAreas] ||
+        PluginManager.Instance.Condition[ConditionFlag.BetweenAreas51] ||
+        PluginManager.Instance.Condition[ConditionFlag.OccupiedSummoningBell];
 
     public static bool IsInCombat() =>
         PluginManager.Instance.Condition[ConditionFlag.InCombat];
@@ -34,16 +30,19 @@ public static class CharacterState
 
     public static bool IsInGoldenSaucer()
     {
-        return _goldenSaucerIDs.Any(id => id == PluginManager.Instance.ClientState.TerritoryType);
+        var territoryId = PluginManager.Instance.ClientState.TerritoryType;
+        foreach (var id in _goldenSaucerIDs)
+        {
+            if (id == territoryId) return true;
+        }
+
+        return false;
     }
 
     public static Job GetCharacterJob()
     {
         var player = PluginManager.Instance.ClientState.LocalPlayer;
-        if (player is null)
-        {
-            return Job.UKN;
-        }
+        if (player is null) return Job.UKN;
 
         unsafe
         {

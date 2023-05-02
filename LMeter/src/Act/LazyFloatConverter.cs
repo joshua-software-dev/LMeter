@@ -6,10 +6,8 @@ namespace LMeter.Act;
 
 public class LazyFloatConverter : JsonConverter
 {
-    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
-    {
+    public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) =>
         throw new NotImplementedException("Write not supported.");
-    }
 
     public override object? ReadJson
     (
@@ -19,15 +17,9 @@ public class LazyFloatConverter : JsonConverter
         JsonSerializer serializer
     )
     {
-        if (objectType != typeof(LazyFloat))
-        {
-            return serializer.Deserialize(reader, objectType);
-        }
+        if (objectType != typeof(LazyFloat)) return serializer.Deserialize(reader, objectType);
 
-        if (reader.TokenType != JsonToken.String)
-        {
-            return new LazyFloat(0f);
-        }
+        if (reader.TokenType != JsonToken.String) return new LazyFloat(0f);
 
         return new LazyFloat(serializer.Deserialize(reader, typeof(string))?.ToString());
     }
@@ -38,8 +30,6 @@ public class LazyFloatConverter : JsonConverter
     public override bool CanWrite =>
         false;
 
-    public override bool CanConvert(Type objectType)
-    {
-        return objectType == typeof(LazyFloat);
-    }
+    public override bool CanConvert(Type objectType) =>
+        objectType == typeof(LazyFloat);
 }

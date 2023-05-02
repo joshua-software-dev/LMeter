@@ -11,9 +11,8 @@ namespace LMeter.Helpers;
 
 public static class Utils
 {
-    public static Vector2 GetAnchoredPosition(Vector2 position, Vector2 size, DrawAnchor anchor)
-    {
-        return anchor switch
+    public static Vector2 GetAnchoredPosition(Vector2 position, Vector2 size, DrawAnchor anchor) =>
+        anchor switch
         {
             DrawAnchor.Center => position - size / 2f,
             DrawAnchor.Left => position + new Vector2(0, -size.Y / 2f),
@@ -26,29 +25,19 @@ public static class Utils
             DrawAnchor.BottomRight => position + new Vector2(-size.X, -size.Y),
             _ => position
         };
-    }
 
     public static GameObject? FindTargetOfTarget(ObjectTable objectTable, GameObject? player, GameObject? target)
     {
-        if (target == null)
-        {
-            return null;
-        }
+        if (target == null) return null;
 
-        if (target.TargetObjectId == 0 && player != null && player.TargetObjectId == 0)
-        {
-            return player;
-        }
+        if (target.TargetObjectId == 0 && player != null && player.TargetObjectId == 0) return player;
 
         // only the first 200 elements in the array are relevant due to the order in which SE packs data into the array
         // we do a step of 2 because its always an actor followed by its companion
-        for (int i = 0; i < 200; i += 2)
+        for (var i = 0; i < 200; i += 2)
         {
-            GameObject? actor = objectTable[i];
-            if (actor?.ObjectId == target.TargetObjectId)
-            {
-                return actor;
-            }
+            var actor = objectTable[i];
+            if (actor?.ObjectId == target.TargetObjectId) return actor;
         }
 
         return null;

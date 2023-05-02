@@ -11,11 +11,13 @@ public class LMeterConfig : IConfigurable, IDisposable
 {
     public string Name
     { 
-        get => "LMeter";
+        get =>
+            "LMeter";
         set {}
     }
 
-    public string? Version => Plugin.Version;
+    public string? Version =
+        Plugin.Version;
 
     public bool FirstLoad = true;
 
