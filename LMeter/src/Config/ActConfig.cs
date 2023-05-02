@@ -29,6 +29,7 @@ public class ActConfig : IConfigPage
     public string ActSocketAddress;
     public int EncounterHistorySize = 15;
     public bool AutoReconnect = false;
+    public bool WaitForCharacterLogin = false;
     public int ReconnectDelay = 30;
 
     [JsonProperty("ClearACT")]
@@ -90,6 +91,7 @@ public class ActConfig : IConfigPage
         ImGui.SameLine();
         ImGui.SetCursorPosY(ImGui.GetCursorPosY() - 1f);
         ImGui.Text("Retry Connection");
+
         ImGui.NewLine();
         ImGui.Checkbox("Automatically attempt to reconnect if connection fails", ref this.AutoReconnect);
         if (this.AutoReconnect)
@@ -99,6 +101,7 @@ public class ActConfig : IConfigPage
             ImGui.InputInt("Seconds between reconnect attempts", ref this.ReconnectDelay, 0, 0);
             ImGui.PopItemWidth();
         }
+        ImGui.Checkbox("Wait until after logging into character to connect to ACT", ref this.WaitForCharacterLogin);
 
         ImGui.NewLine();
         ImGui.PushItemWidth(30);

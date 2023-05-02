@@ -235,6 +235,14 @@ public class ActWebSocketClient : ActEventParser, IActClient
             PluginLog.Error("Cannot start, ActWebSocketClient needs to be reset!");
             return;
         }
+        else if (_config.WaitForCharacterLogin)
+        {
+            if (!PluginManager.Instance?.ClientState.IsLoggedIn ?? true)
+            {
+                PluginLog.Error("Cannot start, player is not logged in.");
+                return;
+            }
+        }
 
         try
         {

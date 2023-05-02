@@ -238,6 +238,14 @@ public class IinactClient : ActEventParser, IActClient
             PluginLog.Error("Cannot start, IINACTClient needs to be reset!");
             return;
         }
+        else if (_config.WaitForCharacterLogin)
+        {
+            if (!PluginManager.Instance?.ClientState.IsLoggedIn ?? true)
+            {
+                PluginLog.Error("Cannot start, player is not logged in.");
+                return;
+            }
+        }
 
         if (!Connect()) return;
 

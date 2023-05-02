@@ -86,6 +86,7 @@ public class PluginManager : IDisposable
             }
         );
 
+        ClientState.Login += OnLogin;
         ClientState.Logout += OnLogout;
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
         PluginInterface.UiBuilder.Draw += Draw;
@@ -138,6 +139,11 @@ public class PluginManager : IDisposable
     private void OpenConfigUi()
     {
         if (!_configRoot.IsOpen) _configRoot.PushConfig(_config);
+    }
+
+    private void OnLogin(object? sender, EventArgs? args)
+    {
+        if (_config.ActConfig.WaitForCharacterLogin) ActClient.Current.Start();
     }
 
     private void OnLogout(object? sender, EventArgs? args) =>
@@ -217,6 +223,7 @@ public class PluginManager : IDisposable
             // Don't modify order
             PluginInterface.UiBuilder.Draw -= Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfigUi;
+            ClientState.Login -= OnLogin;
             ClientState.Logout -= OnLogout;
             _commandManager.RemoveHandler("/lm");
             _windowSystem.RemoveAllWindows();
