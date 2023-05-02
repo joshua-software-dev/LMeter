@@ -27,6 +27,6 @@ public class ActClient
         Current?.Dispose();
         return Current = _config.IinactMode
             ? new IinactClient(_chatGui, _config, _dpi)
-            : new ActWebSocketClient(_chatGui, _config, _dpi);
+            : new ActWebSocketClient(_chatGui, _config);
     }
 }

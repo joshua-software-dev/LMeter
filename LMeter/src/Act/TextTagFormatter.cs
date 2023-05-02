@@ -6,9 +6,11 @@ using System;
 
 namespace LMeter.Act;
 
-public class TextTagFormatter
+public partial class TextTagFormatter
 {
-    public static Regex TextTagRegex { get; } = new (@"\[(\w*)(:k)?\.?(\d+)?\]", RegexOptions.Compiled);
+    [GeneratedRegex(@"\[(\w*)(:k)?\.?(\d+)?\]", RegexOptions.Compiled)]
+    private static partial Regex _textTagRegex();
+    public static Regex TextTagRegex { get; } = _textTagRegex();
 
     private readonly string _format;
     private readonly Dictionary<string, FieldInfo> _fields;

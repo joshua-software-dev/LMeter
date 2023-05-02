@@ -105,12 +105,9 @@ public class DrawHelpers
             opacity
         );
 
-        if (tex is null)
-        {
-            return;
-        }
+        if (tex is null) return;
 
-        (Vector2 uv0, Vector2 uv1) = GetTexCoordinates(tex, cropIcon);
+        (var uv0, var uv1) = GetTexCoordinates(tex, cropIcon);
 
         drawList.AddImage(tex.ImGuiHandle, position, position + size, uv0, uv1);
     }

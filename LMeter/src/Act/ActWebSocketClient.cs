@@ -3,7 +3,6 @@ using Dalamud.Game.Text;
 using Dalamud.Interface.Colors;
 using Dalamud.Interface;
 using Dalamud.Logging;
-using Dalamud.Plugin;
 using ImGuiNET;
 using LMeter.Config;
 using Newtonsoft.Json;
@@ -43,7 +42,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
     public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
 
-    public ActWebSocketClient(ChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
+    public ActWebSocketClient(ChatGui chatGui, ActConfig config)
     {
         _chatGui = chatGui;
         _config = config;
@@ -318,7 +317,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         {
             while (_status == ConnectionStatus.Subscribed)
             {
-                using MemoryStream ms = new MemoryStream();
+                using var ms = new MemoryStream();
                 WebSocketReceiveResult result;
                 do
                 {
@@ -333,7 +332,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 }
 
                 ms.Seek(0, SeekOrigin.Begin);
-                using StreamReader reader = new StreamReader(ms, Encoding.UTF8);
+                using var reader = new StreamReader(ms, Encoding.UTF8);
                 var data = await reader.ReadToEndAsync();
                 PluginLog.Verbose(data);
                 if (string.IsNullOrEmpty(data)) continue;
