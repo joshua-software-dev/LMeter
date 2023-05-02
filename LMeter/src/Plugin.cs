@@ -1,12 +1,8 @@
 using Dalamud.Data;
 using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState.JobGauge;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
-using Dalamud.Game;
 using Dalamud.Interface;
 using Dalamud.Logging;
 using Dalamud.Plugin;
