@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+using ImGuiNET;
 using LMeter.Helpers;
 using System.Numerics;
 

@@ -1,4 +1,4 @@
-﻿using ImGuiNET;
+using ImGuiNET;
 using Newtonsoft.Json;
 using System.Numerics;
 

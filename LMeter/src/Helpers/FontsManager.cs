@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface;
+using Dalamud.Interface;
 using Dalamud.Logging;
 using ImGuiNET;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface;
+using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.Helpers;
 using Newtonsoft.Json;

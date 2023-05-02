@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Logging;
 using ImGuiNET;
 using LMeter.Config;

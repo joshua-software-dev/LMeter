@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Logging;
 using System.Diagnostics;

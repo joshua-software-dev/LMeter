@@ -1,4 +1,4 @@
-﻿using Dalamud.Interface.Internal.Notifications;
+using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Interface;
 using ImGuiNET;
 using ImGuiScene;
