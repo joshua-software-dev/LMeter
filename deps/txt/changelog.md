@@ -4,7 +4,7 @@
   This is a testing release to ensure this update doesn't break people's custom 
   LMeter configs before pushing to more users. This should be considered an 
   alpha release. Errors loading configs are not expected to happen, but in an 
-  abundance of caution, this release is being held from general availablity 
+  abundance of caution, this release is being held from general availability 
   until more user testing is done.
 
   On Windows, the LMeter config can be found at: 
