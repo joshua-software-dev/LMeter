@@ -4,7 +4,7 @@
     <PropertyGroup Label="Target">
         <PlatformTarget>x64</PlatformTarget>
         <TargetFramework>net7.0-windows</TargetFramework>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>11</LangVersion>
         <Platforms>x64</Platforms>
         <Configurations>Debug;Release</Configurations>
     </PropertyGroup>
@@ -48,12 +48,12 @@
         <DalamudHome>$(DALAMUD_HOME)</DalamudHome>
         <DalamudLocal>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)/../deps/lib/dalamud/'))</DalamudLocal>
     </PropertyGroup>
-    
+
     <!-- Dalamud Configuration (Windows-specific) -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
         <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(APPDATA)\XIVLauncher\addon\Hooks\$(DalamudVersion)\'))</DalamudXIVLauncher>
     </PropertyGroup>
-    
+
     <!-- Dalamud Configuration (Linux-specific) -->
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
         <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(HOME)/.xlcore/dalamud/Hooks/$(DalamudVersion)/'))</DalamudXIVLauncher>

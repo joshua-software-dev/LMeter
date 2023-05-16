@@ -16,15 +16,8 @@ public partial class TextTagFormatter
     private readonly Dictionary<string, FieldInfo> _fields;
     private readonly object _source;
 
-    public TextTagFormatter(
-        object source,
-        string format,
-        Dictionary<string, FieldInfo> fields)
-    {
-        _source = source;
-        _format = format;
-        _fields = fields;
-    }
+    public TextTagFormatter(object source, string format, Dictionary<string, FieldInfo> fields) =>
+        (_source, _format, _fields) = (source, format, fields);
 
     public string Evaluate(Match m)
     {
