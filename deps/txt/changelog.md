@@ -1,3 +1,7 @@
+# Version 0.2.0.2
+- Fix reading config file from pre 0.2.x.x incorrectly, hopefully for real this
+  time
+
 # Version 0.2.0.1
 - Build against newest Dalamud to ensure patch 6.4 support (although there are
   no known issues with prior releases, and they may work fine.)

@@ -10,20 +10,47 @@ namespace LMeter.Config;
 public class LMeterConfig : IConfigurable, IDisposable
 {
     public string Name
-    { 
-        get =>
-            "LMeter";
+    {
+        get => "LMeter";
         set {}
     }
 
-    public string? Version =
-        Plugin.Version;
+    public string? Version
+    {
+        get => Plugin.Version;
+        set {}
+    }
 
     public bool FirstLoad = true;
 
     public MeterListConfig MeterList { get; init; }
 
-    public ActConfig ActConfig { get; init; }
+    private ActConfig _actConfig = null!;
+    public ActConfig ActConfig
+    {
+        get => _actConfig;
+        init
+        {
+            if (value is ACTConfig oldTypeName)
+            {
+                // I HATE THIS, but I cannot find any way in C# to actually convert an object to a parent type, in any
+                // other way than creating a brand new object that happens to share every value with a different type.
+                // So if I don't want to manually maintain mappings from now until the end of time whenever the parent
+                // class changes for any reason, I am FORCED to ensure the class is serializable. This is because, C#
+                // does not offer any generic way to simply deep copy an object, without FUCKING SERIALIZING IT! In
+                // this case, being serializable is a required feature anyway for these config objects, so whatever,
+                // eat all my performance and memory why dontcha?
+                var tempConf = JsonConvert.DeserializeObject<ActConfig>(JsonConvert.SerializeObject(oldTypeName));
+                if (tempConf != null)
+                {
+                    _actConfig = tempConf;
+                    return;
+                }
+            }
+
+            _actConfig = value;
+        }
+    }
 
     public FontConfig FontConfig { get; init; }
 

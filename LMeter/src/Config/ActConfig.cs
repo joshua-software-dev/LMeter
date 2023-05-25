@@ -160,13 +160,13 @@ public class ActConfig : IConfigPage
 
     public void TryReconnect()
     {
-        if 
+        if
         (
             this.LastReconnectAttempt.HasValue &&
             PluginManager.Instance.ActClient.Current.ConnectionIncompleteOrFailed()
         )
         {
-            if 
+            if
             (
                 this.AutoReconnect &&
                 this.LastReconnectAttempt < DateTime.UtcNow - TimeSpan.FromSeconds(this.ReconnectDelay)
@@ -190,9 +190,9 @@ public class ActConfig : IConfigPage
             {
                 this.LastCombatTime = DateTime.UtcNow;
             }
-            else if 
+            else if
             (
-                this.LastCombatTime is not null && 
+                this.LastCombatTime is not null &&
                 this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay)
             )
             {
@@ -202,3 +202,7 @@ public class ActConfig : IConfigPage
         }
     }
 }
+
+
+// dummy class to work around serialization dumbness
+public class ACTConfig : ActConfig { }

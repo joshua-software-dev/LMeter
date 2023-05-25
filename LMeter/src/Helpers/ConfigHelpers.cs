@@ -119,6 +119,7 @@ public static class ConfigHelpers
     {
         try
         {
+            PluginLog.Verbose($"Writing out config file: {Plugin.ConfigFilePath}");
             var jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
             File.WriteAllText(Plugin.ConfigFilePath, jsonString);
         }
@@ -172,7 +173,7 @@ public class LMeterSerializationBinder : ISerializationBinder
         if (typeName is not null && this.nameToType.TryGetValue(typeName, out Type? type)) return type;
 
         return
-            Type.GetType($"{typeName}, {assemblyName}", true) 
+            Type.GetType($"{typeName}, {assemblyName}", true)
                 ?? throw new TypeLoadException($"Unable to load type '{typeName}' from assembly '{assemblyName}'");
     }
 }
