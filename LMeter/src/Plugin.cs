@@ -115,7 +115,7 @@ public class Plugin : IDalamudPlugin
         {
             try
             {
-                return File.ReadAllText(changelogPath).Replace("# ", string.Empty);
+                return File.ReadAllText(changelogPath).Replace("%", "%%");
             }
             catch (Exception ex)
             {
@@ -138,7 +138,7 @@ public class Plugin : IDalamudPlugin
             _ => throw new ArgumentException(nameof(assemblyVersion))
         };
     }
-        
+
     public void Dispose()
     {
         this.Dispose(true);

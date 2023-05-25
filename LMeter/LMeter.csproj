@@ -69,6 +69,17 @@
         </AssemblySearchPaths>
     </PropertyGroup>
 
+    <!-- Ensure changelogs in jsons match changelog.md -->
+    <Target Name="UpdateJsonChangelogs" BeforeTargets="Build">
+        <Exec
+            Command="dotnet run --project ../ChangelogFixer/ ../repo.json ../deps/txt/changelog.md"
+            ConsoleToMSBuild="true"
+            IgnoreExitCode="false"
+            StandardErrorImportance="low"
+            StandardOutputImportance="low"
+        />
+    </Target>
+
     <!-- Auto-Download Dalamud if not already present -->
     <Target Name="DownloadDalamudDependencies" BeforeTargets="CollectPackageReferences">
         <DownloadFile
@@ -127,7 +138,7 @@
         </Reference>
         <Reference Include="ImGuiScene">
             <Private>false</Private>
-        </Reference>        
+        </Reference>
         <Reference Include="Lumina">
             <Private>false</Private>
         </Reference>
@@ -146,7 +157,7 @@
 
     <!-- Dalamud Packager Task-->
     <Target Name="DalamudPackage" AfterTargets="Build">
-        <DalamudPackager 
+        <DalamudPackager
             AssemblyName="$(AssemblyName)"
             MakeZip="true"
             OutputPath="$(TargetDir)..\$(Configuration)"
@@ -155,8 +166,8 @@
     </Target>
 
     <!-- Dalamud Packager Task Fixer-->
-    <Target 
-        Name="ExcludeThatWorks" 
+    <Target
+        Name="ExcludeThatWorks"
         AfterTargets="Build"
         BeforeTargets="DalamudPackage"
         Condition="'$(Configuration)' == 'Release'"
