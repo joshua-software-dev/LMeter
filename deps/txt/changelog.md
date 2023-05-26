@@ -1,3 +1,8 @@
+# Version 0.2.0.3
+- Add option to show the meter at all times in a duty, even when "Hide Outside
+  Combat" is enabled.
+- Add option to show meter in combat, even when "Hide Outside Duty" is enabled.
+
 # Version 0.2.0.2
 - Fix reading config file from pre 0.2.x.x incorrectly, hopefully for real this
   time
