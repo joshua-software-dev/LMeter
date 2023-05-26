@@ -21,7 +21,9 @@ public class VisibilityConfig : IConfigPage
     public bool AlwaysHide = false;
     public bool HideInCombat = false;
     public bool HideOutsideCombat = false;
+    public bool ShowAnywayWhenInDuty = false;
     public bool HideOutsideDuty = false;
+    public bool ShowAnywayWhenInCombat = false;
     public bool HideWhilePerforming = false;
     public bool HideInGoldenSaucer = false;
     public bool HideIfNotConnected = false;
@@ -45,15 +47,26 @@ public class VisibilityConfig : IConfigPage
             return false;
         }
 
+        var shouldHide = false;
         if (this.HideOutsideCombat && !CharacterState.IsInCombat())
         {
-            return false;
+            shouldHide |= true;
+            if (this.ShowAnywayWhenInDuty && CharacterState.IsInDuty())
+            {
+                shouldHide = false;
+            }
         }
 
         if (this.HideOutsideDuty && !CharacterState.IsInDuty())
         {
-            return false;
+            shouldHide |= true;
+            if (this.ShowAnywayWhenInCombat && CharacterState.IsInCombat())
+            {
+                shouldHide = false;
+            }
         }
+
+        if (shouldHide) return false;
 
         if (this.HideWhilePerforming && CharacterState.IsPerforming())
         {
@@ -84,7 +97,13 @@ public class VisibilityConfig : IConfigPage
         ImGui.Checkbox("Always Hide", ref this.AlwaysHide);
         ImGui.Checkbox("Hide In Combat", ref this.HideInCombat);
         ImGui.Checkbox("Hide Outside Combat", ref this.HideOutsideCombat);
+        ImGui.Indent();
+        ImGui.Checkbox("Show Anyway When In Duty", ref this.ShowAnywayWhenInDuty);
+        ImGui.Unindent();
         ImGui.Checkbox("Hide Outside Duty", ref this.HideOutsideDuty);
+        ImGui.Indent();
+        ImGui.Checkbox("Show Anyway When In Combat", ref this.ShowAnywayWhenInCombat);
+        ImGui.Unindent();
         ImGui.Checkbox("Hide While Performing", ref this.HideWhilePerforming);
         ImGui.Checkbox("Hide In Golden Saucer", ref this.HideInGoldenSaucer);
         ImGui.Checkbox("Hide While Not Connected to ACT", ref this.HideIfNotConnected);
@@ -103,7 +122,7 @@ public class VisibilityConfig : IConfigPage
         {
             if (string.IsNullOrEmpty(_customJobInput)) _customJobInput = this.CustomJobString.ToUpper();
 
-            if 
+            if
             (
                 ImGui.InputTextWithHint
                 (
