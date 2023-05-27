@@ -8,7 +8,19 @@ namespace LMeter.Helpers;
 
 public static class CharacterState
 {
-    private static readonly uint[] _goldenSaucerIDs = { 144, 388, 389, 390, 391, 579, 792, 899, 941 };
+    public static readonly uint[] _goldenSaucerIDs =
+    {
+        144, // The Gold Saucer | Open world zone
+        388, // Chocobo Square | ???
+        389, // Chocobo Square | ???
+        390, // Chocobo Square | ???
+        391, // Chocobo Square | ???
+        579, // The Battlehall | ???
+        792, // The Fall of Belah'dia | Jump puzzles
+        831, // The Manderville Tables | Mojang
+        899, // The Falling City of Nym | Jump puzzles
+        941, // The Battlehall | ???
+    };
 
     public static bool IsCharacterBusy() =>
         PluginManager.Instance.Condition[ConditionFlag.WatchingCutscene] ||
