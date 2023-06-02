@@ -26,8 +26,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
+        <DefineConstants>$(FeatureFlags.Replace("#",";"))</DefineConstants>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <Nullable>enable</Nullable>
         <OutputPath>bin/$(Configuration)/</OutputPath>
@@ -36,8 +35,17 @@
         <WarningsAsErrors>Nullable</WarningsAsErrors>
     </PropertyGroup>
 
+    <!-- Debug Configuration -->
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <DefineConstants>DEBUG;TRACE;$(DefineConstants)</DefineConstants>
+    </PropertyGroup>
+
     <!-- Release Configuration -->
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
         <Deterministic>true</Deterministic>
         <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)/../'))=C:\</PathMap>
     </PropertyGroup>
@@ -50,12 +58,12 @@
     </PropertyGroup>
 
     <!-- Dalamud Configuration (Windows-specific) -->
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <PropertyGroup Condition=" $([MSBuild]::IsOSPlatform('Windows')) ">
         <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(APPDATA)\XIVLauncher\addon\Hooks\$(DalamudVersion)\'))</DalamudXIVLauncher>
     </PropertyGroup>
 
     <!-- Dalamud Configuration (Linux-specific) -->
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <PropertyGroup Condition=" $([MSBuild]::IsOSPlatform('Linux')) ">
         <DalamudXIVLauncher>$([System.IO.Path]::GetFullPath('$(HOME)/.xlcore/dalamud/Hooks/$(DalamudVersion)/'))</DalamudXIVLauncher>
     </PropertyGroup>
 
@@ -83,7 +91,7 @@
     <!-- Auto-Download Dalamud if not already present -->
     <Target Name="DownloadDalamudDependencies" BeforeTargets="CollectPackageReferences">
         <DownloadFile
-            Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)')"
+            Condition=" !Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)') "
             DestinationFolder="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/"
             SourceUrl="https://github.com/goatcorp/dalamud-distrib/raw/main/stg/latest.zip"
         />
@@ -92,7 +100,7 @@
     <!-- Auto-Extract auto-downloaded Dalamud if not already present -->
     <Target Name="UnzipDalamud" AfterTargets="DownloadDalamudDependencies">
         <Unzip
-            Condition="!Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)/Dalamud.dll')"
+            Condition=" !Exists('$(DalamudXIVLauncher)') And !Exists('$(DalamudHome)') And !Exists('$(DalamudLocal)/Dalamud.dll') "
             DestinationFolder="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/"
             SourceFiles="$(MSBuildThisFileDirectory)/../deps/lib/dalamud/latest.zip"
         />
@@ -152,6 +160,7 @@
 
     <!-- NuGet Packages -->
     <ItemGroup>
+        <PackageReference Include="AngleSharp" Version="1.0.1" />
         <PackageReference Include="DalamudPackager" Version="2.1.11" />
     </ItemGroup>
 
@@ -160,7 +169,7 @@
         <DalamudPackager
             AssemblyName="$(AssemblyName)"
             MakeZip="true"
-            OutputPath="$(TargetDir)..\$(Configuration)"
+            OutputPath="$(TargetDir)../$(Configuration)"
             ProjectDir="$(ProjectDir)"
         />
     </Target>
@@ -170,7 +179,7 @@
         Name="ExcludeThatWorks"
         AfterTargets="Build"
         BeforeTargets="DalamudPackage"
-        Condition="'$(Configuration)' == 'Release'"
+        Condition=" '$(Configuration)' == 'Release' "
     >
         <Delete Files="$(OutDir)LMeter.pdb;$(OutDir)LMeter.deps.json" />
     </Target>

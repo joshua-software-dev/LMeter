@@ -68,6 +68,7 @@ public class Plugin : IDalamudPlugin
         _pluginManager = new PluginManager
         (
             actClient,
+            chatGui,
             clientState,
             commandManager,
             condition,

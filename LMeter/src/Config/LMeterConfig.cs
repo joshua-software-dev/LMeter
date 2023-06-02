@@ -52,6 +52,8 @@ public class LMeterConfig : IConfigurable, IDisposable
         }
     }
 
+    public CactbotConfig CactbotConfig { get; init; }
+
     public FontConfig FontConfig { get; init; }
 
     [JsonIgnore]
@@ -62,6 +64,7 @@ public class LMeterConfig : IConfigurable, IDisposable
         this.MeterList = new MeterListConfig();
         this.ActConfig = new ActConfig();
         this.FontConfig = new FontConfig();
+        this.CactbotConfig = new CactbotConfig();
     }
 
     public void Dispose()
@@ -83,6 +86,7 @@ public class LMeterConfig : IConfigurable, IDisposable
         yield return this.MeterList;
         yield return this.ActConfig;
         yield return this.FontConfig;
+        yield return this.CactbotConfig;
         yield return this.AboutPage;
     }
 

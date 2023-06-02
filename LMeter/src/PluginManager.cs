@@ -1,11 +1,13 @@
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using ImGuiNET;
 using LMeter.Act;
+using LMeter.Cactbot;
 using LMeter.Config;
 using LMeter.Helpers;
 using LMeter.Meter;
@@ -22,7 +24,7 @@ public class PluginManager : IDisposable
     private readonly Vector2 _configSize = new (550, 550);
     private readonly ConfigWindow _configRoot;
     private readonly WindowSystem _windowSystem;
-    private readonly ImGuiWindowFlags _mainWindowFlags = 
+    private readonly ImGuiWindowFlags _mainWindowFlags =
         ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar |
         ImGuiWindowFlags.AlwaysAutoResize |
@@ -35,6 +37,8 @@ public class PluginManager : IDisposable
     private readonly LMeterConfig _config;
 
     public readonly ActClient ActClient;
+    public readonly CactbotConfig CactbotConfig;
+    public readonly ChatGui ChatGui;
     public readonly ClientState ClientState;
     public readonly Condition Condition;
     public readonly FontsManager FontsManager;
@@ -46,6 +50,7 @@ public class PluginManager : IDisposable
     public PluginManager
     (
         ActClient actClient,
+        ChatGui chatGui,
         ClientState clientState,
         CommandManager commandManager,
         Condition condition,
@@ -56,8 +61,9 @@ public class PluginManager : IDisposable
     )
     {
         PluginManager.Instance = this;
-        
+
         ActClient = actClient;
+        ChatGui = chatGui;
         ClientState = clientState;
         _commandManager = commandManager;
         Condition = condition;
@@ -69,12 +75,13 @@ public class PluginManager : IDisposable
         _configRoot = new ConfigWindow(_config, "ConfigRoot", _origin, _configSize);
         _windowSystem = new WindowSystem("LMeter");
         _windowSystem.AddWindow(_configRoot);
+        CactbotConfig = _config.CactbotConfig;
 
         _commandManager.AddHandler(
             "/lm",
             new CommandInfo(PluginCommand)
             {
-                HelpMessage = 
+                HelpMessage =
                     """
                     Opens the LMeter configuration window.
                     /lm end → Ends current ACT Encounter.
@@ -90,6 +97,8 @@ public class PluginManager : IDisposable
         ClientState.Logout += OnLogout;
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
         PluginInterface.UiBuilder.Draw += Draw;
+
+        if (CactbotConfig.Enabled) CactbotConfig.Cactbot.StartBackgroundPolling();
     }
 
     private void Draw()
@@ -110,6 +119,8 @@ public class PluginManager : IDisposable
             {
                 meter.Draw(_origin);
             }
+
+            CactbotRaidbossWindows.Draw(_origin);
         }
 
         ImGui.End();
@@ -176,8 +187,8 @@ public class PluginManager : IDisposable
         var args = argument.Split(" ");
         return
             args.Length > 1 &&
-            int.TryParse(args[1], out var num) 
-                ? num 
+            int.TryParse(args[1], out var num)
+                ? num
                 : 0;
     }
 
@@ -190,7 +201,7 @@ public class PluginManager : IDisposable
             return
                 arg.Equals("on")
                     ? true
-                    : arg.Equals("off") 
+                    : arg.Equals("off")
                         ? false
                         : null;
         }
@@ -227,6 +238,7 @@ public class PluginManager : IDisposable
             ClientState.Logout -= OnLogout;
             _commandManager.RemoveHandler("/lm");
             _windowSystem.RemoveAllWindows();
+            this.CactbotConfig.Dispose();
 
             ActClient.Current.Dispose();
             _config.Dispose();

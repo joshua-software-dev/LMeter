@@ -1,3 +1,7 @@
+# Version 0.2.0.4
+- Add experimental option to display Cactbot data (alerts, timeline) as well as
+  play sound effects.
+
 # Version 0.2.0.3
 - Add option to show the meter at all times in a duty, even when "Hide Outside
   Combat" is enabled.

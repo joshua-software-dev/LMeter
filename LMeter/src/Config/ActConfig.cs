@@ -1,9 +1,10 @@
 using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.Helpers;
+using LMeter.Runtime;
 using Newtonsoft.Json;
-using System.Numerics;
 using System;
+using System.Numerics;
 
 
 namespace LMeter.Config;
@@ -36,6 +37,9 @@ public class ActConfig : IConfigPage
     public bool ClearAct = false;
     public bool AutoEnd = false;
     public int AutoEndDelay = 3;
+
+    [JsonIgnore]
+    private bool? WebSocketFixApplied = null;
 
     public IConfigPage GetDefault() =>
         new ActConfig();
@@ -70,6 +74,64 @@ public class ActConfig : IConfigPage
         PluginManager.Instance.ActClient.Current.DrawConnectionStatus();
         if (!IinactMode)
         {
+            ImGui.Text("WebSockets Functional: ");
+            ImGui.SameLine();
+            ImGui.PushFont(UiBuilder.IconFont);
+            if (ShaFixer.ValidateSha1IsFunctional())
+            {
+                ImGui.Text("");
+                ImGui.PopFont();
+            }
+            else
+            {
+                ImGui.Text("");
+                ImGui.PopFont();
+                ImGui.TextColored
+                (
+                    new Vector4(255, 0, 0, 255),
+                    """
+                    Your Wine runtime cannot correctly perform the SHA1 hashing required for a
+                    functional Web Socket client. A Web Socket is used by this plugin to connect to
+                    ACT to retrieve data, and this functionality has notable limitations without
+                    it. Other plugins such as `Who's Talking` and `TextToTalk` also use Web Sockets
+                    to provide features that will not work with SHA hashing in this state. LMeter
+                    can also attempt to fix this SHA hashing for you, but while the fix IS safe, it
+                    is also INVASIVE, and will modify the C# runtime used for all plugins. For this
+                    reason, LMeter is asking for your authorization before applying the fix. If you
+                    wish to authorize the fix, click the wrench button. You will need to restart
+                    your client after the fix is applied for it to take effect.
+
+                    If you do not wish to authorize the installation of the fix, try other Wine
+                    runtimes to see if they fix the problem for you, or consider using IPC mode
+                    with IINACT instead.
+                    """
+                );
+                ImGui.Text("Apply Fix:");
+                ImGui.SameLine();
+                ImGui.SetWindowFontScale(0.8f);
+                DrawHelpers.DrawButton
+                (
+                    string.Empty,
+                    FontAwesomeIcon.Wrench,
+                    () => WebSocketFixApplied = ShaFixer.ModifyRuntimeWithShaFix(),
+                    null,
+                    new Vector2(20, 20)
+                );
+                ImGui.SetWindowFontScale(1);
+
+                if (WebSocketFixApplied != null)
+                {
+                    if (WebSocketFixApplied.Value)
+                    {
+                        ImGui.Text("Fix successfully applied!");
+                    }
+                    else
+                    {
+                        ImGui.Text("Failed to apply fix...");
+                    }
+                }
+            }
+
             ImGui.InputTextWithHint
             (
                 "ACT Websocket Address",

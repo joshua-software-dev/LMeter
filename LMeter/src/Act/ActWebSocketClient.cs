@@ -61,11 +61,11 @@ public class ActWebSocketClient : ActEventParser, IActClient
     public void DrawConnectionStatus()
     {
         ImGui.Text($"ACT Status: {_status}");
-        
+
         if
         (
             _status != ConnectionStatus.ConnectionFailed &&
-            _status != ConnectionStatus.Connecting && 
+            _status != ConnectionStatus.Connecting &&
             _status != ConnectionStatus.Connected &&
             _status != ConnectionStatus.Subscribing &&
             _status != ConnectionStatus.Subscribed
@@ -73,7 +73,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         {
             return;
         }
-        
+
         ImGui.SameLine();
         ImGui.Text
         (
@@ -115,7 +115,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
         for (var i = 2; i < 6; i++)
         {
-            var iterStatus = (ConnectionStatus) i; 
+            var iterStatus = (ConnectionStatus) i;
             ImGui.TableNextColumn();
             if (_status == ConnectionStatus.ConnectionFailed)
             {
@@ -144,35 +144,35 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 ImGui.Text("");
                 ImGui.PopFont();
             }
-            
+
             if (ImGui.IsItemHovered())
             {
                 ImGui.SetTooltip
                 (
                     iterStatus switch
                     {
-                        ConnectionStatus.Connecting => 
+                        ConnectionStatus.Connecting =>
                             """
-                            LMeter attempts to connect using the ACT WebSocket protocol, 
+                            LMeter attempts to connect using the ACT WebSocket protocol,
                             if it fails the connection attempt ends.
                             """,
-                        ConnectionStatus.Connected => 
+                        ConnectionStatus.Connected =>
                             """
-                            LMeter successfully connected to a conforming ACT client. 
-                            While connection was established, in this state no data 
+                            LMeter successfully connected to a conforming ACT client.
+                            While connection was established, in this state no data
                             will be sent until LMeter explicitly requests for that data.
                             """,
-                        ConnectionStatus.Subscribing => 
+                        ConnectionStatus.Subscribing =>
                             """
-                            LMeter sends a second message to the ACT client requesting 
-                            that all "CombatEvent" data be sent whenever the ACT client 
+                            LMeter sends a second message to the ACT client requesting
+                            that all "CombatEvent" data be sent whenever the ACT client
                             generates such an event.
                             """,
-                        ConnectionStatus.Subscribed => 
+                        ConnectionStatus.Subscribed =>
                             """
-                            LMeter successfully sent a message to the ACT Client 
-                            requesting "CombatEvent" data. The connection did not 
-                            terminate on this request, however ACT clients do not reply 
+                            LMeter successfully sent a message to the ACT Client
+                            requesting "CombatEvent" data. The connection did not
+                            terminate on this request, however ACT clients do not reply
                             on successful subscription state change.
                             """,
                         _ => throw new ArgumentOutOfRangeException()
@@ -190,7 +190,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         {
             return PastEvents[index];
         }
-            
+
         return LastEvent;
     }
 
@@ -280,7 +280,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
         _status = ConnectionStatus.Connected;
         PluginLog.Information("Successfully Established ACT Connection");
-        
+
         try
         {
             _status = ConnectionStatus.Subscribing;
@@ -323,7 +323,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 {
                     result = await _socket.ReceiveAsync(_buffer, _cancellationTokenSource.Token);
                     ms.Write(_buffer.Array, _buffer.Offset, result.Count);
-                } 
+                }
                 while (!result.EndOfMessage);
 
                 if (result.MessageType == WebSocketMessageType.Close)
@@ -360,7 +360,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
             }
         }
     }
-    
+
     public void Shutdown()
     {
         _status = ConnectionStatus.ShuttingDown;
@@ -381,7 +381,8 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 _cancellationTokenSource.Cancel();
             }
 
-            _receiveTask?.Wait();
+            // TODO: Replace this whole thing with a ThreadPool version
+            _receiveTask?.GetAwaiter().GetResult();
             PluginLog.Information($"Closed ACT Connection");
         }
 
