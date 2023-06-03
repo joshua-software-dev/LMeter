@@ -11,5 +11,5 @@ public static class MagicValues
     public const string PatchedCryptographyDllUrl =
         "https://cdn.discordapp.com/attachments/1012241909403615313/1113368719834497104/System.Security.Cryptography.dll";
     public const string TotallyNotCefDownloadUrl =
-        "https://github.com/joshua-software-dev/TotallyNotCef/releases/download/v1.0.0.0/TotallyNotCef.zip";
+        "https://github.com/joshua-software-dev/TotallyNotCef/releases/latest/download/TotallyNotCef.zip";
 }
