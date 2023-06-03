@@ -92,7 +92,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (pluginDir == null) return;
         var cefDirPath = Path.GetFullPath(Path.Combine(pluginDir, "../"));
-        var cefExePath = Path.Combine(cefDirPath, "TotallyNotCef/TotallyNotCef.exe");
+        var cefExePath = Path.Combine(cefDirPath, "TotallyNotCef", "TotallyNotCef.exe");
 
         if (!File.Exists(cefExePath))
         {
