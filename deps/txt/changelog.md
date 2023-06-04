@@ -1,3 +1,7 @@
+# Version 0.2.0.5
+- Ensure that a console window does not briefly show when launching the
+  background browser used for the Cactbot feature.
+
 # Version 0.2.0.4
 - Add experimental option to display Cactbot data (alerts, timeline) as well as
   play sound effects.

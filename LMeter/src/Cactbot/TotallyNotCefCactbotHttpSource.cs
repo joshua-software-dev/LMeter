@@ -2,7 +2,9 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Dalamud.Logging;
 using LMeter.Runtime;
+using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -59,6 +61,48 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         ) { }
     }
 
+    private class GithubTagResponse
+    {
+        #pragma warning disable CS0649
+        // JSON reflection is annoying
+        [JsonProperty("name")]
+        public string? Name;
+        #pragma warning restore CS0649
+    }
+
+    private async Task<bool> IsTotallyNotCefUpToDate(string exePath)
+    {
+        FileVersionInfo localVersion;
+        try
+        {
+            localVersion = FileVersionInfo.GetVersionInfo(exePath);
+            // don't both checking the web if the file isn't even present / correct
+            if (localVersion == null || localVersion.FileVersion == null) return false;
+        }
+        catch
+        {
+            return false;
+        }
+
+        var response = await _httpClient.GetAsync(_httpUrl, cancellationToken: _cancelTokenSource.Token);
+        // assume up to date, github hasn't responded correctly.
+        if (response.Content == null) return true;
+
+        var rawJson = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
+        // same here.
+        if (rawJson == null) return true;
+
+        var parsedJson = JsonConvert.DeserializeObject<GithubTagResponse[]>(rawJson);
+        // same here too.
+        if (parsedJson == null || parsedJson.Length < 1) return true;
+
+        var latestVersion = parsedJson[0].Name?.Replace("v", string.Empty);
+        // same here three.
+        if (latestVersion == null) return true;
+
+        return localVersion.FileVersion == latestVersion;
+    }
+
     private async Task DownloadTotallyNotCef(string cefDirPath)
     {
         PluginLog.Log("Downloading TotallyNotCef...");
@@ -87,6 +131,36 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
     }
 
+    private async Task DeleteTotallyNotCefInstall(string exePath)
+    {
+        var installDir = Path.GetDirectoryName(exePath);
+        if (installDir == null) return;
+
+        foreach (var process in Process.GetProcessesByName("TotallyNotCef"))
+        {
+            try
+            {
+                process.Kill();
+            }
+            catch
+            {
+                // Do not crash
+            }
+        }
+
+        await Task.Delay(1000);
+
+        try
+        {
+            Directory.Delete(installDir, recursive: true);
+            return;
+        }
+        catch
+        {
+            return;
+        }
+    }
+
     private async Task StartTotallyNotCefProcess()
     {
         var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -94,7 +168,15 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         var cefDirPath = Path.GetFullPath(Path.Combine(pluginDir, "../"));
         var cefExePath = Path.Combine(cefDirPath, "TotallyNotCef", "TotallyNotCef.exe");
 
-        if (!File.Exists(cefExePath))
+        if (File.Exists(cefExePath))
+        {
+            if (!(await IsTotallyNotCefUpToDate(cefExePath)))
+            {
+                await DeleteTotallyNotCefInstall(cefExePath);
+                await DownloadTotallyNotCef(cefDirPath);
+            }
+        }
+        else
         {
             await DownloadTotallyNotCef(cefDirPath);
         }
