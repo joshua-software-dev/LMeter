@@ -6,7 +6,7 @@ var repoText = File.ReadAllText(args[0]);
 var changelogText = File.ReadAllText(args[1]);
 
 dynamic repo = JsonConvert.DeserializeObject(repoText);
-repo[0].Changelog = changelogText;
+repo[0].Changelog = changelogText.Split("\n\n")[0];
 
 var serializer = new Newtonsoft.Json.JsonSerializer();
 serializer.Formatting = Formatting.Indented;
