@@ -15,17 +15,29 @@ public class CactbotConfig : IConfigPage, IDisposable
     public bool Enabled = false;
     public string CactbotUrl = MagicValues.DefaultCactbotUrl;
     public int HttpPort = 8080;
-    public int InCombatPollingRate = 10;
-    public int OutOfCombatPollingRate = 1000;
-    public Vector2 AlertsPosition = new (-(ImGui.GetMainViewport().Size.Y * 12.5f / 90f), -(ImGui.GetMainViewport().Size.Y / 3.6f));
-    public Vector2 AlertsSize = new (ImGui.GetMainViewport().Size.Y * 25 / 90, ImGui.GetMainViewport().Size.Y / 3.6f);
-    [JsonIgnore]
-    public bool AlertsPreview = false;
 
-    public Vector2 TimelinePosition = new (-(ImGui.GetMainViewport().Size.Y * 70 / 90f), -(ImGui.GetMainViewport().Size.Y / 5f));
-    public Vector2 TimelineSize = new (ImGui.GetMainViewport().Size.Y * 25 / 90, ImGui.GetMainViewport().Size.Y / 3.6f);
+    public bool RaidbossEnableAudio = true;
+    public int RaidbossInCombatPollingRate = 10;
+    public int RaidbossOutOfCombatPollingRate = 1000;
+    public bool RaidbossAlarmsEnabled = true;
+    public bool RaidbossAlertsEnabled = true;
+    public bool RaidbossInfoEnabled = true;
+    public bool RaidbossAlarmsInChatEnabled = false;
+    public bool RaidbossAlertsInChatEnabled = false;
+    public bool RaidbossInfoInChatEnabled = false;
+    public uint RaidbossAlarmTextOutlineThickness = 2;
+    public uint RaidbossAlertsTextOutlineThickness = 2;
+    public uint RaidbossInfoTextOutlineThickness = 2;
+    public Vector2 RaidbossAlertsPosition = new (-(ImGui.GetMainViewport().Size.Y * 12.5f / 90f), -(ImGui.GetMainViewport().Size.Y / 3.6f));
+    public Vector2 RaidbossAlertsSize = new (ImGui.GetMainViewport().Size.Y * 25 / 90, ImGui.GetMainViewport().Size.Y / 3.6f);
     [JsonIgnore]
-    public bool TimelinePreview = false;
+    public bool RaidbossAlertsPreview = false;
+
+    public bool RaidbossTimelineEnabled = true;
+    public Vector2 RaidbossTimelinePosition = new (-(ImGui.GetMainViewport().Size.Y * 70 / 90f), -(ImGui.GetMainViewport().Size.Y / 5f));
+    public Vector2 RaidbossTimelineSize = new (ImGui.GetMainViewport().Size.Y * 25 / 90, ImGui.GetMainViewport().Size.Y / 3.6f);
+    [JsonIgnore]
+    public bool RaidbossTimelinePreview = false;
 
 
     public string Name =>
@@ -33,18 +45,18 @@ public class CactbotConfig : IConfigPage, IDisposable
 
     public CactbotConfig()
     {
-        Cactbot = new (CactbotUrl, (ushort) HttpPort);
+        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio);
     }
 
     public IConfigPage GetDefault() =>
         new CactbotConfig();
 
-    public void SetNewCactbotUrl()
+    public void SetNewCactbotUrl(bool startPolling)
     {
         Cactbot.SendShutdownCommand();
         Cactbot.Dispose();
-        Cactbot = new (CactbotUrl, (ushort) HttpPort);
-        Cactbot.StartBackgroundPolling();
+        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio);
+        if (startPolling) Cactbot.StartBackgroundPolling();
     }
 
     public void DrawConfig(Vector2 size, float padX, float padY)
@@ -54,35 +66,48 @@ public class CactbotConfig : IConfigPage, IDisposable
             if (ImGui.BeginChild("##CactbotConfig", new Vector2(size.X, size.Y), true))
             {
                 var tempAddress = this.CactbotUrl;
-                ImGui.Text("Process Started: ");
+                ImGui.Text("Background Web Browser State: ");
                 ImGui.SameLine();
                 ImGui.PushFont(UiBuilder.IconFont);
-                if (Cactbot.PollingStarted)
-                {
-                    ImGui.Text("");
-                }
-                else
-                {
-                    ImGui.Text("");
-                }
-                ImGui.PopFont();
 
-                ImGui.Text("Connection Active: ");
-                ImGui.SameLine();
-                ImGui.PushFont(UiBuilder.IconFont);
-                if (Cactbot.LastPollSuccessful)
+                switch (Cactbot.WebBrowserState)
                 {
-                    ImGui.Text("");
-                }
-                else
-                {
-                    ImGui.Text("");
+                    case TotallyNotCefBrowserState.NotStarted:
+                    {
+                        ImGui.Text(""); // Boxed X Mark
+                        break;
+                    }
+                    case TotallyNotCefBrowserState.Downloading:
+                    {
+                        ImGui.Text(""); // Loading Spinner
+                        break;
+                    }
+                    case TotallyNotCefBrowserState.Starting:
+                    {
+                        ImGui.Text(""); // Loading Spinner
+                        break;
+                    }
+                    case TotallyNotCefBrowserState.Connected:
+                    {
+                        ImGui.Text(""); // Boxed checkmark
+                        break;
+                    }
+                    case TotallyNotCefBrowserState.Disconnected:
+                    {
+                        ImGui.Text(""); // Boxed X Mark
+                        break;
+                    }
                 }
                 ImGui.PopFont();
+                ImGui.SameLine();
+                ImGui.Text(Cactbot.WebBrowserState.ToString());
 
                 if (ImGui.Checkbox("Enabled", ref this.Enabled))
                 {
-                    if (!Cactbot.PollingStarted) Cactbot.StartBackgroundPolling();
+                    if (Cactbot.WebBrowserState == TotallyNotCefBrowserState.NotStarted)
+                    {
+                        Cactbot.StartBackgroundPolling();
+                    }
                 }
 
                 if (Enabled)
@@ -101,12 +126,26 @@ public class CactbotConfig : IConfigPage, IDisposable
                         this.CactbotUrl = tempAddress;
                     }
 
-                    ImGui.Text("[Change this if the default port conflicts with other things you have running]");
                     var tempPort = this.HttpPort;
-                    var tempInRate = this.InCombatPollingRate;
-                    var tempOutRate = this.OutOfCombatPollingRate;
+                    var windowSize = ImGui.GetWindowSize();
+                    try
+                    {
+                        if (ImGui.BeginChild("##HttpPort", windowSize with { X = windowSize.X * 0.9f, Y = 60 }, true))
+                        {
+                            ImGui.PushItemWidth(100);
+                            ImGui.InputInt("HTTP Server Port", ref tempPort);
+                            ImGui.PopItemWidth();
+                            ImGui.Text("[Change this if the default port conflicts with other things you have running]");
+                        }
+                    }
+                    finally
+                    {
+                        ImGui.EndChild();
+                    }
+
+                    var tempInRate = this.RaidbossInCombatPollingRate;
+                    var tempOutRate = this.RaidbossOutOfCombatPollingRate;
                     ImGui.PushItemWidth(100);
-                    ImGui.InputInt("HTTP Server Port", ref tempPort);
                     ImGui.InputInt("In Combat Polling Rate in milliseconds [Lower is faster]", ref tempInRate);
                     ImGui.InputInt("Out of Combat Polling Rate in milliseconds [Lower is faster]", ref tempOutRate);
                     ImGui.PopItemWidth();
@@ -116,27 +155,43 @@ public class CactbotConfig : IConfigPage, IDisposable
                         this.HttpPort = tempPort;
                     }
 
+                    ImGui.Checkbox("Enable Audio [Web Browser must restart for setting to take effect]", ref RaidbossEnableAudio);
+
                     tempInRate = Math.Max(1, tempInRate);
-                    if (tempInRate != this.InCombatPollingRate)
+                    if (tempInRate != this.RaidbossInCombatPollingRate)
                     {
-                        this.InCombatPollingRate = tempInRate;
+                        this.RaidbossInCombatPollingRate = tempInRate;
                     }
 
                     tempOutRate = Math.Max(1, tempOutRate);
-                    if (tempOutRate != this.OutOfCombatPollingRate)
+                    if (tempOutRate != this.RaidbossOutOfCombatPollingRate)
                     {
-                        this.OutOfCombatPollingRate = tempOutRate;
+                        this.RaidbossOutOfCombatPollingRate = tempOutRate;
                     }
 
-                    if (ImGui.Button("Retry Connection")) SetNewCactbotUrl();
+                    if (ImGui.Button("Restart Web Browser")) SetNewCactbotUrl(true);
+                }
+                else if (!Enabled && Cactbot.WebBrowserState != TotallyNotCefBrowserState.NotStarted)
+                {
+                    SetNewCactbotUrl(false);
                 }
 
                 var screenSize = ImGui.GetMainViewport().Size;
+                ImGui.NewLine();
                 ImGui.Text("Alerts Render Options:");
+
+                ImGui.Checkbox("Show Alarms popups", ref RaidbossAlarmsEnabled);
+                ImGui.Checkbox("Show Alarms in game chat##alarms", ref RaidbossAlarmsInChatEnabled);
+                ImGui.Checkbox("Show Alerts popups", ref RaidbossAlertsEnabled);
+                ImGui.Checkbox("Show Alerts in game chat##alerts", ref RaidbossAlertsInChatEnabled);
+                ImGui.Checkbox("Show Info popups", ref RaidbossInfoEnabled);
+                ImGui.Checkbox("Show Info messages in game chat##info", ref RaidbossInfoInChatEnabled);
+
+                ImGui.PushItemWidth(ImGui.GetWindowSize().X * 0.6f);
                 ImGui.DragFloat2
                 (
                     "Position##alerts",
-                    ref this.AlertsPosition,
+                    ref this.RaidbossAlertsPosition,
                     1,
                     -screenSize.X / 2,
                     screenSize.X / 2
@@ -145,19 +200,35 @@ public class CactbotConfig : IConfigPage, IDisposable
                 ImGui.DragFloat2
                 (
                     "Size##alerts",
-                    ref this.AlertsSize,
+                    ref this.RaidbossAlertsSize,
                     1,
                     0,
                     screenSize.Y
                 );
 
-                ImGui.Checkbox("Preview##alerts", ref this.AlertsPreview);
+                var tempAlarmsOutline = (int) RaidbossAlarmTextOutlineThickness;
+                ImGui.SliderInt("Alarms Text Outline Thickness", ref tempAlarmsOutline, 0, 10);
+                RaidbossAlarmTextOutlineThickness = (uint) tempAlarmsOutline;
 
+                var tempAlertsOutline = (int) RaidbossAlertsTextOutlineThickness;
+                ImGui.SliderInt("Alerts Text Outline Thickness", ref tempAlertsOutline, 0, 10);
+                RaidbossAlertsTextOutlineThickness = (uint) tempAlertsOutline;
+
+                var tempInfoOutline = (int) RaidbossInfoTextOutlineThickness;
+                ImGui.SliderInt("Info Text Outline Thickness", ref tempInfoOutline, 0, 10);
+                RaidbossInfoTextOutlineThickness = (uint) tempInfoOutline;
+                ImGui.PopItemWidth();
+
+                ImGui.Checkbox("Preview##alerts", ref this.RaidbossAlertsPreview);
+
+                ImGui.NewLine();
                 ImGui.Text("Timeline Render Options:");
+                ImGui.Checkbox("Show Timeline", ref RaidbossTimelineEnabled);
+                ImGui.PushItemWidth(ImGui.GetWindowSize().X * 0.6f);
                 ImGui.DragFloat2
                 (
                     "Position##timeline",
-                    ref this.TimelinePosition,
+                    ref this.RaidbossTimelinePosition,
                     1,
                     -screenSize.X / 2,
                     screenSize.X / 2
@@ -166,13 +237,14 @@ public class CactbotConfig : IConfigPage, IDisposable
                 ImGui.DragFloat2
                 (
                     "Size##timeline",
-                    ref this.TimelineSize,
+                    ref this.RaidbossTimelineSize,
                     1,
                     0,
                     screenSize.Y
                 );
+                ImGui.PopItemWidth();
 
-                ImGui.Checkbox("Preview##timeline", ref this.TimelinePreview);
+                ImGui.Checkbox("Preview##timeline", ref this.RaidbossTimelinePreview);
             }
         }
         finally

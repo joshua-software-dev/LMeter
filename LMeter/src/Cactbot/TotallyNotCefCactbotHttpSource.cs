@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,25 +19,28 @@ namespace LMeter.Cactbot;
 public class TotallyNotCefCactbotHttpSource : IDisposable
 {
     public bool LastPollSuccessful { get; private set; } = false;
+    public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
     public int PollingRate { get; set; } = 1000; // milliseconds
-    public bool PollingStarted = false;
     public readonly CactbotState CactbotState;
     private readonly string _cactbotUrl;
     private readonly CancellationTokenSource _cancelTokenSource;
+    private readonly bool _enableAudio;
     private readonly HttpClient _httpClient;
     private readonly HtmlParser _htmlParser;
     private readonly string _httpUrl;
     private readonly ushort _httpPort;
     private IHtmlDocument? _parsedResponse = null;
 
-    public TotallyNotCefCactbotHttpSource(string cactbotUrl, ushort httpPort)
+    public TotallyNotCefCactbotHttpSource(string cactbotUrl, ushort httpPort, bool enableAudio)
     {
         CactbotState = new ();
         _cactbotUrl = cactbotUrl;
+        _enableAudio = enableAudio;
         _htmlParser = new ();
         _httpPort = httpPort;
         _httpUrl = $"http://127.0.0.1:{httpPort}";
         _httpClient = new ();
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("curl/8.1.2");
         _cancelTokenSource = new ();
     }
 
@@ -52,6 +56,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             if (rawHtml == null) return;
             _parsedResponse = await _htmlParser.ParseDocumentAsync(rawHtml, _cancelTokenSource.Token);
             CactbotState.UpdateState(_parsedResponse);
+            WebBrowserState = TotallyNotCefBrowserState.Connected;
         }
         catch (Exception e) when
         (
@@ -75,8 +80,11 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         FileVersionInfo localVersion;
         try
         {
-            localVersion = FileVersionInfo.GetVersionInfo(exePath);
-            // don't both checking the web if the file isn't even present / correct
+            if (!exePath.EndsWith(".exe")) return false;
+            var dllPath = exePath.Substring(0, exePath.Length - 3) + "dll";
+
+            localVersion = FileVersionInfo.GetVersionInfo(dllPath);
+            // don't bother checking the web if the file isn't even present / correct
             if (localVersion == null || localVersion.FileVersion == null) return false;
         }
         catch
@@ -84,30 +92,67 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             return false;
         }
 
-        var response = await _httpClient.GetAsync(_httpUrl, cancellationToken: _cancelTokenSource.Token);
-        // assume up to date, github hasn't responded correctly.
-        if (response.Content == null) return true;
+        PluginLog.Debug($"TotallyNotCef Version: {localVersion.FileVersion}");
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.GetAsync
+            (
+                MagicValues.TotallyNotCefUpdateCheckUrl,
+                cancellationToken: _cancelTokenSource.Token
+            );
+
+            // assume up to date, github hasn't responded correctly.
+            if (!response.IsSuccessStatusCode) return true;
+        }
+        catch (Exception e) when
+        (
+            e is OperationCanceledException ||
+            e is TaskCanceledException ||
+            e is HttpRequestException ||
+            e is SocketException
+        )
+        {
+            // same here.
+            return true;
+        }
+
+        // same here too.
+        if (response?.Content == null) return true;
 
         var rawJson = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
-        // same here.
+        // same here three.
         if (rawJson == null) return true;
 
-        var parsedJson = JsonConvert.DeserializeObject<GithubTagResponse[]>(rawJson);
-        // same here too.
-        if (parsedJson == null || parsedJson.Length < 1) return true;
+        GithubTagResponse[]? parsedJson;
+        try
+        {
+            parsedJson = JsonConvert.DeserializeObject<GithubTagResponse[]>(rawJson);
+            // same here four.
+            if (parsedJson == null || parsedJson.Length < 1) return true;
+        }
+        catch (JsonSerializationException)
+        {
+            // same here five.
+            return true;
+        }
 
         var latestVersion = parsedJson[0].Name?.Replace("v", string.Empty);
-        // same here three.
+        // same here six.
         if (latestVersion == null) return true;
+        PluginLog.Debug($"Latest Version: {latestVersion}");
 
         return localVersion.FileVersion == latestVersion;
     }
 
     private async Task DownloadTotallyNotCef(string cefDirPath)
     {
+        WebBrowserState = TotallyNotCefBrowserState.Downloading;
         PluginLog.Log("Downloading TotallyNotCef...");
         try
         {
+            PluginLog.Log(MagicValues.TotallyNotCefDownloadUrl);
             using var response = await _httpClient.GetAsync
             (
                 MagicValues.TotallyNotCefDownloadUrl,
@@ -124,7 +169,8 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         (
             e is OperationCanceledException ||
             e is TaskCanceledException ||
-            e is HttpRequestException
+            e is HttpRequestException ||
+            e is SocketException
         )
         {
             return;
@@ -166,7 +212,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (pluginDir == null) return;
         var cefDirPath = Path.GetFullPath(Path.Combine(pluginDir, "../"));
-        var cefExePath = Path.Combine(cefDirPath, "TotallyNotCef/TotallyNotCef.exe");
+        var cefExePath = Path.Combine(cefDirPath, $"TotallyNotCef{Path.DirectorySeparatorChar}TotallyNotCef.exe");
 
         if (File.Exists(cefExePath))
         {
@@ -175,13 +221,18 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                 await DeleteTotallyNotCefInstall(cefExePath);
                 await DownloadTotallyNotCef(cefDirPath);
             }
+            else
+            {
+                PluginLog.Log("TotallyNotCef is up to date.");
+            }
         }
         else
         {
             await DownloadTotallyNotCef(cefDirPath);
         }
 
-        ProcessLauncher.LaunchTotallyNotCef(cefExePath, _cactbotUrl, _httpPort);
+        WebBrowserState = TotallyNotCefBrowserState.Starting;
+        ProcessLauncher.LaunchTotallyNotCef(cefExePath, _cactbotUrl, _httpPort, _enableAudio);
     }
 
     private async Task PollCactbot()
@@ -195,11 +246,14 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                 if (PluginManager.Instance?.CactbotConfig?.Enabled ?? false)
                 {
                     await GetCactbotHtml();
-                    LastPollSuccessful = _parsedResponse != null;
                 }
-                else
+
+                if (WebBrowserState != TotallyNotCefBrowserState.Starting)
                 {
-                    LastPollSuccessful = false;
+                    LastPollSuccessful = _parsedResponse != null;
+                    WebBrowserState = LastPollSuccessful
+                        ? TotallyNotCefBrowserState.Connected
+                        : TotallyNotCefBrowserState.Disconnected;
                 }
 
                 await Task.Delay(PollingRate, _cancelTokenSource.Token);
@@ -218,7 +272,6 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
     public void StartBackgroundPolling()
     {
-        PollingStarted = true;
         ThreadPool.QueueUserWorkItem(ThreadStartAsyncPolling);
     }
 
@@ -235,7 +288,8 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         (
             e is OperationCanceledException ||
             e is TaskCanceledException ||
-            e is HttpRequestException
+            e is HttpRequestException ||
+            e is SocketException
         ) { }
     }
 

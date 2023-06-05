@@ -12,8 +12,8 @@ public class CactbotRaidbossWindows
     public static void DrawAlerts(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
-        var localPos = pos + config.AlertsPosition;
-        var size = config.AlertsSize;
+        var localPos = pos + config.RaidbossAlertsPosition;
+        var size = config.RaidbossAlertsSize;
 
         DrawHelpers.DrawInWindow
         (
@@ -23,61 +23,102 @@ public class CactbotRaidbossWindows
             needsInput: false,
             needsFocus: false,
             locked: true,
-            drawAction: _ =>
+            drawAction: drawList =>
             {
                 localPos = ImGui.GetWindowPos();
-                config.AlertsPosition = localPos - pos;
+                config.RaidbossAlertsPosition = localPos - pos;
 
                 size = ImGui.GetWindowSize();
-                config.AlertsSize = size;
-
-                var originalScale = ImGui.GetFont().Scale;
+                config.RaidbossAlertsSize = size;
 
                 try
                 {
-                    if (config.AlertsPreview)
+                    if (config.RaidbossAlertsPreview)
                     {
                         ImGui.BeginChild("##CactbotAlertRender", new Vector2(size.X, size.Y), true);
                     }
 
-                    ImGui.GetFont().Scale *= 2;
-                    ImGui.PushFont(ImGui.GetFont());
-                    var windowWidth = ImGui.GetWindowSize().X;
+                    using var bigFontScope = PluginManager.Instance.FontsManager
+                        .PushFont(FontsManager.DefaultBigFontKey);
 
-                    var state = config.AlertsPreview
+                    var cursorY = 0f;
+
+                    var state = config.RaidbossAlertsPreview
                         ? CactbotState.PreviewState
                         : config.Cactbot.CactbotState;
 
-                    if (state.Alarm != null)
+                    if (config.RaidbossAlarmsEnabled && !string.IsNullOrEmpty(state.Alarm))
                     {
-                        // red
-                        var textWidth = ImGui.CalcTextSize(state.Alarm).X;
-                        ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
-                        ImGui.TextColored(new Vector4(255, 0, 0, 255), state.Alarm);
+                        var textSize = ImGui.CalcTextSize(state.Alarm);
+                        var textWidthOffset = (size.X - textSize.X) * 0.5f;
+                        var textCenteredPos = localPos with
+                        {
+                            X = localPos.X + textWidthOffset,
+                            Y = localPos.Y + cursorY
+                        };
+
+                        DrawHelpers.DrawText
+                        (
+                            drawList,
+                            state.Alarm,
+                            textCenteredPos,
+                            4278190335, // red
+                            config.RaidbossAlarmTextOutlineThickness > 0,
+                            thickness: (int) config.RaidbossAlarmTextOutlineThickness
+                        );
+
+                        cursorY += textSize.Y + 10;
                     }
 
-                    if (state.Alert != null)
+                    if (config.RaidbossAlertsEnabled && !string.IsNullOrEmpty(state.Alert))
                     {
-                        // yellow
-                        var textWidth = ImGui.CalcTextSize(state.Alert).X;
-                        ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
-                        ImGui.TextColored(new Vector4(128, 128, 0, 255), state.Alert);
+                        var textSize = ImGui.CalcTextSize(state.Alert);
+                        var textWidthOffset = (size.X - textSize.X) * 0.5f;
+                        var textCenteredPos = localPos with
+                        {
+                            X = localPos.X + textWidthOffset,
+                            Y = localPos.Y + cursorY
+                        };
+
+                        DrawHelpers.DrawText
+                        (
+                            drawList,
+                            state.Alert,
+                            textCenteredPos,
+                            4278255615, // yellow
+                            config.RaidbossAlertsTextOutlineThickness > 0,
+                            thickness: (int) config.RaidbossAlertsTextOutlineThickness
+                        );
+
+                        cursorY += textSize.Y + 10;
                     }
 
-                    if (state.Info != null)
+                    if (config.RaidbossInfoEnabled && !string.IsNullOrEmpty(state.Info))
                     {
-                        // green
-                        var textWidth = ImGui.CalcTextSize(state.Info).X;
-                        ImGui.SetCursorPosX((windowWidth - textWidth) * 0.5f);
-                        ImGui.TextColored(new Vector4(0, 255, 0, 255), state.Info);
+                        var textSize = ImGui.CalcTextSize(state.Info);
+                        var textWidthOffset = (size.X - textSize.X) * 0.5f;
+                        var textCenteredPos = localPos with
+                        {
+                            X = localPos.X + textWidthOffset,
+                            Y = localPos.Y + cursorY
+                        };
+
+                        DrawHelpers.DrawText
+                        (
+                            drawList,
+                            state.Info,
+                            textCenteredPos,
+                            4278255360, // green
+                            config.RaidbossInfoTextOutlineThickness > 0,
+                            thickness: (int) config.RaidbossInfoTextOutlineThickness
+                        );
+
+                        cursorY += textSize.Y + 10;
                     }
                 }
                 finally
                 {
-                    ImGui.GetFont().Scale = originalScale;
-                    ImGui.PopFont();
-
-                    if (config.AlertsPreview) ImGui.EndChild();
+                    if (config.RaidbossAlertsPreview) ImGui.EndChild();
                 }
             }
         );
@@ -86,8 +127,8 @@ public class CactbotRaidbossWindows
     public static void DrawTimeline(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
-        var localPos = pos + config.TimelinePosition;
-        var size = config.TimelineSize;
+        var localPos = pos + config.RaidbossTimelinePosition;
+        var size = config.RaidbossTimelineSize;
 
         DrawHelpers.DrawInWindow
         (
@@ -101,7 +142,7 @@ public class CactbotRaidbossWindows
             {
                 try
                 {
-                    if (config.TimelinePreview)
+                    if (config.RaidbossTimelinePreview)
                     {
                         ImGui.BeginChild("##CactbotTimelineRender", new Vector2(size.X, size.Y), true);
                     }
@@ -110,13 +151,15 @@ public class CactbotRaidbossWindows
                     var barWidth = windowWidth * 0.8f;
                     var progressBarSize = new Vector2(barWidth, 30);
 
-                    var state = config.TimelinePreview
+                    var state = config.RaidbossTimelinePreview
                         ? CactbotState.PreviewState
                         : config.Cactbot.CactbotState;
 
-                    foreach (var pair in state.Timeline.ToArray().OrderBy(it => it.Key))
+                    foreach (var key in state.Timeline.Keys.OrderBy(it => it))
                     {
-                        var timelineInfo = pair.Value;
+                        state.Timeline.TryGetValue(key, out var timelineInfo);
+                        if (timelineInfo == null) continue;
+
                         var remainingTime = timelineInfo.ApproxCompletionTime - DateTime.Now;
                         var progress = (float)
                         (
@@ -146,7 +189,7 @@ public class CactbotRaidbossWindows
                 }
                 finally
                 {
-                    if (config.TimelinePreview) ImGui.EndChild();
+                    if (config.RaidbossTimelinePreview) ImGui.EndChild();
                 }
             }
         );
@@ -155,13 +198,16 @@ public class CactbotRaidbossWindows
     public static void Draw(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
-        if (!config.Enabled && !config.AlertsPreview && !config.TimelinePreview) return;
+        if (!config.Enabled && !config.RaidbossAlertsPreview && !config.RaidbossTimelinePreview) return;
 
         config.Cactbot.PollingRate = CharacterState.IsInCombat()
-            ? config.InCombatPollingRate
-            : config.OutOfCombatPollingRate;
+            ? config.RaidbossInCombatPollingRate
+            : config.RaidbossOutOfCombatPollingRate;
 
         DrawAlerts(pos);
-        DrawTimeline(pos);
+        if (config.RaidbossTimelineEnabled)
+        {
+            DrawTimeline(pos);
+        }
     }
 }

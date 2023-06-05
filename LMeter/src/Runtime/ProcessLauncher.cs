@@ -1,14 +1,17 @@
 using Dalamud.Logging;
 using System;
 using System.Diagnostics;
+using System.Linq;
 
 
 namespace LMeter.Runtime;
 
 public static class ProcessLauncher
 {
-    public static void LaunchTotallyNotCef(string exePath, string cactbotUrl, ushort httpPort)
+    public static void LaunchTotallyNotCef(string exePath, string cactbotUrl, ushort httpPort, bool enableAudio)
     {
+        if (Process.GetProcessesByName("TotallyNotCef").Any()) return;
+
         var process = new Process();
         process.EnableRaisingEvents = true;
         process.OutputDataReceived += new DataReceivedEventHandler(OnStdOutMessage);
@@ -16,7 +19,7 @@ public static class ProcessLauncher
         process.Exited += (_, _) => PluginLog.Log($"{exePath} exited with code {process?.ExitCode}");
 
         process.StartInfo.FileName = exePath;
-        process.StartInfo.Arguments = cactbotUrl + " " + httpPort;
+        process.StartInfo.Arguments = cactbotUrl + " " + httpPort + " " + (enableAudio ? 1 : 0);
 
         PluginLog.Log($"EXE : {process.StartInfo.FileName}");
         PluginLog.Log($"ARGS: {process.StartInfo.Arguments}");
@@ -27,9 +30,20 @@ public static class ProcessLauncher
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.RedirectStandardOutput = true;
 
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
+        const int E_FAIL = unchecked((int) 0x80004005);
+        const int ERROR_FILE_NOT_FOUND = 0x2;
+
+        try
+        {
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+        }
+        catch (System.ComponentModel.Win32Exception e)
+        {
+            if (e.ErrorCode == E_FAIL && e.NativeErrorCode == ERROR_FILE_NOT_FOUND) return;
+            throw;
+        }
     }
 
     public static void LaunchInstallFixDll(string winNewDllPath, string winOldDllPath)

@@ -1,4 +1,6 @@
 using AngleSharp.Html.Dom;
+using Dalamud.Game.Text;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
@@ -11,9 +13,18 @@ public class CactbotState
     public string? Alarm { get; private set; }
     public string? Alert { get; private set; }
     public string? Info { get; private set; }
+    public event EventHandler? AlarmStateChanged = null;
+    public event EventHandler? AlertStateChanged = null;
+    public event EventHandler? InfoStateChanged = null;
     public ConcurrentDictionary<int, CactbotTimeLineElement> Timeline = new ();
 
-    public CactbotState() { }
+    public CactbotState()
+    {
+        AlarmStateChanged += OnAlarmStateChange;
+        AlertStateChanged += OnAlertStateChange;
+        InfoStateChanged += OnInfoStateChange;
+    }
+
     public CactbotState(bool preview)
     {
         Alarm = "ALARM!";
@@ -23,6 +34,44 @@ public class CactbotState
         Timeline[1] = new CactbotTimeLineElement(1);
         Timeline[2] = new CactbotTimeLineElement(2);
         Timeline[3] = new CactbotTimeLineElement(3);
+    }
+
+    private void OnAlarmStateChange(object? sender, EventArgs eventArgs)
+    {
+        if (!PluginManager.Instance.CactbotConfig.RaidbossAlarmsInChatEnabled || this.Alarm == null) return;
+
+        var message = new XivChatEntry
+        {
+            Message = $"RAIDBOSS ALARM: {Alarm}",
+            Type = XivChatType.ErrorMessage
+        };
+        PluginManager.Instance.ChatGui.PrintChat(message);
+    }
+
+    private void OnAlertStateChange(object? sender, EventArgs eventArgs)
+    {
+        if (!PluginManager.Instance.CactbotConfig.RaidbossAlertsInChatEnabled || this.Alert == null) return;
+
+        var message = new XivChatEntry
+        {
+            Message = Alert,
+            Name = "RAIDBOSS ALERT",
+            Type = XivChatType.Yell
+        };
+        PluginManager.Instance.ChatGui.PrintChat(message);
+    }
+
+    private void OnInfoStateChange(object? sender, EventArgs eventArgs)
+    {
+        if (!PluginManager.Instance.CactbotConfig.RaidbossInfoInChatEnabled || this.Info == null) return;
+
+        var message = new XivChatEntry
+        {
+            Message = Info,
+            Name = "RAIDBOSS INFO",
+            Type = XivChatType.NPCDialogueAnnouncements
+        };
+        PluginManager.Instance.ChatGui.PrintChat(message);
     }
 
     private void UpdateTimeline(IHtmlDocument html)
@@ -48,7 +97,9 @@ public class CactbotState
             currentIds[parsedContainer.ContainerId] = true;
         }
 
-        // TODO: THIS IS HACKY, FIX THIS
+        // TODO: Find a way to remove multiple keys atomically. This works, but
+        // only because there is only one other accessor, who exclusively reads
+        // by making a complete copy of the keys whenever it iterates.
         foreach (var key in Timeline.Keys)
         {
             if (!currentIds.ContainsKey(key))
@@ -78,8 +129,37 @@ public class CactbotState
         var infoContainer = html.GetElementById("popup-text-info");
         var info = infoContainer?.GetElementsByClassName("holder")?[0];
 
+        var alarmWasEmpty = string.IsNullOrEmpty(Alarm);
         Alarm = alarm?.TextContent.Trim();
+        if (alarmWasEmpty && !string.IsNullOrEmpty(Alarm))
+        {
+            AlarmStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (Alarm == null && alarmWasEmpty)
+        {
+            AlarmStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        var alertWasEmpty = string.IsNullOrEmpty(Alert);
         Alert = alert?.TextContent.Trim();
+        if (alertWasEmpty && !string.IsNullOrEmpty(Alert))
+        {
+            AlertStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (Alert == null && alertWasEmpty)
+        {
+            AlertStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        var infoWasEmpty = string.IsNullOrEmpty(Info);
         Info = info?.TextContent.Trim();
+        if (infoWasEmpty && !string.IsNullOrEmpty(Info))
+        {
+            InfoStateChanged?.Invoke(this, EventArgs.Empty);
+        }
+        else if (Info == null && infoWasEmpty)
+        {
+            InfoStateChanged?.Invoke(this, EventArgs.Empty);
+        }
     }
 }

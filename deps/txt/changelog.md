@@ -1,3 +1,24 @@
+# Version 0.2.0.6
+- Add option to disable audio prompts for Cactbot integration.
+- Add option to selectively enable and disable rendering of Alert message
+  popups, Alarm message popups, Info message popups, and Timeline event popups
+  for Cactbot integration.
+- Add option to render a text outline of user adjustable thickness around
+  Alarm message popups, Alert message popups, and Info message popups to
+  improve readability for Cactbot integration.
+- Add option to selectively enable and disable printing of Alert messages,
+  Alarm messages, and Info messages to in game chat (with appropriate colors)
+  for Cactbot integration.
+- Improve text rendering of Alarm messages, Alert messages, and Info messages
+  to appear much less "pixel-ly" for Cactbot integration.
+- The background web browser process used for Cactbot integration now:
+  - Auto updates correctly (this was broken last version, sorry)
+  - Will avoid starting when already running
+  - Has better communication with the plugin regarding its startup state,
+    allowing for easier tracking of any issues that may arise.
+  - Should no longer crash the game if the user rapidly requests it restart
+    manually.
+
 # Version 0.2.0.5
 - Ensure that a console window does not briefly show when launching the
   background browser used for the Cactbot feature.

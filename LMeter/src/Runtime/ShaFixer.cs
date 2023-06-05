@@ -29,14 +29,31 @@ public static class ShaFixer
         }
     }
 
+    public static bool CanRuntimeBeFixed()
+    {
+        var originalDllPath = System.Reflection.Assembly.GetAssembly(typeof(System.Security.Cryptography.SHA1))?.Location;
+        if (originalDllPath == null) return false;
+
+        var dllDir = Path.GetDirectoryName(originalDllPath);
+        if (dllDir == null) return false;
+
+        var jsonPath = Path.Join(dllDir, "..\\..\\..\\hashes-7.0.0.json");
+        if (!Path.Exists(jsonPath)) return false;
+
+        return true;
+    }
+
     public static bool ModifyRuntimeWithShaFix()
     {
         var originalDllPath = System.Reflection.Assembly.GetAssembly(typeof(System.Security.Cryptography.SHA1))?.Location;
         if (originalDllPath == null) return false;
 
         var dllDir = Path.GetDirectoryName(originalDllPath);
+        if (dllDir == null) return false;
         var newDllPath = Path.Join(dllDir, "System.Security.Cryptography2.dll");
-        var jsonPath = dllDir + Path.DirectorySeparatorChar + "..\\..\\..\\hashes-7.0.0.json";
+        var jsonPath = Path.Join(dllDir, "..\\..\\..\\hashes-7.0.0.json");
+        if (!Path.Exists(jsonPath)) return false;
+
         var hashJsonDict = JsonSerializer.Deserialize<Dictionary<string, string?>>(File.ReadAllText(jsonPath));
         if (hashJsonDict == null) return false;
 

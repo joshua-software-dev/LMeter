@@ -82,7 +82,7 @@ public class ActConfig : IConfigPage
                 ImGui.Text("");
                 ImGui.PopFont();
             }
-            else
+            else if (ShaFixer.CanRuntimeBeFixed())
             {
                 ImGui.Text("");
                 ImGui.PopFont();
