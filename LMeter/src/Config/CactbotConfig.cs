@@ -12,7 +12,9 @@ public class CactbotConfig : IConfigPage, IDisposable
 {
     [JsonIgnore]
     public TotallyNotCefCactbotHttpSource Cactbot { get; private set; }
-    public bool Enabled = false;
+    public bool AutomaticallyStartBackgroundWebBrowser = false;
+    [JsonProperty("Enabled")]
+    public bool EnableConnection = false;
     public string CactbotUrl = MagicValues.DefaultCactbotUrl;
     public int HttpPort = 8080;
 
@@ -45,18 +47,18 @@ public class CactbotConfig : IConfigPage, IDisposable
 
     public CactbotConfig()
     {
-        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio);
+        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio, false);
     }
 
     public IConfigPage GetDefault() =>
         new CactbotConfig();
 
-    public void SetNewCactbotUrl(bool startPolling)
+    public void SetNewCactbotUrl(bool forceStart)
     {
         Cactbot.SendShutdownCommand();
         Cactbot.Dispose();
-        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio);
-        if (startPolling) Cactbot.StartBackgroundPolling();
+        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio, forceStart);
+        Cactbot.StartBackgroundPollingThread();
     }
 
     public void DrawConfig(Vector2 size, float padX, float padY)
@@ -87,6 +89,16 @@ public class CactbotConfig : IConfigPage, IDisposable
                         ImGui.Text(""); // Loading Spinner
                         break;
                     }
+                    case TotallyNotCefBrowserState.Started:
+                    {
+                        ImGui.Text(""); // Boxed checkmark
+                        break;
+                    }
+                    case TotallyNotCefBrowserState.WaitingForConnection:
+                    {
+                        ImGui.Text(""); // Loading Spinner
+                        break;
+                    }
                     case TotallyNotCefBrowserState.Connected:
                     {
                         ImGui.Text(""); // Boxed checkmark
@@ -97,20 +109,42 @@ public class CactbotConfig : IConfigPage, IDisposable
                         ImGui.Text(""); // Boxed X Mark
                         break;
                     }
+                    default:
+                    {
+                        ImGui.Text("?");
+                        break;
+                    }
                 }
                 ImGui.PopFont();
                 ImGui.SameLine();
                 ImGui.Text(Cactbot.WebBrowserState.ToString());
 
-                if (ImGui.Checkbox("Enabled", ref this.Enabled))
+                if
+                (
+                    ImGui.Button
+                    (
+                        Cactbot.WebBrowserState switch
+                        {
+                            TotallyNotCefBrowserState.NotStarted => "Start Web Browser",
+                            TotallyNotCefBrowserState.WaitingForConnection => "Start Web Browser",
+                            _ => "Restart Web Browser",
+                        }
+                    )
+                )
                 {
-                    if (Cactbot.WebBrowserState == TotallyNotCefBrowserState.NotStarted)
-                    {
-                        Cactbot.StartBackgroundPolling();
-                    }
+                    SetNewCactbotUrl(forceStart: true);
                 }
 
-                if (Enabled)
+                ImGui.Checkbox("Automatically Start Background Web Browser", ref this.AutomaticallyStartBackgroundWebBrowser);
+                if (AutomaticallyStartBackgroundWebBrowser)
+                {
+                    ImGui.Indent();
+                    ImGui.Checkbox("Enable Audio [Web Browser must restart for setting to take effect]", ref RaidbossEnableAudio);
+                    ImGui.Unindent();
+                }
+
+                ImGui.Checkbox("Enable Connection to Browser", ref this.EnableConnection);
+                if (EnableConnection)
                 {
                     ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.8f);
                     ImGui.InputTextWithHint
@@ -155,8 +189,6 @@ public class CactbotConfig : IConfigPage, IDisposable
                         this.HttpPort = tempPort;
                     }
 
-                    ImGui.Checkbox("Enable Audio [Web Browser must restart for setting to take effect]", ref RaidbossEnableAudio);
-
                     tempInRate = Math.Max(1, tempInRate);
                     if (tempInRate != this.RaidbossInCombatPollingRate)
                     {
@@ -168,12 +200,6 @@ public class CactbotConfig : IConfigPage, IDisposable
                     {
                         this.RaidbossOutOfCombatPollingRate = tempOutRate;
                     }
-
-                    if (ImGui.Button("Restart Web Browser")) SetNewCactbotUrl(true);
-                }
-                else if (!Enabled && Cactbot.WebBrowserState != TotallyNotCefBrowserState.NotStarted)
-                {
-                    SetNewCactbotUrl(false);
                 }
 
                 var screenSize = ImGui.GetMainViewport().Size;

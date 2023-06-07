@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data.",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.6",
-        "TestingAssemblyVersion": "0.2.0.6",
+        "AssemblyVersion": "0.2.0.7",
+        "TestingAssemblyVersion": "0.2.0.7",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.6/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.6/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.6/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.6\n- Add option to disable audio prompts for Cactbot integration.\n- Add option to selectively enable and disable rendering of Alert message\n  popups, Alarm message popups, Info message popups, and Timeline event popups\n  for Cactbot integration.\n- Add option to render a text outline of user adjustable thickness around\n  Alarm message popups, Alert message popups, and Info message popups to\n  improve readability for Cactbot integration.\n- Add option to selectively enable and disable printing of Alert messages,\n  Alarm messages, and Info messages to in game chat (with appropriate colors)\n  for Cactbot integration.\n- Improve text rendering of Alarm messages, Alert messages, and Info messages\n  to appear much less \"pixel-ly\" for Cactbot integration.\n- The background web browser process used for Cactbot integration now:\n  - Auto updates correctly (this was broken last version, sorry)\n  - Will avoid starting when already running\n  - Has better communication with the plugin regarding its startup state,\n    allowing for easier tracking of any issues that may arise.\n  - Should no longer crash the game if the user rapidly requests it restart\n    manually."
+        "Changelog": "# Version 0.2.0.7\n- Add option to not automatically start background web browser, without forcing\n  off Cactbot connections entirely"
     }
 ]

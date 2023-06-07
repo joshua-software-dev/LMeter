@@ -1,3 +1,7 @@
+# Version 0.2.0.7
+- Add option to not automatically start background web browser, without forcing
+  off Cactbot connections entirely
+
 # Version 0.2.0.6
 - Add option to disable audio prompts for Cactbot integration.
 - Add option to selectively enable and disable rendering of Alert message

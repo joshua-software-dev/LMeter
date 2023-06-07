@@ -98,7 +98,7 @@ public class PluginManager : IDisposable
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
         PluginInterface.UiBuilder.Draw += Draw;
 
-        if (CactbotConfig.Enabled) CactbotConfig.Cactbot.StartBackgroundPolling();
+        CactbotConfig.Cactbot.StartBackgroundPollingThread();
     }
 
     private void Draw()

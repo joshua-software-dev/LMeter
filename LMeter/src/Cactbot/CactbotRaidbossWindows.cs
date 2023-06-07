@@ -198,7 +198,7 @@ public class CactbotRaidbossWindows
     public static void Draw(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
-        if (!config.Enabled && !config.RaidbossAlertsPreview && !config.RaidbossTimelinePreview) return;
+        if (!config.EnableConnection && !config.RaidbossAlertsPreview && !config.RaidbossTimelinePreview) return;
 
         config.Cactbot.PollingRate = CharacterState.IsInCombat()
             ? config.RaidbossInCombatPollingRate
