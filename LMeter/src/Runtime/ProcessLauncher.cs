@@ -30,19 +30,15 @@ public static class ProcessLauncher
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.RedirectStandardOutput = true;
 
-        const int E_FAIL = unchecked((int) 0x80004005);
-        const int ERROR_FILE_NOT_FOUND = 0x2;
-
         try
         {
             process.Start();
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
         }
-        catch (System.ComponentModel.Win32Exception e)
+        catch
         {
-            if (e.ErrorCode == E_FAIL && e.NativeErrorCode == ERROR_FILE_NOT_FOUND) return;
-            throw;
+            // Prefer not crashing to not starting
         }
     }
 
@@ -66,7 +62,14 @@ public static class ProcessLauncher
         process.StartInfo.RedirectStandardError = false;
         process.StartInfo.RedirectStandardOutput = false;
 
-        process.Start();
+        try
+        {
+            process.Start();
+        }
+        catch
+        {
+            // Prefer not crashing to not starting
+        }
     }
 
     private static void OnStdErrMessage(object? sender, DataReceivedEventArgs e) =>
