@@ -124,6 +124,57 @@ public class CactbotRaidbossWindows
         );
     }
 
+    private static void DrawColoredProgressBar(CactbotTimeLineElement timelineInfo, Vector2 size)
+    {
+        var remainingTime = timelineInfo.ApproxCompletionTime - DateTime.Now;
+        var progress = (float)
+        (
+            remainingTime.TotalSeconds /
+            timelineInfo.OriginalRemainingTime.TotalSeconds
+        );
+
+        if (PluginManager.Instance.CactbotConfig.RaidbossTimelinePreview) progress = 0.5f;
+
+        if (timelineInfo.StyleFill == "fill")
+        {
+            if (timelineInfo.RgbValue != null)
+            {
+                ImGui.PushStyleColor(ImGuiCol.PlotHistogram, timelineInfo.RgbValue.Value);
+            }
+
+            ImGui.ProgressBar
+            (
+                1 - progress,
+                size,
+                $"{timelineInfo.LeftText} : {remainingTime:mm\\:ss\\.ff}"
+            );
+
+            if (timelineInfo.RgbValue != null)
+            {
+                ImGui.PopStyleColor();
+            }
+        }
+        else
+        {
+            if (timelineInfo.RgbValue != null)
+            {
+                ImGui.PushStyleColor(ImGuiCol.PlotHistogram, timelineInfo.RgbValue.Value);
+            }
+
+            ImGui.ProgressBar
+            (
+                progress,
+                size,
+                $"{timelineInfo.LeftText} : {remainingTime:mm\\:ss\\.ff}"
+            );
+
+            if (timelineInfo.RgbValue != null)
+            {
+                ImGui.PopStyleColor();
+            }
+        }
+    }
+
     public static void DrawTimeline(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
@@ -159,32 +210,7 @@ public class CactbotRaidbossWindows
                     {
                         state.Timeline.TryGetValue(key, out var timelineInfo);
                         if (timelineInfo == null) continue;
-
-                        var remainingTime = timelineInfo.ApproxCompletionTime - DateTime.Now;
-                        var progress = (float)
-                        (
-                            remainingTime.TotalSeconds /
-                            timelineInfo.OriginalRemainingTime.TotalSeconds
-                        );
-                        ImGui.SetCursorPosX((windowWidth - barWidth) * 0.5f);
-                        if (timelineInfo.StyleFill == "fill")
-                        {
-                            ImGui.ProgressBar
-                            (
-                                1 - progress,
-                                progressBarSize,
-                                $"{timelineInfo.LeftText} : {remainingTime:mm\\:ss\\.ff}"
-                            );
-                        }
-                        else
-                        {
-                            ImGui.ProgressBar
-                            (
-                                progress,
-                                progressBarSize,
-                                $"{timelineInfo.LeftText} : {remainingTime:mm\\:ss\\.ff}"
-                            );
-                        }
+                        DrawColoredProgressBar(timelineInfo, progressBarSize);
                     }
                 }
                 finally

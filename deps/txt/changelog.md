@@ -1,3 +1,9 @@
+# Version 0.2.0.8
+- Ensure plugin does not crash the game in the event of an unexpected issue
+  launching the background web browser used for Cactbot integration
+- Ensure Cactbot timeline events are rendered more accurately
+- Cactbot timeline events now render using the same colors specified by Cactbot
+
 # Version 0.2.0.7
 - Add option to not automatically start background web browser, without forcing
   off Cactbot connections entirely

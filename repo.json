@@ -23,10 +23,10 @@
     {
         "Author": "Lichie, joshua.software.dev",
         "Name": "LMeter",
-        "Description": "Plugin to display ACT combat log data.",
+        "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.7",
-        "TestingAssemblyVersion": "0.2.0.7",
+        "AssemblyVersion": "0.2.0.8",
+        "TestingAssemblyVersion": "0.2.0.8",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.7/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.8/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.8/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.8/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.7\n- Add option to not automatically start background web browser, without forcing\n  off Cactbot connections entirely"
+        "Changelog": "# Version 0.2.0.8\n- Ensure plugin does not crash the game in the event of an unexpected issue\n  launching the background web browser used for Cactbot integration\n- Ensure Cactbot timeline events are rendered more accurately\n- Cactbot timeline events now render using the same colors specified by Cactbot"
     }
 ]

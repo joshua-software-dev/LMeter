@@ -36,9 +36,10 @@ public static class ProcessLauncher
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
         }
-        catch
+        catch (Exception e)
         {
-            // Prefer not crashing to not starting
+            // Prefer not crashing to not starting this process
+            PluginLog.Log(e.ToString());
         }
     }
 
@@ -66,9 +67,10 @@ public static class ProcessLauncher
         {
             process.Start();
         }
-        catch
+        catch (Exception e)
         {
-            // Prefer not crashing to not starting
+            // Prefer not crashing to not starting this process
+            PluginLog.Log(e.ToString());
         }
     }
 
