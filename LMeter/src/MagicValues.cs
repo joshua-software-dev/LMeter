@@ -1,3 +1,8 @@
+using System;
+using System.IO;
+using System.Reflection;
+
+
 namespace LMeter;
 
 public static class MagicValues
@@ -14,4 +19,13 @@ public static class MagicValues
         "https://github.com/joshua-software-dev/TotallyNotCef/releases/latest/download/TotallyNotCef.zip";
     public const string TotallyNotCefUpdateCheckUrl =
         "https://api.github.com/repos/joshua-software-dev/TotallyNotCef/tags";
+    public static readonly string DefaultTotallyNotCefInstallLocation =
+        Path.GetFullPath
+        (
+            Path.Join
+            (
+                Path.GetDirectoryName(Assembly.GetExecutingAssembly()?.Location ?? throw new NullReferenceException()),
+                "../TotallyNotCef/"
+            )
+        );
 }

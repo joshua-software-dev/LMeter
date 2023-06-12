@@ -1,3 +1,13 @@
+# Version 0.2.0.9
+- Add option to specify install location for background web browser for Cactbot
+  integration
+- Rework Cactbot integration config screen to be easier to read and understand
+- Add better feedback into the state of the background web browser, to make
+  debugging any unexpected errors easier
+- Add better feedback into the state of the background connection, to make
+  debugging any unexpected errors easier
+- Add button to allow force killing of the background web browser
+
 # Version 0.2.0.8
 - Ensure plugin does not crash the game in the event of an unexpected issue
   launching the background web browser used for Cactbot integration

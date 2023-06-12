@@ -7,9 +7,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,9 +19,11 @@ namespace LMeter.Cactbot;
 public class TotallyNotCefCactbotHttpSource : IDisposable
 {
     public bool LastPollSuccessful { get; private set; } = false;
+    public TotallyNotCefConnectionState ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
     public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
     public int PollingRate { get; set; } = 1000; // milliseconds
     public readonly CactbotState CactbotState;
+    private readonly string _browserInstallFolder;
     private readonly string _cactbotUrl;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly bool _enableAudio;
@@ -32,9 +34,17 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     private readonly ushort _httpPort;
     private IHtmlDocument? _parsedResponse = null;
 
-    public TotallyNotCefCactbotHttpSource(string cactbotUrl, ushort httpPort, bool enableAudio, bool forceStart)
+    public TotallyNotCefCactbotHttpSource
+    (
+        string browserInstallFolder,
+        string cactbotUrl,
+        ushort httpPort,
+        bool enableAudio,
+        bool forceStart
+    )
     {
         CactbotState = new ();
+        _browserInstallFolder = browserInstallFolder;
         _cactbotUrl = cactbotUrl;
         _enableAudio = enableAudio;
         _forceStart = forceStart;
@@ -58,7 +68,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             if (rawHtml == null) return;
             _parsedResponse = await _htmlParser.ParseDocumentAsync(rawHtml, _cancelTokenSource.Token);
             CactbotState.UpdateState(_parsedResponse);
-            WebBrowserState = TotallyNotCefBrowserState.Connected;
+            ConnectionState = TotallyNotCefConnectionState.Connected;
         }
         catch (Exception e) when
         (
@@ -148,8 +158,29 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         return localVersion.FileVersion == latestVersion;
     }
 
+    private async Task DeleteTotallyNotCefInstall(string cefDirPath)
+    {
+        KillWebBrowserProcess();
+        await Task.Delay(1000);
+
+        try
+        {
+            Directory.Delete(cefDirPath, recursive: true);
+            return;
+        }
+        catch
+        {
+            return;
+        }
+    }
+
+    /// <summary>
+    /// Do not call unless installing to the expected default install location
+    /// </summary>
     private async Task DownloadTotallyNotCef(string cefDirPath)
     {
+        var extractDir = Path.GetFullPath(Path.Join(cefDirPath, ".."));
+        PluginLog.Log($"Extract Directory: {extractDir}");
         WebBrowserState = TotallyNotCefBrowserState.Downloading;
         PluginLog.Log("Downloading TotallyNotCef...");
         try
@@ -164,7 +195,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
             using var streamToReadFrom = await response.Content.ReadAsStreamAsync(_cancelTokenSource.Token);
             using var zip = new ZipArchive(streamToReadFrom);
-            zip.ExtractToDirectory(cefDirPath);
+            zip.ExtractToDirectory(extractDir);
             PluginLog.Log("Finished extracting TotallyNotCef");
         }
         catch (Exception e) when
@@ -179,63 +210,44 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
     }
 
-    private async Task DeleteTotallyNotCefInstall(string exePath)
+    private bool DidWebBrowserLaunchSuccessfully()
     {
-        var installDir = Path.GetDirectoryName(exePath);
-        if (installDir == null) return;
-
-        foreach (var process in Process.GetProcessesByName("TotallyNotCef"))
-        {
-            try
-            {
-                process.Kill();
-            }
-            catch
-            {
-                // Do not crash
-            }
-        }
-
-        await Task.Delay(1000);
-
-        try
-        {
-            Directory.Delete(installDir, recursive: true);
-            return;
-        }
-        catch
-        {
-            return;
-        }
+        return Process.GetProcessesByName("TotallyNotCef").Any();
     }
 
     private async Task StartTotallyNotCefProcess()
     {
-        var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        if (pluginDir == null) return;
-        var cefDirPath = Path.GetFullPath(Path.Combine(pluginDir, "../"));
-        var cefExePath = Path.Combine(cefDirPath, $"TotallyNotCef{Path.DirectorySeparatorChar}TotallyNotCef.exe");
+        var isDefaultInstallLocation = _browserInstallFolder == MagicValues.DefaultTotallyNotCefInstallLocation;
+        var cefExePath = Path.Join(_browserInstallFolder, "TotallyNotCef.exe");
 
         if (File.Exists(cefExePath))
         {
             if (!(await IsTotallyNotCefUpToDate(cefExePath)))
             {
-                await DeleteTotallyNotCefInstall(cefExePath);
-                await DownloadTotallyNotCef(cefDirPath);
+                PluginLog.Log("TotallyNotCef is out of date.");
+                if (isDefaultInstallLocation)
+                {
+                    PluginLog.Log("Updating...");
+                    await DeleteTotallyNotCefInstall(_browserInstallFolder);
+                    await DownloadTotallyNotCef(_browserInstallFolder);
+                }
             }
             else
             {
                 PluginLog.Log("TotallyNotCef is up to date.");
             }
         }
-        else
+        else if (isDefaultInstallLocation)
         {
-            await DownloadTotallyNotCef(cefDirPath);
+            await DownloadTotallyNotCef(_browserInstallFolder);
         }
 
         WebBrowserState = TotallyNotCefBrowserState.Starting;
         ProcessLauncher.LaunchTotallyNotCef(cefExePath, _cactbotUrl, _httpPort, _enableAudio);
-        WebBrowserState = TotallyNotCefBrowserState.Started;
+        if (DidWebBrowserLaunchSuccessfully())
+        {
+            WebBrowserState = TotallyNotCefBrowserState.Running;
+        }
     }
 
     private async Task PollCactbot()
@@ -244,17 +256,6 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         {
             await StartTotallyNotCefProcess();
         }
-        else if (PluginManager.Instance?.CactbotConfig?.EnableConnection ?? false)
-        {
-            WebBrowserState = TotallyNotCefBrowserState.WaitingForConnection;
-        }
-
-        WebBrowserState = WebBrowserState switch
-        {
-            TotallyNotCefBrowserState.NotStarted => TotallyNotCefBrowserState.NotStarted,
-            TotallyNotCefBrowserState.Started => TotallyNotCefBrowserState.Started,
-            _ => TotallyNotCefBrowserState.WaitingForConnection
-        };
 
         while (!_cancelTokenSource.IsCancellationRequested)
         {
@@ -269,17 +270,12 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                     _parsedResponse = null;
                 }
 
-                if
-                (
-                    WebBrowserState != TotallyNotCefBrowserState.NotStarted &&
-                    WebBrowserState != TotallyNotCefBrowserState.Started &&
-                    WebBrowserState != TotallyNotCefBrowserState.WaitingForConnection
-                )
+                if (ConnectionState != TotallyNotCefConnectionState.WaitingForConnection)
                 {
                     LastPollSuccessful = _parsedResponse != null;
-                    WebBrowserState = LastPollSuccessful
-                        ? TotallyNotCefBrowserState.Connected
-                        : TotallyNotCefBrowserState.Disconnected;
+                    ConnectionState = LastPollSuccessful
+                        ? TotallyNotCefConnectionState.Connected
+                        : TotallyNotCefConnectionState.Disconnected;
                 }
 
                 await Task.Delay(PollingRate, _cancelTokenSource.Token);
@@ -317,6 +313,23 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             e is HttpRequestException ||
             e is SocketException
         ) { }
+    }
+
+    public void KillWebBrowserProcess()
+    {
+        foreach (var process in Process.GetProcessesByName("TotallyNotCef"))
+        {
+            try
+            {
+                process.Kill();
+            }
+            catch
+            {
+                // Do not crash
+            }
+        }
+
+        WebBrowserState = TotallyNotCefBrowserState.NotStarted;
     }
 
     public void Dispose()

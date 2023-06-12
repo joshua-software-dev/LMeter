@@ -1,9 +1,12 @@
 using Dalamud.Interface;
 using ImGuiNET;
 using LMeter.Cactbot;
+using LMeter.Helpers;
 using Newtonsoft.Json;
 using System;
+using System.IO;
 using System.Numerics;
+using System.Reflection;
 
 
 namespace LMeter.Config;
@@ -12,7 +15,11 @@ public class CactbotConfig : IConfigPage, IDisposable
 {
     [JsonIgnore]
     public TotallyNotCefCactbotHttpSource Cactbot { get; private set; }
+
     public bool AutomaticallyStartBackgroundWebBrowser = false;
+    public bool AutomaticallyDownloadBackgroundWebBrowser = true;
+    public string? WebBrowserInstallLocation = MagicValues.DefaultTotallyNotCefInstallLocation;
+
     [JsonProperty("Enabled")]
     public bool EnableConnection = false;
     public string CactbotUrl = MagicValues.DefaultCactbotUrl;
@@ -47,7 +54,14 @@ public class CactbotConfig : IConfigPage, IDisposable
 
     public CactbotConfig()
     {
-        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio, false);
+        Cactbot = new
+        (
+            WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
+            CactbotUrl,
+            (ushort) HttpPort,
+            RaidbossEnableAudio,
+            false
+        );
     }
 
     public IConfigPage GetDefault() =>
@@ -57,226 +71,374 @@ public class CactbotConfig : IConfigPage, IDisposable
     {
         Cactbot.SendShutdownCommand();
         Cactbot.Dispose();
-        Cactbot = new (CactbotUrl, (ushort) HttpPort, RaidbossEnableAudio, forceStart);
+        Cactbot = new
+        (
+            WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
+            CactbotUrl,
+            (ushort) HttpPort,
+            RaidbossEnableAudio,
+            forceStart
+        );
         Cactbot.StartBackgroundPollingThread();
+    }
+
+    private void DrawBrowserSettings(Vector2 windowSize)
+    {
+        using var browserScope = new DrawChildScope
+        (
+            "##BrowserSettings",
+            windowSize with { X = windowSize.X * 0.94f, Y = 194 + (AutomaticallyStartBackgroundWebBrowser ? 28 : 0) },
+            true
+        );
+        if (!browserScope.Success) return;
+
+        ImGui.Text("Web Browser Settings:");
+        ImGui.Checkbox
+        (
+            "Automatically Start Background Web Browser",
+            ref this.AutomaticallyStartBackgroundWebBrowser
+        );
+        if (AutomaticallyStartBackgroundWebBrowser)
+        {
+            ImGui.Indent();
+            ImGui.Checkbox
+            (
+                "Enable Audio [Web Browser must restart for setting to take effect]",
+                ref RaidbossEnableAudio
+            );
+            ImGui.Unindent();
+        }
+
+        ImGui.Text("Background Web Browser State:");
+        ImGui.SameLine();
+        ImGui.PushFont(UiBuilder.IconFont);
+
+        switch (Cactbot.WebBrowserState)
+        {
+            case TotallyNotCefBrowserState.NotStarted:
+            {
+                ImGui.Text(""); // Boxed X Mark
+                break;
+            }
+            case TotallyNotCefBrowserState.Downloading:
+            {
+                ImGui.Text(""); // Loading Spinner
+                break;
+            }
+            case TotallyNotCefBrowserState.Starting:
+            {
+                ImGui.Text(""); // Loading Spinner
+                break;
+            }
+            case TotallyNotCefBrowserState.Running:
+            {
+                ImGui.Text(""); // Boxed checkmark
+                break;
+            }
+            default:
+            {
+                ImGui.Text("?");
+                break;
+            }
+        }
+        ImGui.PopFont();
+        ImGui.SameLine();
+        ImGui.Text(Cactbot.WebBrowserState.ToString());
+
+        switch (Cactbot.WebBrowserState)
+        {
+            case TotallyNotCefBrowserState.NotStarted:
+            {
+                if (ImGui.Button("Start Web Browser"))
+                {
+                    SetNewCactbotUrl(forceStart: true);
+                }
+                ImGui.SameLine();
+                break;
+            }
+            case TotallyNotCefBrowserState.Downloading:
+            {
+                break;
+            }
+            case TotallyNotCefBrowserState.Starting:
+            {
+                break;
+            }
+            case TotallyNotCefBrowserState.Running:
+            {
+                if (ImGui.Button("Restart Web Browser"))
+                {
+                    SetNewCactbotUrl(forceStart: true);
+                }
+                ImGui.SameLine();
+                break;
+            }
+            case TotallyNotCefBrowserState.NotRunning:
+            {
+                if (ImGui.Button("Restart Web Browser"))
+                {
+                    SetNewCactbotUrl(forceStart: true);
+                }
+                ImGui.SameLine();
+                break;
+            }
+        }
+
+        if (ImGui.Button("Kill Web Browser"))
+        {
+            Cactbot.KillWebBrowserProcess();
+        }
+
+        using var installScope = new DrawChildScope
+        (
+            "##InstallSettings",
+            windowSize with { X = windowSize.X * 0.9f, Y = 82 },
+            true
+        );
+        if (!installScope.Success) return;
+
+        var tempLocation = this.WebBrowserInstallLocation;
+        ImGui.Text("Browser Install Location:");
+        ImGui.PushItemWidth(windowSize.X * 0.88f);
+        ImGui.InputTextWithHint
+        (
+            "##exefolderpath",
+            $"Default '{MagicValues.DefaultTotallyNotCefInstallLocation}'",
+            ref tempLocation,
+            64
+        );
+        ImGui.PopItemWidth();
+
+        ImGui.Text("TotallyNotCef.exe Found in Install Folder:");
+        ImGui.SameLine();
+        ImGui.PushFont(UiBuilder.IconFont);
+        if (File.Exists(Path.Join(this.WebBrowserInstallLocation, "TotallyNotCef.exe")))
+        {
+            ImGui.Text(""); // Boxed checkmark
+        }
+        else
+        {
+            ImGui.Text(""); // Boxed X Mark
+        }
+        ImGui.PopFont();
+
+        if (tempLocation != this.WebBrowserInstallLocation)
+        {
+            WebBrowserInstallLocation = tempLocation;
+        }
+    }
+
+    private void DrawConnectionSettings(Vector2 windowSize)
+    {
+        using var connectionScope = new DrawChildScope
+        (
+            "##ConnectionSettings",
+            windowSize with { X = windowSize.X * 0.94f, Y = 85 + (this.EnableConnection ? 145 : 0) },
+            true
+        );
+        if (!connectionScope.Success) return;
+
+        ImGui.Text("Connection Settings:");
+        ImGui.Checkbox("Enable Connection to Browser", ref this.EnableConnection);
+        ImGui.Text("Connection State:");
+        ImGui.SameLine();
+        ImGui.PushFont(UiBuilder.IconFont);
+        switch (Cactbot.ConnectionState)
+        {
+            case TotallyNotCefConnectionState.WaitingForConnection:
+            {
+                ImGui.Text(""); // Loading Spinner
+                break;
+            }
+            case TotallyNotCefConnectionState.Connected:
+            {
+                ImGui.Text(""); // Boxed checkmark
+                break;
+            }
+            case TotallyNotCefConnectionState.Disconnected:
+            {
+                ImGui.Text(""); // Boxed X Mark
+                break;
+            }
+            default:
+            {
+                ImGui.Text("?");
+                break;
+            }
+        }
+        ImGui.PopFont();
+        ImGui.SameLine();
+        ImGui.Text(Cactbot.ConnectionState.ToString());
+
+        if (EnableConnection)
+        {
+
+            var tempAddress = this.CactbotUrl;
+            ImGui.PushItemWidth(windowSize.X * 0.75f);
+            ImGui.InputTextWithHint
+            (
+                "Cactbot URL",
+                $"Default: '{MagicValues.DefaultCactbotUrl}'",
+                ref tempAddress,
+                64
+            );
+            ImGui.PopItemWidth();
+            if (tempAddress != this.CactbotUrl)
+            {
+                this.CactbotUrl = tempAddress;
+            }
+
+            var tempPort = this.HttpPort;
+            using
+            (
+                var httpScope = new DrawChildScope
+                (
+                    "##HttpPort",
+                    windowSize with { X = windowSize.X * 0.9f, Y = 60 },
+                    true
+                )
+            )
+            {
+                if (httpScope.Success)
+                {
+                    ImGui.PushItemWidth(100);
+                    ImGui.InputInt("HTTP Server Port", ref tempPort);
+                    ImGui.PopItemWidth();
+                    ImGui.Text("[Change this if the default port conflicts with other things you have running]");
+                }
+            }
+
+            var tempInRate = this.RaidbossInCombatPollingRate;
+            var tempOutRate = this.RaidbossOutOfCombatPollingRate;
+            ImGui.PushItemWidth(100);
+            ImGui.InputInt("In Combat Polling Rate in milliseconds [Lower is faster]", ref tempInRate);
+            ImGui.InputInt("Out of Combat Polling Rate in milliseconds [Lower is faster]", ref tempOutRate);
+            ImGui.PopItemWidth();
+            tempPort = Math.Max(1, Math.Min(tempPort, ushort.MaxValue));
+            if (tempPort != this.HttpPort)
+            {
+                this.HttpPort = tempPort;
+            }
+
+            tempInRate = Math.Max(1, tempInRate);
+            if (tempInRate != this.RaidbossInCombatPollingRate)
+            {
+                this.RaidbossInCombatPollingRate = tempInRate;
+            }
+
+            tempOutRate = Math.Max(1, tempOutRate);
+            if (tempOutRate != this.RaidbossOutOfCombatPollingRate)
+            {
+                this.RaidbossOutOfCombatPollingRate = tempOutRate;
+            }
+        }
+    }
+
+    private void DrawAlertSettings(Vector2 windowSize, Vector2 screenSize)
+    {
+        using var alertScope = new DrawChildScope
+        (
+            "##AlertSettings",
+            windowSize with { X = windowSize.X * 0.94f, Y = 276 },
+            true
+        );
+        if (!alertScope.Success) return;
+
+        ImGui.Text("Alerts Render Options:");
+
+        ImGui.Checkbox("Show Alarm popups", ref RaidbossAlarmsEnabled);
+        ImGui.SameLine(200);
+        ImGui.Checkbox("Show Alarm messages in game chat##alarms", ref RaidbossAlarmsInChatEnabled);
+
+        ImGui.Checkbox("Show Alert popups", ref RaidbossAlertsEnabled);
+        ImGui.SameLine(200);
+        ImGui.Checkbox("Show Alert messages in game chat##alerts", ref RaidbossAlertsInChatEnabled);
+
+        ImGui.Checkbox("Show Info popups", ref RaidbossInfoEnabled);
+        ImGui.SameLine(200);
+        ImGui.Checkbox("Show Info messages in game chat##info", ref RaidbossInfoInChatEnabled);
+
+        ImGui.PushItemWidth(windowSize.X * 0.58f);
+        ImGui.DragFloat2
+        (
+            "Position##alerts",
+            ref this.RaidbossAlertsPosition,
+            1,
+            -screenSize.X / 2,
+            screenSize.X / 2
+        );
+
+        ImGui.DragFloat2
+        (
+            "Size##alerts",
+            ref this.RaidbossAlertsSize,
+            1,
+            0,
+            screenSize.Y
+        );
+
+        var tempAlarmsOutline = (int) RaidbossAlarmTextOutlineThickness;
+        ImGui.SliderInt("Alarms Text Outline Thickness", ref tempAlarmsOutline, 0, 10);
+        RaidbossAlarmTextOutlineThickness = (uint) tempAlarmsOutline;
+
+        var tempAlertsOutline = (int) RaidbossAlertsTextOutlineThickness;
+        ImGui.SliderInt("Alerts Text Outline Thickness", ref tempAlertsOutline, 0, 10);
+        RaidbossAlertsTextOutlineThickness = (uint) tempAlertsOutline;
+
+        var tempInfoOutline = (int) RaidbossInfoTextOutlineThickness;
+        ImGui.SliderInt("Info Text Outline Thickness", ref tempInfoOutline, 0, 10);
+        RaidbossInfoTextOutlineThickness = (uint) tempInfoOutline;
+        ImGui.PopItemWidth();
+
+        ImGui.Checkbox("Preview##alerts", ref this.RaidbossAlertsPreview);
+    }
+
+    private void DrawTimelineSettings(Vector2 windowSize, Vector2 screenSize)
+    {
+        using var timelineScope = new DrawChildScope
+        (
+            "##TimelineSettings",
+            windowSize with { X = windowSize.X * 0.94f, Y = 141 },
+            true
+        );
+        if (!timelineScope.Success) return;
+
+        ImGui.Text("Timeline Render Options:");
+        ImGui.Checkbox("Show Timeline", ref RaidbossTimelineEnabled);
+        ImGui.PushItemWidth(windowSize.X * 0.58f);
+        ImGui.DragFloat2
+        (
+            "Position##timeline",
+            ref this.RaidbossTimelinePosition,
+            1,
+            -screenSize.X / 2,
+            screenSize.X / 2
+        );
+
+        ImGui.DragFloat2
+        (
+            "Size##timeline",
+            ref this.RaidbossTimelineSize,
+            1,
+            0,
+            screenSize.Y
+        );
+        ImGui.PopItemWidth();
+
+        ImGui.Checkbox("Preview##timeline", ref this.RaidbossTimelinePreview);
     }
 
     public void DrawConfig(Vector2 size, float padX, float padY)
     {
-        try
-        {
-            if (ImGui.BeginChild("##CactbotConfig", new Vector2(size.X, size.Y), true))
-            {
-                var tempAddress = this.CactbotUrl;
-                ImGui.Text("Background Web Browser State: ");
-                ImGui.SameLine();
-                ImGui.PushFont(UiBuilder.IconFont);
+        using var configScope = new DrawChildScope("##CactbotConfig", size, true);
+        if (!configScope.Success) return;
 
-                switch (Cactbot.WebBrowserState)
-                {
-                    case TotallyNotCefBrowserState.NotStarted:
-                    {
-                        ImGui.Text(""); // Boxed X Mark
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.Downloading:
-                    {
-                        ImGui.Text(""); // Loading Spinner
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.Starting:
-                    {
-                        ImGui.Text(""); // Loading Spinner
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.Started:
-                    {
-                        ImGui.Text(""); // Boxed checkmark
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.WaitingForConnection:
-                    {
-                        ImGui.Text(""); // Loading Spinner
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.Connected:
-                    {
-                        ImGui.Text(""); // Boxed checkmark
-                        break;
-                    }
-                    case TotallyNotCefBrowserState.Disconnected:
-                    {
-                        ImGui.Text(""); // Boxed X Mark
-                        break;
-                    }
-                    default:
-                    {
-                        ImGui.Text("?");
-                        break;
-                    }
-                }
-                ImGui.PopFont();
-                ImGui.SameLine();
-                ImGui.Text(Cactbot.WebBrowserState.ToString());
-
-                if
-                (
-                    ImGui.Button
-                    (
-                        Cactbot.WebBrowserState switch
-                        {
-                            TotallyNotCefBrowserState.NotStarted => "Start Web Browser",
-                            TotallyNotCefBrowserState.WaitingForConnection => "Start Web Browser",
-                            _ => "Restart Web Browser",
-                        }
-                    )
-                )
-                {
-                    SetNewCactbotUrl(forceStart: true);
-                }
-
-                ImGui.Checkbox("Automatically Start Background Web Browser", ref this.AutomaticallyStartBackgroundWebBrowser);
-                if (AutomaticallyStartBackgroundWebBrowser)
-                {
-                    ImGui.Indent();
-                    ImGui.Checkbox("Enable Audio [Web Browser must restart for setting to take effect]", ref RaidbossEnableAudio);
-                    ImGui.Unindent();
-                }
-
-                ImGui.Checkbox("Enable Connection to Browser", ref this.EnableConnection);
-                if (EnableConnection)
-                {
-                    ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.8f);
-                    ImGui.InputTextWithHint
-                    (
-                        "Cactbot URL",
-                        $"Default: '{MagicValues.DefaultCactbotUrl}'",
-                        ref tempAddress,
-                        64
-                    );
-                    ImGui.PopItemWidth();
-                    if (tempAddress != this.CactbotUrl)
-                    {
-                        this.CactbotUrl = tempAddress;
-                    }
-
-                    var tempPort = this.HttpPort;
-                    var windowSize = ImGui.GetWindowSize();
-                    try
-                    {
-                        if (ImGui.BeginChild("##HttpPort", windowSize with { X = windowSize.X * 0.9f, Y = 60 }, true))
-                        {
-                            ImGui.PushItemWidth(100);
-                            ImGui.InputInt("HTTP Server Port", ref tempPort);
-                            ImGui.PopItemWidth();
-                            ImGui.Text("[Change this if the default port conflicts with other things you have running]");
-                        }
-                    }
-                    finally
-                    {
-                        ImGui.EndChild();
-                    }
-
-                    var tempInRate = this.RaidbossInCombatPollingRate;
-                    var tempOutRate = this.RaidbossOutOfCombatPollingRate;
-                    ImGui.PushItemWidth(100);
-                    ImGui.InputInt("In Combat Polling Rate in milliseconds [Lower is faster]", ref tempInRate);
-                    ImGui.InputInt("Out of Combat Polling Rate in milliseconds [Lower is faster]", ref tempOutRate);
-                    ImGui.PopItemWidth();
-                    tempPort = Math.Max(1, Math.Min(tempPort, ushort.MaxValue));
-                    if (tempPort != this.HttpPort)
-                    {
-                        this.HttpPort = tempPort;
-                    }
-
-                    tempInRate = Math.Max(1, tempInRate);
-                    if (tempInRate != this.RaidbossInCombatPollingRate)
-                    {
-                        this.RaidbossInCombatPollingRate = tempInRate;
-                    }
-
-                    tempOutRate = Math.Max(1, tempOutRate);
-                    if (tempOutRate != this.RaidbossOutOfCombatPollingRate)
-                    {
-                        this.RaidbossOutOfCombatPollingRate = tempOutRate;
-                    }
-                }
-
-                var screenSize = ImGui.GetMainViewport().Size;
-                ImGui.NewLine();
-                ImGui.Text("Alerts Render Options:");
-
-                ImGui.Checkbox("Show Alarms popups", ref RaidbossAlarmsEnabled);
-                ImGui.Checkbox("Show Alarms in game chat##alarms", ref RaidbossAlarmsInChatEnabled);
-                ImGui.Checkbox("Show Alerts popups", ref RaidbossAlertsEnabled);
-                ImGui.Checkbox("Show Alerts in game chat##alerts", ref RaidbossAlertsInChatEnabled);
-                ImGui.Checkbox("Show Info popups", ref RaidbossInfoEnabled);
-                ImGui.Checkbox("Show Info messages in game chat##info", ref RaidbossInfoInChatEnabled);
-
-                ImGui.PushItemWidth(ImGui.GetWindowSize().X * 0.6f);
-                ImGui.DragFloat2
-                (
-                    "Position##alerts",
-                    ref this.RaidbossAlertsPosition,
-                    1,
-                    -screenSize.X / 2,
-                    screenSize.X / 2
-                );
-
-                ImGui.DragFloat2
-                (
-                    "Size##alerts",
-                    ref this.RaidbossAlertsSize,
-                    1,
-                    0,
-                    screenSize.Y
-                );
-
-                var tempAlarmsOutline = (int) RaidbossAlarmTextOutlineThickness;
-                ImGui.SliderInt("Alarms Text Outline Thickness", ref tempAlarmsOutline, 0, 10);
-                RaidbossAlarmTextOutlineThickness = (uint) tempAlarmsOutline;
-
-                var tempAlertsOutline = (int) RaidbossAlertsTextOutlineThickness;
-                ImGui.SliderInt("Alerts Text Outline Thickness", ref tempAlertsOutline, 0, 10);
-                RaidbossAlertsTextOutlineThickness = (uint) tempAlertsOutline;
-
-                var tempInfoOutline = (int) RaidbossInfoTextOutlineThickness;
-                ImGui.SliderInt("Info Text Outline Thickness", ref tempInfoOutline, 0, 10);
-                RaidbossInfoTextOutlineThickness = (uint) tempInfoOutline;
-                ImGui.PopItemWidth();
-
-                ImGui.Checkbox("Preview##alerts", ref this.RaidbossAlertsPreview);
-
-                ImGui.NewLine();
-                ImGui.Text("Timeline Render Options:");
-                ImGui.Checkbox("Show Timeline", ref RaidbossTimelineEnabled);
-                ImGui.PushItemWidth(ImGui.GetWindowSize().X * 0.6f);
-                ImGui.DragFloat2
-                (
-                    "Position##timeline",
-                    ref this.RaidbossTimelinePosition,
-                    1,
-                    -screenSize.X / 2,
-                    screenSize.X / 2
-                );
-
-                ImGui.DragFloat2
-                (
-                    "Size##timeline",
-                    ref this.RaidbossTimelineSize,
-                    1,
-                    0,
-                    screenSize.Y
-                );
-                ImGui.PopItemWidth();
-
-                ImGui.Checkbox("Preview##timeline", ref this.RaidbossTimelinePreview);
-            }
-        }
-        finally
-        {
-            ImGui.EndChild();
-        }
+        var windowSize = ImGui.GetWindowSize();
+        var screenSize = ImGui.GetMainViewport().Size;
+        DrawBrowserSettings(windowSize);
+        DrawConnectionSettings(windowSize);
+        DrawAlertSettings(windowSize, screenSize);
+        DrawTimelineSettings(windowSize, screenSize);
     }
 
     public void Dispose()
