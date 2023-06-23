@@ -87,27 +87,23 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var browserScope = new DrawChildScope
         (
             "##BrowserSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 194 + (AutomaticallyStartBackgroundWebBrowser ? 28 : 0) },
+            windowSize with { X = windowSize.X * 0.94f, Y = 252 },
             true
         );
         if (!browserScope.Success) return;
 
-        ImGui.Text("Web Browser Settings:");
+        ImGui.Text("Web Browser Settings");
+        ImGui.Separator();
         ImGui.Checkbox
         (
             "Automatically Start Background Web Browser",
             ref this.AutomaticallyStartBackgroundWebBrowser
         );
-        if (AutomaticallyStartBackgroundWebBrowser)
-        {
-            ImGui.Indent();
-            ImGui.Checkbox
-            (
-                "Enable Audio [Web Browser must restart for setting to take effect]",
-                ref RaidbossEnableAudio
-            );
-            ImGui.Unindent();
-        }
+        ImGui.Checkbox
+        (
+            "Enable Audio [Web Browser must restart for setting to take effect]",
+            ref RaidbossEnableAudio
+        );
 
         ImGui.Text("Background Web Browser State:");
         ImGui.SameLine();
@@ -192,7 +188,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var installScope = new DrawChildScope
         (
             "##InstallSettings",
-            windowSize with { X = windowSize.X * 0.9f, Y = 82 },
+            windowSize with { X = windowSize.X * 0.9f, Y = 108 },
             true
         );
         if (!installScope.Success) return;
@@ -226,6 +222,11 @@ public class CactbotConfig : IConfigPage, IDisposable
         {
             WebBrowserInstallLocation = tempLocation;
         }
+
+        if (ImGui.Button("Reset to default location"))
+        {
+            this.WebBrowserInstallLocation = MagicValues.DefaultTotallyNotCefInstallLocation;
+        }
     }
 
     private void DrawConnectionSettings(Vector2 windowSize)
@@ -238,7 +239,8 @@ public class CactbotConfig : IConfigPage, IDisposable
         );
         if (!connectionScope.Success) return;
 
-        ImGui.Text("Connection Settings:");
+        ImGui.Text("Connection Settings");
+        ImGui.Separator();
         ImGui.Checkbox("Enable Connection to Browser", ref this.EnableConnection);
         ImGui.Text("Connection State:");
         ImGui.SameLine();
@@ -339,13 +341,13 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var alertScope = new DrawChildScope
         (
             "##AlertSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 276 },
+            windowSize with { X = windowSize.X * 0.94f, Y = 280 },
             true
         );
         if (!alertScope.Success) return;
 
-        ImGui.Text("Alerts Render Options:");
-
+        ImGui.Text("Alerts Render Options");
+        ImGui.Separator();
         ImGui.Checkbox("Show Alarm popups", ref RaidbossAlarmsEnabled);
         ImGui.SameLine(200);
         ImGui.Checkbox("Show Alarm messages in game chat##alarms", ref RaidbossAlarmsInChatEnabled);
@@ -398,12 +400,13 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var timelineScope = new DrawChildScope
         (
             "##TimelineSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 141 },
+            windowSize with { X = windowSize.X * 0.94f, Y = 145 },
             true
         );
         if (!timelineScope.Success) return;
 
-        ImGui.Text("Timeline Render Options:");
+        ImGui.Text("Timeline Render Options");
+        ImGui.Separator();
         ImGui.Checkbox("Show Timeline", ref RaidbossTimelineEnabled);
         ImGui.PushItemWidth(windowSize.X * 0.58f);
         ImGui.DragFloat2

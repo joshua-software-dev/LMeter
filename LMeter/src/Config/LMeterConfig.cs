@@ -11,7 +11,7 @@ public class LMeterConfig : IConfigurable, IDisposable
 {
     public string Name
     {
-        get => "LMeter";
+        get => $"LMeter v{this.Version}";
         set {}
     }
 

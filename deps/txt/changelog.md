@@ -1,3 +1,9 @@
+# Version 0.2.0.10
+- Ensure timeline events don't get left on screen should LMeter lose connection
+  to the background web browser for any reason
+- Add button to reset background web browser install location back to default
+- Minor tweaks to Cactbot integration config presentation
+
 # Version 0.2.0.9
 - Add option to specify install location for background web browser for Cactbot
   integration

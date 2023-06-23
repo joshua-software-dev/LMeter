@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.9",
-        "TestingAssemblyVersion": "0.2.0.9",
+        "AssemblyVersion": "0.2.0.10",
+        "TestingAssemblyVersion": "0.2.0.10",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.9/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.9/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.9/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.10/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.10/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.10/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.9\n- Add option to specify install location for background web browser for Cactbot\n  integration\n- Rework Cactbot integration config screen to be easier to read and understand\n- Add better feedback into the state of the background web browser, to make\n  debugging any unexpected errors easier\n- Add better feedback into the state of the background connection, to make\n  debugging any unexpected errors easier\n- Add button to allow force killing of the background web browser"
+        "Changelog": "# Version 0.2.0.10\n- Ensure timeline events don't get left on screen should LMeter lose connection\n  to the background web browser for any reason\n- Add button to reset background web browser install location back to default\n- Minor tweaks to Cactbot integration config presentation\n- Add plugin version number to plugin window title"
     }
 ]

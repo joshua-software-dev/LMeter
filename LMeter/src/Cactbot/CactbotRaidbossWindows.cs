@@ -1,3 +1,4 @@
+using Dalamud.Logging;
 using ImGuiNET;
 using LMeter.Helpers;
 using System;
@@ -205,6 +206,18 @@ public class CactbotRaidbossWindows
                     var state = config.RaidbossTimelinePreview
                         ? CactbotState.PreviewState
                         : config.Cactbot.CactbotState;
+
+                    if
+                    (
+                        !config.RaidbossTimelinePreview &&
+                        config.Cactbot.ConnectionState != TotallyNotCefConnectionState.Connected &&
+                        !state.Timeline.IsEmpty
+                    )
+                    {
+                        PluginLog.Log("Lost connection to TotallyNotCef, clearing lingering timeline events...");
+                        // Ensure lingering timers aren't left rendering.
+                        state.Timeline.Clear();
+                    }
 
                     foreach (var key in state.Timeline.Keys.OrderBy(it => it))
                     {
