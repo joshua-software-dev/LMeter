@@ -1,3 +1,6 @@
+# Version 0.2.0.11
+- Fix cactbot timeline events not reading data correctly due to cactbot updates
+
 # Version 0.2.0.10
 - Ensure timeline events don't get left on screen should LMeter lose connection
   to the background web browser for any reason

@@ -13,6 +13,10 @@ public partial class CactbotTimeLineElement
     private static partial Regex _preCompiledRgbRegex();
     private readonly static Regex RgbRegex = _preCompiledRgbRegex();
 
+    [GeneratedRegex("order: (\\d+)")]
+    private static partial Regex _preCompiledStyleToIdRegex();
+    private readonly static Regex StyleToIdRegex = _preCompiledStyleToIdRegex();
+
     public int ContainerId;
     public string? ContainerStyle;
     public double Duration;
@@ -36,13 +40,9 @@ public partial class CactbotTimeLineElement
 
     public CactbotTimeLineElement(IElement container)
     {
-        ContainerId = -1;
-        if (int.TryParse(container.GetAttribute("id"), out var contId))
-        {
-            ContainerId = contId;
-        }
-
         ContainerStyle = container.GetAttribute("style");
+        ContainerId = GetIdFromContainerStyle(ContainerStyle);
+
         var timerBar = container.GetElementsByTagName("timer-bar")[0];
 
         Duration = -1;
@@ -65,10 +65,32 @@ public partial class CactbotTimeLineElement
 
         OriginalRemainingTime = TimeSpan.FromSeconds(Value);
         ApproxCompletionTime = DateTime.Now + OriginalRemainingTime;
-        RgbValue = GetStyleRgb(Fg);
+        RgbValue = GetRgbFromInternalStyle(Fg);
     }
 
-    private uint? GetStyleRgb(string? fg)
+    private int GetIdFromContainerStyle(string? containerStyle)
+    {
+        if (containerStyle == null) return -1;
+        var match = StyleToIdRegex.Match(containerStyle);
+        if (!match.Success) return -1;
+
+        const string orderCssPrefix = "order: ";
+        if
+        (
+            int.TryParse
+            (
+                match.ValueSpan[(match.ValueSpan.IndexOf(orderCssPrefix) + orderCssPrefix.Length)..],
+                out var id
+            )
+        )
+        {
+            return id;
+        }
+
+        return -1;
+    }
+
+    private uint? GetRgbFromInternalStyle(string? fg)
     {
         if (fg == null) return null;
         var match = RgbRegex.Match(fg);
@@ -113,7 +135,7 @@ public partial class CactbotTimeLineElement
         Toward = newlyParsed.Toward;
         StyleFill = newlyParsed.StyleFill;
         Fg = newlyParsed.Fg;
-        RgbValue = GetStyleRgb(newlyParsed.Fg);
+        RgbValue = GetRgbFromInternalStyle(newlyParsed.Fg);
     }
 
     public override string ToString() =>

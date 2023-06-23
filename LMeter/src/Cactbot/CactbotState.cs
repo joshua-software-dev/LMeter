@@ -16,7 +16,7 @@ public class CactbotState
     public event EventHandler? AlarmStateChanged = null;
     public event EventHandler? AlertStateChanged = null;
     public event EventHandler? InfoStateChanged = null;
-    public ConcurrentDictionary<int, CactbotTimeLineElement> Timeline = new ();
+    public readonly ConcurrentDictionary<int, CactbotTimeLineElement> Timeline = new ();
 
     public CactbotState()
     {
