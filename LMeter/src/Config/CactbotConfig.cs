@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Numerics;
-using System.Reflection;
+using System.Threading;
 
 
 namespace LMeter.Config;
@@ -14,11 +14,13 @@ namespace LMeter.Config;
 public class CactbotConfig : IConfigPage, IDisposable
 {
     [JsonIgnore]
-    public TotallyNotCefCactbotHttpSource Cactbot { get; private set; }
+    public TotallyNotCefCactbotHttpSource? Cactbot { get; private set; }
 
     public bool AutomaticallyStartBackgroundWebBrowser = false;
     public bool AutomaticallyDownloadBackgroundWebBrowser = true;
     public string? WebBrowserInstallLocation = MagicValues.DefaultTotallyNotCefInstallLocation;
+    [JsonIgnore]
+    private bool? WebBrowserInstallLocationContainsExe = null;
 
     [JsonProperty("Enabled")]
     public bool EnableConnection = false;
@@ -52,34 +54,29 @@ public class CactbotConfig : IConfigPage, IDisposable
     public string Name =>
         "Cactbot";
 
-    public CactbotConfig()
-    {
-        Cactbot = new
-        (
-            WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
-            CactbotUrl,
-            (ushort) HttpPort,
-            RaidbossEnableAudio,
-            false
-        );
-    }
-
     public IConfigPage GetDefault() =>
         new CactbotConfig();
 
     public void SetNewCactbotUrl(bool forceStart)
     {
-        Cactbot.SendShutdownCommand();
-        Cactbot.Dispose();
-        Cactbot = new
+        forceStart = forceStart || this.AutomaticallyStartBackgroundWebBrowser;
+
+        ThreadPool.QueueUserWorkItem
         (
-            WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
-            CactbotUrl,
-            (ushort) HttpPort,
-            RaidbossEnableAudio,
-            forceStart
+            _ =>
+            {
+                this.Cactbot?.SendShutdownCommand();
+                this.Cactbot?.Dispose();
+                this.Cactbot = new
+                (
+                    WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
+                    CactbotUrl,
+                    (ushort) HttpPort,
+                    RaidbossEnableAudio
+                );
+                this.Cactbot.StartBackgroundPollingThread(forceStart);
+            }
         );
-        Cactbot.StartBackgroundPollingThread();
     }
 
     private void DrawBrowserSettings(Vector2 windowSize)
@@ -109,7 +106,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         ImGui.SameLine();
         ImGui.PushFont(UiBuilder.IconFont);
 
-        switch (Cactbot.WebBrowserState)
+        switch (Cactbot?.WebBrowserState)
         {
             case TotallyNotCefBrowserState.NotStarted:
             {
@@ -139,9 +136,9 @@ public class CactbotConfig : IConfigPage, IDisposable
         }
         ImGui.PopFont();
         ImGui.SameLine();
-        ImGui.Text(Cactbot.WebBrowserState.ToString());
+        ImGui.Text(Cactbot?.WebBrowserState.ToString() ?? "null");
 
-        switch (Cactbot.WebBrowserState)
+        switch (Cactbot?.WebBrowserState)
         {
             case TotallyNotCefBrowserState.NotStarted:
             {
@@ -178,11 +175,15 @@ public class CactbotConfig : IConfigPage, IDisposable
                 ImGui.SameLine();
                 break;
             }
+            default:
+            {
+                break;
+            }
         }
 
         if (ImGui.Button("Kill Web Browser"))
         {
-            Cactbot.KillWebBrowserProcess();
+            Cactbot?.KillWebBrowserProcess();
         }
 
         using var installScope = new DrawChildScope
@@ -196,19 +197,30 @@ public class CactbotConfig : IConfigPage, IDisposable
         var tempLocation = this.WebBrowserInstallLocation;
         ImGui.Text("Browser Install Location:");
         ImGui.PushItemWidth(windowSize.X * 0.88f);
-        ImGui.InputTextWithHint
+        if
         (
-            "##exefolderpath",
-            $"Default '{MagicValues.DefaultTotallyNotCefInstallLocation}'",
-            ref tempLocation,
-            64
-        );
+            ImGui.InputTextWithHint
+            (
+                "##exefolderpath",
+                $"Default '{MagicValues.DefaultTotallyNotCefInstallLocation}'",
+                ref tempLocation,
+                64,
+                ImGuiInputTextFlags.EnterReturnsTrue
+            )
+        )
+        {
+            this.WebBrowserInstallLocationContainsExe = null;
+        }
         ImGui.PopItemWidth();
 
         ImGui.Text("TotallyNotCef.exe Found in Install Folder:");
         ImGui.SameLine();
         ImGui.PushFont(UiBuilder.IconFont);
-        if (File.Exists(Path.Join(this.WebBrowserInstallLocation, "TotallyNotCef.exe")))
+        this.WebBrowserInstallLocationContainsExe ??= File.Exists
+        (
+            Path.Join(this.WebBrowserInstallLocation, "TotallyNotCef.exe")
+        );
+        if (this.WebBrowserInstallLocationContainsExe.Value)
         {
             ImGui.Text(""); // Boxed checkmark
         }
@@ -226,6 +238,12 @@ public class CactbotConfig : IConfigPage, IDisposable
         if (ImGui.Button("Reset to default location"))
         {
             this.WebBrowserInstallLocation = MagicValues.DefaultTotallyNotCefInstallLocation;
+            this.WebBrowserInstallLocationContainsExe = null;
+        }
+
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip($"Default Location: '{MagicValues.DefaultTotallyNotCefInstallLocation}'");
         }
     }
 
@@ -242,11 +260,25 @@ public class CactbotConfig : IConfigPage, IDisposable
         ImGui.Text("Connection Settings");
         ImGui.Separator();
         ImGui.Checkbox("Enable Connection to Browser", ref this.EnableConnection);
+        if (Cactbot != null)
+        {
+            Cactbot.ConnectionState = this.EnableConnection
+                ? Cactbot.ConnectionState == TotallyNotCefConnectionState.Disabled
+                    ? TotallyNotCefConnectionState.WaitingForConnection
+                    : Cactbot.ConnectionState
+                : TotallyNotCefConnectionState.Disabled;
+        }
+
         ImGui.Text("Connection State:");
         ImGui.SameLine();
         ImGui.PushFont(UiBuilder.IconFont);
-        switch (Cactbot.ConnectionState)
+        switch (Cactbot?.ConnectionState)
         {
+            case TotallyNotCefConnectionState.Disabled:
+            {
+                ImGui.Text(""); // Boxed X Mark
+                break;
+            }
             case TotallyNotCefConnectionState.WaitingForConnection:
             {
                 ImGui.Text(""); // Loading Spinner
@@ -270,7 +302,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         }
         ImGui.PopFont();
         ImGui.SameLine();
-        ImGui.Text(Cactbot.ConnectionState.ToString());
+        ImGui.Text(Cactbot?.ConnectionState.ToString() ?? "null");
 
         if (EnableConnection)
         {

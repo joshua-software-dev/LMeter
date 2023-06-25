@@ -97,8 +97,6 @@ public class PluginManager : IDisposable
         ClientState.Logout += OnLogout;
         PluginInterface.UiBuilder.OpenConfigUi += OpenConfigUi;
         PluginInterface.UiBuilder.Draw += Draw;
-
-        CactbotConfig.Cactbot.StartBackgroundPollingThread();
     }
 
     private void Draw()

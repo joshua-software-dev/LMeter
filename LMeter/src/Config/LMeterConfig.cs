@@ -90,5 +90,10 @@ public class LMeterConfig : IConfigurable, IDisposable
         yield return this.AboutPage;
     }
 
+    public void ApplyConfig()
+    {
+        this.CactbotConfig.SetNewCactbotUrl(forceStart: false);
+    }
+
     public void ImportPage(IConfigPage page) { }
 }

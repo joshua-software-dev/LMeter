@@ -18,6 +18,7 @@ namespace LMeter.Cactbot;
 
 public class TotallyNotCefCactbotHttpSource : IDisposable
 {
+    public bool BackgroundThreadRunning { get; private set; } = false;
     public bool LastPollSuccessful { get; private set; } = false;
     public TotallyNotCefConnectionState ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
     public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
@@ -27,7 +28,6 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     private readonly string _cactbotUrl;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly bool _enableAudio;
-    private readonly bool _forceStart;
     private readonly HttpClient _httpClient;
     private readonly HtmlParser _htmlParser;
     private readonly string _httpUrl;
@@ -39,15 +39,13 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         string browserInstallFolder,
         string cactbotUrl,
         ushort httpPort,
-        bool enableAudio,
-        bool forceStart
+        bool enableAudio
     )
     {
         CactbotState = new ();
         _browserInstallFolder = browserInstallFolder;
         _cactbotUrl = cactbotUrl;
         _enableAudio = enableAudio;
-        _forceStart = forceStart;
         _htmlParser = new ();
         _httpPort = httpPort;
         _httpUrl = $"http://127.0.0.1:{httpPort}";
@@ -250,9 +248,9 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
     }
 
-    private async Task PollCactbot()
+    private async Task PollCactbot(bool autoStartBackgroundWebBrowser)
     {
-        if ((PluginManager.Instance?.CactbotConfig?.AutomaticallyStartBackgroundWebBrowser ?? false) || _forceStart)
+        if (autoStartBackgroundWebBrowser)
         {
             await StartTotallyNotCefProcess();
         }
@@ -270,7 +268,11 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                     _parsedResponse = null;
                 }
 
-                if (ConnectionState != TotallyNotCefConnectionState.WaitingForConnection)
+                if
+                (
+                    ConnectionState != TotallyNotCefConnectionState.Disabled &&
+                    ConnectionState != TotallyNotCefConnectionState.WaitingForConnection
+                )
                 {
                     LastPollSuccessful = _parsedResponse != null;
                     ConnectionState = LastPollSuccessful
@@ -287,14 +289,17 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
     }
 
-    private void PollingAsyncThread(object? _)
+    public void StartBackgroundPollingThread(bool autoStartBackgroundWebBrowser)
     {
-        PollCactbot().GetAwaiter().GetResult();
-    }
-
-    public void StartBackgroundPollingThread()
-    {
-        ThreadPool.QueueUserWorkItem(PollingAsyncThread);
+        if (BackgroundThreadRunning) return;
+        BackgroundThreadRunning = true;
+        ThreadPool.QueueUserWorkItem
+        (
+            _ =>
+            {
+                PollCactbot(autoStartBackgroundWebBrowser).GetAwaiter().GetResult();
+            }
+        );
     }
 
     public void SendShutdownCommand()
@@ -341,5 +346,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             _cancelTokenSource.Cancel();
         }
         catch { }
+
+        KillWebBrowserProcess();
     }
 }

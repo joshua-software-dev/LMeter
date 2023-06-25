@@ -279,7 +279,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         }
 
         _status = ConnectionStatus.Connected;
-        PluginLog.Information("Successfully Established ACT Connection");
+        PluginLog.Information("Successfully established ACT WebSocket connection");
 
         try
         {
@@ -301,7 +301,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         }
 
         _status = ConnectionStatus.Subscribed;
-        PluginLog.Information("Successfully subscribed to ACT");
+        PluginLog.Information("Successfully subscribed to combat events from ACT WebSocket");
 
         await ReceiveMessages();
     }
@@ -383,7 +383,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
             // TODO: Replace this whole thing with a ThreadPool version
             _receiveTask?.GetAwaiter().GetResult();
-            PluginLog.Information($"Closed ACT Connection");
+            PluginLog.Information($"Closed ACT WebSocket connection");
         }
 
         _socket.Dispose();

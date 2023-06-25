@@ -26,6 +26,7 @@ public static class ProcessLauncher
 
         process.StartInfo.EnvironmentVariables["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DALAMUD_RUNTIME");
         process.StartInfo.EnvironmentVariables.Remove("DOTNET_BUNDLE_EXTRACT_BASE_DIR");
+        process.StartInfo.CreateNoWindow = true;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardError = true;
         process.StartInfo.RedirectStandardOutput = true;
@@ -46,7 +47,7 @@ public static class ProcessLauncher
     public static void LaunchInstallFixDll(string winNewDllPath, string winOldDllPath)
     {
         var linNewDllPath = WineChecker.WindowsFullPathToLinuxPath(winNewDllPath);
-        var linOldDllPath = WineChecker.WindowsFullPathToLinuxPath(winNewDllPath);
+        var linOldDllPath = WineChecker.WindowsFullPathToLinuxPath(winOldDllPath);
         if (linNewDllPath == null || linOldDllPath == null)
         {
             PluginLog.LogError("Could not install DLL fix.");
@@ -59,6 +60,7 @@ public static class ProcessLauncher
         process.StartInfo.FileName = "/usr/bin/env";
         process.StartInfo.Arguments = $"mv {linNewDllPath} {linOldDllPath}";
 
+        process.StartInfo.CreateNoWindow = true;
         process.StartInfo.UseShellExecute = false;
         process.StartInfo.RedirectStandardError = false;
         process.StartInfo.RedirectStandardOutput = false;

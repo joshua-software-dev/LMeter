@@ -68,7 +68,7 @@ public class IinactClient : ActEventParser, IActClient
         if
         (
             _status != SubscriptionStatus.ConnectionFailed &&
-            _status != SubscriptionStatus.Connecting && 
+            _status != SubscriptionStatus.Connecting &&
             _status != SubscriptionStatus.Connected &&
             _status != SubscriptionStatus.Subscribing &&
             _status != SubscriptionStatus.Subscribed
@@ -118,7 +118,7 @@ public class IinactClient : ActEventParser, IActClient
 
         for (var i = 2; i < 6; i++)
         {
-            var iterStatus = (SubscriptionStatus) i; 
+            var iterStatus = (SubscriptionStatus) i;
             ImGui.TableNextColumn();
             if (_status == SubscriptionStatus.ConnectionFailed)
             {
@@ -154,28 +154,28 @@ public class IinactClient : ActEventParser, IActClient
                 (
                     iterStatus switch
                     {
-                        SubscriptionStatus.Connecting => 
+                        SubscriptionStatus.Connecting =>
                             """
-                            LMeter attempts to connect to IINACT, if it fails the 
+                            LMeter attempts to connect to IINACT, if it fails the
                             connection attempt ends.
                             """,
-                        SubscriptionStatus.Connected => 
+                        SubscriptionStatus.Connected =>
                             """
-                            LMeter successfully connected to IINACT. While connection 
-                            was established, in this state no data will be sent until 
+                            LMeter successfully connected to IINACT. While connection
+                            was established, in this state no data will be sent until
                             LMeter explicitly requests for that data.
                             """,
-                        SubscriptionStatus.Subscribing => 
+                        SubscriptionStatus.Subscribing =>
                             """
-                            LMeter sends a second message to IINACT requesting that all 
-                            "CombatEvent" data be sent whenever IINACT generates such 
+                            LMeter sends a second message to IINACT requesting that all
+                            "CombatEvent" data be sent whenever IINACT generates such
                             an event.
                             """,
-                        SubscriptionStatus.Subscribed => 
+                        SubscriptionStatus.Subscribed =>
                             """
-                            LMeter successfully sent a message to IINACT requesting 
-                            "CombatEvent" data. There was no connection error upon this 
-                            request, however IINACT does not reply on successful 
+                            LMeter successfully sent a message to IINACT requesting
+                            "CombatEvent" data. There was no connection error upon this
+                            request, however IINACT does not reply on successful
                             subscription state change.
                             """,
                         _ => throw new ArgumentOutOfRangeException()
@@ -193,7 +193,7 @@ public class IinactClient : ActEventParser, IActClient
         {
             return PastEvents[index];
         }
-            
+
         return LastEvent;
     }
 
@@ -247,10 +247,7 @@ public class IinactClient : ActEventParser, IActClient
             }
         }
 
-        if (!Connect()) return;
-
-        _status = SubscriptionStatus.Subscribed;;
-        PluginLog.Information("Successfully subscribed to IINACT");
+        Connect();
     }
 
     private bool Connect()
@@ -273,6 +270,7 @@ public class IinactClient : ActEventParser, IActClient
             return false;
         }
         _status = SubscriptionStatus.Connected;
+        PluginLog.Information("Successfully discovered IINACT IPC endpoint");
 
         try
         {
@@ -301,6 +299,8 @@ public class IinactClient : ActEventParser, IActClient
                 .GetIpcSubscriber<JObject, bool>(IinactProviderEditEndpoint)
                 .InvokeAction(SubscriptionMessageObject);
             PluginLog.Verbose($"""Subscription update message sent""");
+            _status = SubscriptionStatus.Subscribed;
+            PluginLog.Information("Successfully subscribed to combat events from IINACT IPC");
             return true;
         }
         catch (Exception ex)
@@ -340,8 +340,8 @@ public class IinactClient : ActEventParser, IActClient
 
             PluginLog.Information(
                 success
-                    ? "Successfully unsubscribed from IINACT"
-                    : "Failed to unsubscribe from IINACT"
+                    ? "Successfully unsubscribed from IINACT IPC"
+                    : "Failed to unsubscribe from IINACT IPC"
             );
         }
         catch (Exception)

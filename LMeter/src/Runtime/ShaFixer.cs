@@ -37,10 +37,7 @@ public static class ShaFixer
         var dllDir = Path.GetDirectoryName(originalDllPath);
         if (dllDir == null) return false;
 
-        var jsonPath = Path.Join(dllDir, "..\\..\\..\\hashes-7.0.0.json");
-        if (!Path.Exists(jsonPath)) return false;
-
-        return true;
+        return Path.Exists(Path.Join(dllDir, "..\\..\\..\\hashes-7.0.0.json"));
     }
 
     public static bool ModifyRuntimeWithShaFix()

@@ -1,5 +1,6 @@
 using Dalamud.Logging;
 using ImGuiNET;
+using LMeter.Config;
 using LMeter.Helpers;
 using System;
 using System.Linq;
@@ -10,9 +11,8 @@ namespace LMeter.Cactbot;
 
 public class CactbotRaidbossWindows
 {
-    public static void DrawAlerts(Vector2 pos)
+    public static void DrawAlerts(CactbotConfig config, TotallyNotCefCactbotHttpSource cactbot, Vector2 pos)
     {
-        var config = PluginManager.Instance.CactbotConfig;
         var localPos = pos + config.RaidbossAlertsPosition;
         var size = config.RaidbossAlertsSize;
 
@@ -46,7 +46,7 @@ public class CactbotRaidbossWindows
 
                     var state = config.RaidbossAlertsPreview
                         ? CactbotState.PreviewState
-                        : config.Cactbot.CactbotState;
+                        : cactbot.CactbotState;
 
                     if (config.RaidbossAlarmsEnabled && !string.IsNullOrEmpty(state.Alarm))
                     {
@@ -125,7 +125,7 @@ public class CactbotRaidbossWindows
         );
     }
 
-    private static void DrawColoredProgressBar(CactbotTimeLineElement timelineInfo, Vector2 size)
+    private static void DrawColoredProgressBar(CactbotConfig config, CactbotTimeLineElement timelineInfo, Vector2 size)
     {
         var remainingTime = timelineInfo.ApproxCompletionTime - DateTime.Now;
         var progress = (float)
@@ -134,7 +134,7 @@ public class CactbotRaidbossWindows
             timelineInfo.OriginalRemainingTime.TotalSeconds
         );
 
-        if (PluginManager.Instance.CactbotConfig.RaidbossTimelinePreview) progress = 0.5f;
+        if (config.RaidbossTimelinePreview) progress = 0.5f;
 
         if (timelineInfo.StyleFill == "fill")
         {
@@ -176,9 +176,8 @@ public class CactbotRaidbossWindows
         }
     }
 
-    public static void DrawTimeline(Vector2 pos)
+    public static void DrawTimeline(CactbotConfig config, TotallyNotCefCactbotHttpSource cactbot, Vector2 pos)
     {
-        var config = PluginManager.Instance.CactbotConfig;
         var localPos = pos + config.RaidbossTimelinePosition;
         var size = config.RaidbossTimelineSize;
 
@@ -205,12 +204,12 @@ public class CactbotRaidbossWindows
 
                     var state = config.RaidbossTimelinePreview
                         ? CactbotState.PreviewState
-                        : config.Cactbot.CactbotState;
+                        : cactbot.CactbotState;
 
                     if
                     (
                         !config.RaidbossTimelinePreview &&
-                        config.Cactbot.ConnectionState != TotallyNotCefConnectionState.Connected &&
+                        cactbot.ConnectionState != TotallyNotCefConnectionState.Connected &&
                         !state.Timeline.IsEmpty
                     )
                     {
@@ -223,7 +222,7 @@ public class CactbotRaidbossWindows
                     {
                         state.Timeline.TryGetValue(key, out var timelineInfo);
                         if (timelineInfo == null) continue;
-                        DrawColoredProgressBar(timelineInfo, progressBarSize);
+                        DrawColoredProgressBar(config, timelineInfo, progressBarSize);
                     }
                 }
                 finally
@@ -237,16 +236,18 @@ public class CactbotRaidbossWindows
     public static void Draw(Vector2 pos)
     {
         var config = PluginManager.Instance.CactbotConfig;
-        if (!config.EnableConnection && !config.RaidbossAlertsPreview && !config.RaidbossTimelinePreview) return;
+        var cactbot = config.Cactbot;
+        if (cactbot == null) return;
+        else if (!config.EnableConnection && !config.RaidbossAlertsPreview && !config.RaidbossTimelinePreview) return;
 
-        config.Cactbot.PollingRate = CharacterState.IsInCombat()
+        cactbot.PollingRate = CharacterState.IsInCombat()
             ? config.RaidbossInCombatPollingRate
             : config.RaidbossOutOfCombatPollingRate;
 
-        DrawAlerts(pos);
+        DrawAlerts(config, cactbot, pos);
         if (config.RaidbossTimelineEnabled)
         {
-            DrawTimeline(pos);
+            DrawTimeline(config, cactbot, pos);
         }
     }
 }

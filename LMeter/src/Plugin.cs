@@ -56,6 +56,7 @@ public class Plugin : IDalamudPlugin
         FontsManager.CopyPluginFontsToUserPath();
         LMeterConfig config = ConfigHelpers.LoadConfig(Plugin.ConfigFilePath);
         config.FontConfig.RefreshFontList();
+        config.ApplyConfig();
 
         // Initialize Fonts
         var fontsManager = new FontsManager(pluginInterface.UiBuilder, config.FontConfig.Fonts.Values);

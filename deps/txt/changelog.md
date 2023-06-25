@@ -1,3 +1,17 @@
+# Version 0.2.0.12
+- Fix reading from background browser install location for cactbot integration
+  every frame when the config was open, rather than only when needed
+- Change UI to communicate more clearly when the background web browser
+  connection is disabled or not active
+- Take measures to ensure the background web browser will not hang the game
+  while the browser is starting
+- Improve management of background threads and background web browser to ensure
+  the plugin will load faster, and block the game from rendering for less time
+  on plugin load
+- Ensure background web browser process is always killed even when it is not
+  responding when the plugin is given a chance to shutdown cleanly (sudden game
+  crashes / hardware failure / bluescreens etc. prevent clean shutdowns)
+
 # Version 0.2.0.11
 - Fix cactbot timeline events not reading data correctly due to cactbot updates
 
