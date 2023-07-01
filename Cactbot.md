@@ -31,6 +31,20 @@ A straightforward way to display Cactbot it then follows should be to integrate 
 
 LMeter's attempted solution then, is slightly different. LMeter runs a custom web browser as a background process, instead of integrating it into the plugin, and polls the web browser for the present state of the layout of the website (its HTML) every so often. This method would be much too slow to display the actual browser rendered frames without a massive performance cost, but fetching the small amount of text that makes up the Cactbot website is comparatively trivial. So then, the background web browser runs Cactbot, and LMeter simply fetches this text content and then reprocesses and renders it using Dalamud. This means a custom UI is required, and any updates to Cactbot's UI will **not** be trivially reflected in LMeter, as this feature manually recreated a facsimile of Cactbot's UI. However, as Cactbot is updated with support for future fights, no updating of the plugin should be required, as LMeter simply loads the latest version of the Cactbot website and thus pulls in any updates they push out right away.
 
+## Known limitations
+
+* Cannot change Cactbot settings
+
+Presently, there is no way with this feature to configure settings for Cactbot itself. I plan to make this possible in the future, but this functionality has not been implemented yet.
+
+* Disabling / enabling audio support requires restarting `TotallyNotCef`
+
+This is a limitation of this solution I do not think will be possible to remedy. Likely not a deal breaker, as you can simply leave the audio enabled and mute the application as you would any other program, or just leave audio disabled if you never want to use it.
+
+* Starting the background web browser takes multiple seconds on Windows
+
+Also likely not possible to fix. I could maybe rewrite `TotallyNotCef` in a faster language like C/C++/Rust/Zig etc. and maybe shave off some of those seconds, but starting a web browser and then waiting for it to load a web page simply takes a variable and sometimes human noticeable amount of time. Still, as it is, its around 3-7 seconds, which isn't world shatteringly terrible. Even on Linux with wine, the time to start is around 0.5-1 second(s).
+
 ## How do I enable and use this feature?
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/dalamud_settings_part1.png)
