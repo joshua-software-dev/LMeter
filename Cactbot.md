@@ -2,13 +2,16 @@
 
 The testing builds of LMeter support experimental Cactbot integration.
 
-*Timeline Preview Here*
+https://github.com/joshua-software-dev/LMeter/assets/55586380/3a8070f4-afd6-4ba7-ae0d-6c469fe0e246
+
 A comparison showing the default Cactbot web overlay (top) rendering timeline events compared with the LMeter integration (bottom)
 
-*Alert Preview Here*
+https://github.com/joshua-software-dev/LMeter/assets/55586380/cbbb52aa-daec-40b7-bbd0-70efd7a40ceb
+
 A comparison showing the default Cactbot web overlay (top) alerts compared with the LMeter integration (bottom)
 
-*Chat Preview Here*
+https://github.com/joshua-software-dev/LMeter/assets/55586380/fbeab6eb-ac30-43e0-8f58-0e6b7da406fd
+
 LMeter can optionally show alerts in chat
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_preview_positioning.png)
