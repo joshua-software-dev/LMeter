@@ -31,15 +31,19 @@ LMeter's attempted solution then, is slightly different. LMeter runs a custom we
 ## How do I enable and use this feature?
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/dalamud_settings_part1.png)
+
 The first thing to do is to ensure you've added the LMeter `repo.json` url to your Custom Plugin Repositories in your Dalamud Settings.
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/dalamud_settings_part2.png)
+
 As of the time of writing, the Cactbot integration is only in the testing builds. You can enable receiving testing builds in Dalamud Settings.
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_browser_settings.png)
+
 After doing both these steps and installing LMeter, open LMeter's settings menu, and go to the Cactbot tab. The browser is not automatically started because starting a subprocess on your computer without your permission is rude. The first time you wish to start it, you must click the `Start Web Browser` button, and then LMeter will automatically download the required web browser application, [TotallyNotCef](https://github.com/joshua-software-dev/TotallyNotCef). Every time after the first, the browser can be launched for you if you enable `Automatically Start Background Web Browser`, or you can also choose to do so manually each time, at your discretion.
 
 ![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_connection_settings.png)
+
 After starting the browser, you need to enable connecting to it. This can be done with the `Enable Connection to Browser` toggle in the `Connection Settings` submenu of the Cactbot tab. For here, it is likely the feature will: "Just Work (tm)", however, if you are running other services on your computer, you may need to change the `HTTP Server Port` option. This setting changes what port `TotallyNotCef` hosts the Cactbot text content from. It is not likely you need to change this unless something else you are running is using port 8080.
 
 ## Troubleshooting
