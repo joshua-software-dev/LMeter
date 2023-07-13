@@ -1,3 +1,7 @@
+# Version 0.2.0.14
+- Fix Cactbot URL potentially causing crashes on plugin load if the url was not
+  valid.
+
 # Version 0.2.0.13
 - Add support for disabling WebSockets on the background web browser, instead
   sending data to the process obtained using Dalamud IPC (Requires IINACT)

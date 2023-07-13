@@ -52,9 +52,22 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         _browserInstallFolder = browserInstallFolder;
         _bypassWebSocket = bypassWebSocket;
 
-        _cactbotUrl = _bypassWebSocket && Uri.TryCreate(cactbotUrl, UriKind.RelativeOrAbsolute, out var tempCactbotUri)
-            ? $"{tempCactbotUri.GetLeftPart(UriPartial.Path)}{MagicValues.DefaultCactbotUrlQuery}"
-            : cactbotUrl;
+        if (_bypassWebSocket)
+        {
+            try
+            {
+                Uri.TryCreate(cactbotUrl, UriKind.RelativeOrAbsolute, out var tempCactbotUri);
+                _cactbotUrl = $"{tempCactbotUri?.GetLeftPart(UriPartial.Path)}{MagicValues.DefaultCactbotUrlQuery}";
+            }
+            catch
+            {
+                _cactbotUrl = cactbotUrl;
+            }
+        }
+        else
+        {
+            _cactbotUrl = cactbotUrl;
+        }
 
         _cancelTokenSource = new ();
         _enableAudio = enableAudio;

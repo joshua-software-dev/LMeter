@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.13",
-        "TestingAssemblyVersion": "0.2.0.13",
+        "AssemblyVersion": "0.2.0.14",
+        "TestingAssemblyVersion": "0.2.0.14",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.13\n- Add support for disabling WebSockets on the background web browser, instead\n  sending data to the process obtained using Dalamud IPC (Requires IINACT)\n- Fix Cactbot URL not being editable if the URL exceeded 64 characters"
+        "Changelog": "# Version 0.2.0.14\n- Fix Cactbot URL potentially causing crashes on plugin load if the url was not\n  valid."
     }
 ]
