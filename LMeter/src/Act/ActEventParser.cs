@@ -18,7 +18,7 @@ public class ActEventParser
     {
         try
         {
-            if 
+            if
             (
                 newEvent?.Encounter is not null &&
                 newEvent?.Combatants is not null &&

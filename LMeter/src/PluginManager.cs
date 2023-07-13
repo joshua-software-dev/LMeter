@@ -1,3 +1,4 @@
+using Dalamud.Data;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
@@ -41,6 +42,7 @@ public class PluginManager : IDisposable
     public readonly ChatGui ChatGui;
     public readonly ClientState ClientState;
     public readonly Condition Condition;
+    public readonly DataManager DataManager;
     public readonly FontsManager FontsManager;
     public readonly DalamudPluginInterface PluginInterface;
     public readonly TexturesCache TexCache;
@@ -55,6 +57,7 @@ public class PluginManager : IDisposable
         CommandManager commandManager,
         Condition condition,
         LMeterConfig config,
+        DataManager dataManager,
         FontsManager fontsManager,
         DalamudPluginInterface pluginInterface,
         TexturesCache texCache
@@ -68,6 +71,7 @@ public class PluginManager : IDisposable
         _commandManager = commandManager;
         Condition = condition;
         _config = config;
+        DataManager = dataManager;
         FontsManager = fontsManager;
         PluginInterface = pluginInterface;
         TexCache = texCache;

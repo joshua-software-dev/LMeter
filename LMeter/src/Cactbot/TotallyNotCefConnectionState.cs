@@ -4,6 +4,7 @@ public enum TotallyNotCefConnectionState
 {
     Disabled,
     WaitingForConnection,
+    AttemptingHandshake,
     Connected,
     Disconnected
 }

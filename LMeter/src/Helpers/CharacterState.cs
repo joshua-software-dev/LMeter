@@ -1,5 +1,6 @@
 using Dalamud.Game.ClientState.Conditions;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using Lumina.Excel.GeneratedSheets;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -60,6 +61,29 @@ public static class CharacterState
         {
             return (Job) ((Character*) player.Address)->ClassJob;
         }
+    }
+
+    public static (ushort territoryId, string? territoryName) GetCharacterLocation()
+    {
+        var locationId = PluginManager.Instance?.ClientState.TerritoryType;
+        if (locationId == null || locationId < 4) return (0, null);
+
+        var locationRow = PluginManager
+            .Instance?
+            .DataManager
+            .GetExcelSheet<TerritoryType>()?
+            .GetRow(locationId.Value);
+
+        var instanceContentName = locationRow?.ContentFinderCondition.Value?.Name?.ToString();
+        var placeName = locationRow?.PlaceName.Value?.Name?.ToString();
+
+        return
+        (
+            locationId.Value,
+            string.IsNullOrEmpty(instanceContentName)
+                ? placeName
+                : instanceContentName
+        );
     }
 
     public static bool IsJobType(Job job, JobType type, IEnumerable<Job>? jobList = null) => type switch

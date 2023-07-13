@@ -74,6 +74,7 @@ public class Plugin : IDalamudPlugin
             commandManager,
             condition,
             config,
+            dataManager,
             fontsManager,
             pluginInterface,
             texCache

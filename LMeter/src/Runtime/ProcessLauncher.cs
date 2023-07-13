@@ -8,7 +8,14 @@ namespace LMeter.Runtime;
 
 public static class ProcessLauncher
 {
-    public static void LaunchTotallyNotCef(string exePath, string cactbotUrl, ushort httpPort, bool enableAudio)
+    public static void LaunchTotallyNotCef
+    (
+        string exePath,
+        string cactbotUrl,
+        ushort httpPort,
+        bool enableAudio,
+        bool bypassWebSocket
+    )
     {
         if (Process.GetProcessesByName("TotallyNotCef").Any()) return;
 
@@ -19,7 +26,8 @@ public static class ProcessLauncher
         process.Exited += (_, _) => PluginLog.Log($"{exePath} exited with code {process?.ExitCode}");
 
         process.StartInfo.FileName = exePath;
-        process.StartInfo.Arguments = cactbotUrl + " " + httpPort + " " + (enableAudio ? 1 : 0);
+        process.StartInfo.Arguments =
+            cactbotUrl + " " + httpPort + " " + (enableAudio ? 1 : 0) + " " + (bypassWebSocket ? 0 : 1);
 
         PluginLog.Log($"EXE : {process.StartInfo.FileName}");
         PluginLog.Log($"ARGS: {process.StartInfo.Arguments}");

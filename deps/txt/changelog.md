@@ -1,3 +1,8 @@
+# Version 0.2.0.13
+- Add support for disabling WebSockets on the background web browser, instead
+  sending data to the process obtained using Dalamud IPC (Requires IINACT)
+- Fix Cactbot URL not being editable if the URL exceeded 64 characters
+
 # Version 0.2.0.12
 - Fix reading from background browser install location for cactbot integration
   every frame when the config was open, rather than only when needed

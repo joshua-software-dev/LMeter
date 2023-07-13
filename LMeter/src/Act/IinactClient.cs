@@ -33,10 +33,11 @@ public class IinactClient : ActEventParser, IActClient
     private readonly DalamudPluginInterface _dpi;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
 
+    public const string IinactListeningIpcEndpoint = "IINACT.Server.Listening";
+    public const string IinactSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
+    public const string IinactUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
+
     private const string LMeterSubscriptionIpcEndpoint = "LMeter.SubscriptionReceiver";
-    private const string IinactListeningIpcEndpoint = "IINACT.Server.Listening";
-    private const string IinactSubscribeIpcEndpoint = "IINACT.CreateSubscriber";
-    private const string IinactUnsubscribeIpcEndpoint = "IINACT.Unsubscribe";
     private const string IinactProviderEditEndpoint = "IINACT.IpcProvider." + LMeterSubscriptionIpcEndpoint;
     private static readonly JObject SubscriptionMessageObject = JObject.Parse(ActWebSocketClient.SubscriptionMessage);
 
@@ -49,7 +50,7 @@ public class IinactClient : ActEventParser, IActClient
         _config = config;
         _dpi = dpi;
         _status = SubscriptionStatus.NotConnected;
-        PastEvents = new List<ActEvent>();
+        PastEvents = new ();
 
         subscriptionReceiver = _dpi.GetIpcProvider<JObject, bool>(LMeterSubscriptionIpcEndpoint);
         subscriptionReceiver.RegisterFunc(ReceiveIpcMessage);

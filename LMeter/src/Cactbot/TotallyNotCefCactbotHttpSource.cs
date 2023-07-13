@@ -18,25 +18,31 @@ namespace LMeter.Cactbot;
 
 public class TotallyNotCefCactbotHttpSource : IDisposable
 {
-    public bool BackgroundThreadRunning { get; private set; } = false;
-    public bool LastPollSuccessful { get; private set; } = false;
-    public TotallyNotCefConnectionState ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
-    public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
-    public int PollingRate { get; set; } = 1000; // milliseconds
     public readonly CactbotState CactbotState;
+
     private readonly string _browserInstallFolder;
+    private readonly bool _bypassWebSocket;
     private readonly string _cactbotUrl;
+    private readonly IinactCactbotClient _iinactCactbotClient;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly bool _enableAudio;
     private readonly HttpClient _httpClient;
     private readonly HtmlParser _htmlParser;
     private readonly string _httpUrl;
     private readonly ushort _httpPort;
+
+    public bool BackgroundThreadRunning { get; private set; } = false;
+    public bool LastPollSuccessful { get; private set; } = false;
+    public TotallyNotCefConnectionState ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
+    public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
+    public int PollingRate { get; set; } = 1000; // milliseconds
+
     private IHtmlDocument? _parsedResponse = null;
 
     public TotallyNotCefCactbotHttpSource
     (
         string browserInstallFolder,
+        bool bypassWebSocket,
         string cactbotUrl,
         ushort httpPort,
         bool enableAudio
@@ -44,14 +50,27 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     {
         CactbotState = new ();
         _browserInstallFolder = browserInstallFolder;
-        _cactbotUrl = cactbotUrl;
+        _bypassWebSocket = bypassWebSocket;
+
+        _cactbotUrl = _bypassWebSocket && Uri.TryCreate(cactbotUrl, UriKind.RelativeOrAbsolute, out var tempCactbotUri)
+            ? $"{tempCactbotUri.GetLeftPart(UriPartial.Path)}{MagicValues.DefaultCactbotUrlQuery}"
+            : cactbotUrl;
+
+        _cancelTokenSource = new ();
         _enableAudio = enableAudio;
         _htmlParser = new ();
         _httpPort = httpPort;
         _httpUrl = $"http://127.0.0.1:{httpPort}";
         _httpClient = new ();
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("curl/8.1.2");
-        _cancelTokenSource = new ();
+        _iinactCactbotClient = new
+        (
+            _bypassWebSocket,
+            _cancelTokenSource,
+            PluginManager.Instance?.PluginInterface ?? throw new NullReferenceException(),
+            _httpClient,
+            _httpUrl
+        );
     }
 
     private async Task GetCactbotHtml()
@@ -241,7 +260,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
 
         WebBrowserState = TotallyNotCefBrowserState.Starting;
-        ProcessLauncher.LaunchTotallyNotCef(cefExePath, _cactbotUrl, _httpPort, _enableAudio);
+        ProcessLauncher.LaunchTotallyNotCef(cefExePath, _cactbotUrl, _httpPort, _enableAudio, _bypassWebSocket);
         if (DidWebBrowserLaunchSuccessfully())
         {
             WebBrowserState = TotallyNotCefBrowserState.Running;
@@ -253,6 +272,13 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         if (autoStartBackgroundWebBrowser)
         {
             await StartTotallyNotCefProcess();
+        }
+
+        if (_bypassWebSocket)
+        {
+            ConnectionState = TotallyNotCefConnectionState.AttemptingHandshake;
+            _iinactCactbotClient.Start();
+            ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
         }
 
         while (!_cancelTokenSource.IsCancellationRequested)
@@ -344,6 +370,12 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         try
         {
             _cancelTokenSource.Cancel();
+        }
+        catch { }
+
+        try
+        {
+            _iinactCactbotClient.Dispose();
         }
         catch { }
 

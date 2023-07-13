@@ -26,6 +26,7 @@ public class CactbotConfig : IConfigPage, IDisposable
     public bool EnableConnection = false;
     public string CactbotUrl = MagicValues.DefaultCactbotUrl;
     public int HttpPort = 8080;
+    public bool BypassCactbotWebSocketUsingIPC = true;
 
     public bool RaidbossEnableAudio = true;
     public int RaidbossInCombatPollingRate = 10;
@@ -70,6 +71,7 @@ public class CactbotConfig : IConfigPage, IDisposable
                 this.Cactbot = new
                 (
                     WebBrowserInstallLocation ?? MagicValues.DefaultTotallyNotCefInstallLocation,
+                    BypassCactbotWebSocketUsingIPC,
                     CactbotUrl,
                     (ushort) HttpPort,
                     RaidbossEnableAudio
@@ -84,7 +86,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var browserScope = new DrawChildScope
         (
             "##BrowserSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 252 },
+            windowSize with { X = windowSize.X * 0.94f, Y = 346 },
             true
         );
         if (!browserScope.Success) return;
@@ -98,8 +100,21 @@ public class CactbotConfig : IConfigPage, IDisposable
         );
         ImGui.Checkbox
         (
-            "Enable Audio [Web Browser must restart for setting to take effect]",
+            """
+            Enable Audio
+            [Web Browser must restart for setting to take effect]
+            """,
             ref RaidbossEnableAudio
+        );
+        ImGui.Checkbox
+        (
+            """
+            Bypass Cactbot WebSocket using IINACT IPC
+            [Requires IINACT plugin to be installed]
+            [May lower performance slightly]
+            [Web Browser must restart for setting to take effect]
+            """,
+            ref this.BypassCactbotWebSocketUsingIPC
         );
 
         ImGui.Text("Background Web Browser State:");
@@ -184,6 +199,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         if (ImGui.Button("Kill Web Browser"))
         {
             Cactbot?.KillWebBrowserProcess();
+            SetNewCactbotUrl(forceStart: false);
         }
 
         using var installScope = new DrawChildScope
@@ -284,6 +300,11 @@ public class CactbotConfig : IConfigPage, IDisposable
                 ImGui.Text(""); // Loading Spinner
                 break;
             }
+            case TotallyNotCefConnectionState.AttemptingHandshake:
+            {
+                ImGui.Text(""); // Loading Spinner
+                break;
+            }
             case TotallyNotCefConnectionState.Connected:
             {
                 ImGui.Text(""); // Boxed checkmark
@@ -314,7 +335,7 @@ public class CactbotConfig : IConfigPage, IDisposable
                 "Cactbot URL",
                 $"Default: '{MagicValues.DefaultCactbotUrl}'",
                 ref tempAddress,
-                64
+                1000
             );
             ImGui.PopItemWidth();
             if (tempAddress != this.CactbotUrl)

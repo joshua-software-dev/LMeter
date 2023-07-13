@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.12",
-        "TestingAssemblyVersion": "0.2.0.12",
+        "AssemblyVersion": "0.2.0.13",
+        "TestingAssemblyVersion": "0.2.0.13",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.12/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.12/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.12/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.13/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.12\n- Fix reading from background browser install location for cactbot integration\n  every frame when the config was open, rather than only when needed\n- Change UI to communicate more clearly when the background web browser\n  connection is disabled or not active\n- Take measures to ensure the background web browser will not hang the game\n  while the browser is starting\n- Improve management of background threads and background web browser to ensure\n  the plugin will load faster, and block the game from rendering for less time\n  on plugin load\n- Ensure background web browser process is always killed even when it is not\n  responding when the plugin is given a chance to shutdown cleanly (sudden game\n  crashes / hardware failure / bluescreens etc. prevent clean shutdowns)"
+        "Changelog": "# Version 0.2.0.13\n- Add support for disabling WebSockets on the background web browser, instead\n  sending data to the process obtained using Dalamud IPC (Requires IINACT)\n- Fix Cactbot URL not being editable if the URL exceeded 64 characters"
     }
 ]
