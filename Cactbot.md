@@ -81,15 +81,15 @@ For the `..._selfcontained.zip` releases, a stripped down version of the .NET ru
 
 It is recommended you download and extract the zip into its own folder, and that wherever you install it to, TotallyNotCef will have write permissions to write new files. Where you install isn't very important, as long as its writable and you can access / remember the path you choose. `TotallyNotCef` is a command line program, and you'll need to start it from a terminal (or with a script) with some arguments for it to work. These values are:
 
-`./path/to/TotallyNotCef <url> <httpPort> <enableAudio=1/0>`
+`./path/to/TotallyNotCef <url> <httpPort> <enableAudio=1/0> <enableWebSockets=1/0>`
 
 so a more complete example looks like
 
-`./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1`
+`./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 1`
 
 or to run it in the background:
 
-`nohup ./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 & disown`
+`nohup ./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 1 & disown`
 
 so you should be able to do something like the following to get a GUI startable script:
 
@@ -104,7 +104,7 @@ then open the file in a text editor, and change its contents to:
 ```
 #!/bin/bash
 
-nohup ./TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 & disown
+nohup ./TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 1 & disown
 ```
 
 This can likely be integrated into the launch arguments if you're running the game from Game Mode on the Steam Deck, but I do not own the hardware to test this, and it will likely be harder if you're running the flatpak release to do so than simply running it ahead of time and then launching the game. Its likely a script of this fashion would work for those not using flatpak:
@@ -112,6 +112,6 @@ This can likely be integrated into the launch arguments if you're running the ga
 ```
 #!/bin/bash
 
-./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 &
+./path/to/TotallyNotCef 'https://quisquous.github.io/cactbot/ui/raidboss/raidboss.html?OVERLAY_WS=ws://127.0.0.1:10501/ws' 8080 1 1 &
 exec "$@"
 ```
