@@ -79,6 +79,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         _iinactCactbotClient = new
         (
             _bypassWebSocket,
+            PluginManager.Instance?.ClientState ?? throw new NullReferenceException(),
             _cancelTokenSource,
             PluginManager.Instance?.PluginInterface ?? throw new NullReferenceException(),
             _httpClient,

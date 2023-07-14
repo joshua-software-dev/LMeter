@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.14",
-        "TestingAssemblyVersion": "0.2.0.14",
+        "AssemblyVersion": "0.2.0.15",
+        "TestingAssemblyVersion": "0.2.0.15",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.14/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.15/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.15/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.15/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.14\n- Fix Cactbot URL potentially causing crashes on plugin load if the url was not\n  valid."
+        "Changelog": "# Version 0.2.0.15\n- Add fix for Cactbot WebSocket bypass option potentially not starting\n  correctly if the plugin loaded before the player had finished logging in."
     }
 ]

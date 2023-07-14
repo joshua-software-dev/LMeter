@@ -1,3 +1,4 @@
+using Dalamud.Game.ClientState;
 using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -19,6 +20,7 @@ namespace LMeter.Cactbot;
 public class IinactCactbotClient : IActClient
 {
     private readonly bool _bypassWebSocket;
+    private readonly ClientState _clientState;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly DalamudPluginInterface _dpi;
     private readonly HttpClient _httpClient;
@@ -66,6 +68,7 @@ public class IinactCactbotClient : IActClient
     public IinactCactbotClient
     (
         bool bypassWebSocket,
+        ClientState clientState,
         CancellationTokenSource cts,
         DalamudPluginInterface dpi,
         HttpClient httpClient,
@@ -73,11 +76,14 @@ public class IinactCactbotClient : IActClient
     )
     {
         _bypassWebSocket = bypassWebSocket;
+        _clientState = clientState;
         _cancelTokenSource = cts;
         _dpi = dpi;
         _httpClient = httpClient;
         _status = SubscriptionStatus.NotConnected;
         _totallyNotCefUrl = totallyNotCefUrl;
+
+        _clientState.Login += HandleOnLogin;
 
         try
         {
@@ -85,6 +91,14 @@ public class IinactCactbotClient : IActClient
             subscriptionReceiver.RegisterFunc(ReceiveIpcMessage);
         }
         catch { }
+    }
+
+    private void HandleOnLogin(object? sender, EventArgs args)
+    {
+        if (_bypassWebSocket && !_fakeHandshakeComplete)
+        {
+            RetryConnection();
+        }
     }
 
     private void SendHttpPostRequest(string message)
@@ -326,6 +340,7 @@ public class IinactCactbotClient : IActClient
     public void Dispose()
     {
         _fakeHandshakeComplete = false;
+        _clientState.Login -= HandleOnLogin;
         subscriptionReceiver?.UnregisterFunc();
         this.Dispose(true);
         GC.SuppressFinalize(this);

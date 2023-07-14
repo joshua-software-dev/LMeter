@@ -1,3 +1,7 @@
+# Version 0.2.0.15
+- Add fix for Cactbot WebSocket bypass option potentially not starting
+  correctly if the plugin loaded before the player had finished logging in.
+
 # Version 0.2.0.14
 - Fix Cactbot URL potentially causing crashes on plugin load if the url was not
   valid.
