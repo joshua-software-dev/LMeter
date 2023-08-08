@@ -1,3 +1,8 @@
+# Version 0.2.0.16
+- LMeter will now attempt a very basic handshake to determine if the responses
+  it receives come from a program claiming to be the background web browser,
+  and not some other program unexpectedly on the same port.
+
 # Version 0.2.0.15
 - Add fix for Cactbot WebSocket bypass option potentially not starting
   correctly if the plugin loaded before the player had finished logging in.

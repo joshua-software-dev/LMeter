@@ -230,7 +230,7 @@ public class IinactCactbotClient : IActClient
     {
         if (_status != SubscriptionStatus.NotConnected)
         {
-            PluginLog.Error("CACTBOT | Cannot start, IINACTCactbotClient needs to be reset!");
+            PluginLog.Error("CACTBOT | Cannot start, IINACTCactbotClient already setup!");
             return;
         }
         else if (!_bypassWebSocket)

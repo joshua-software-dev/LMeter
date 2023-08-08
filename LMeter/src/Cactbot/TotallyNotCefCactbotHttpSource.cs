@@ -34,6 +34,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     public bool BackgroundThreadRunning { get; private set; } = false;
     public bool LastPollSuccessful { get; private set; } = false;
     public TotallyNotCefConnectionState ConnectionState = TotallyNotCefConnectionState.WaitingForConnection;
+    public TotallyNotCefHealthCheckResponse LastHealthResponse = TotallyNotCefHealthCheckResponse.Unverified;
     public TotallyNotCefBrowserState WebBrowserState = TotallyNotCefBrowserState.NotStarted;
     public int PollingRate { get; set; } = 1000; // milliseconds
 
@@ -87,12 +88,80 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         );
     }
 
+    private class TotallyNotCefPortValidResponse
+    {
+        #pragma warning disable CS0649
+        // JSON reflection is annoying
+        [JsonProperty("IsTotallyNotCef")]
+        public bool IsTotallyNotCef;
+        #pragma warning restore CS0649
+    }
+
+    private async Task<TotallyNotCefHealthCheckResponse> CheckIfPortBelongsToTotallyNotCef()
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.GetAsync
+            (
+                _httpUrl + "/tncef",
+                cancellationToken: _cancelTokenSource.Token
+            );
+
+            if (!response.IsSuccessStatusCode || response?.Content == null)
+            {
+                return TotallyNotCefHealthCheckResponse.InvalidResponse;
+            }
+        }
+        catch (Exception e) when
+        (
+            e is OperationCanceledException ||
+            e is TaskCanceledException ||
+            e is HttpRequestException ||
+            e is SocketException
+        )
+        {
+            return TotallyNotCefHealthCheckResponse.NoResponse;
+        }
+
+        var rawJson = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
+        if (rawJson == null) return TotallyNotCefHealthCheckResponse.InvalidResponse;
+
+        TotallyNotCefPortValidResponse? parsedJson;
+        try
+        {
+            parsedJson = JsonConvert.DeserializeObject<TotallyNotCefPortValidResponse?>(rawJson);
+            if (parsedJson == null) return TotallyNotCefHealthCheckResponse.InvalidResponse;
+            return parsedJson.IsTotallyNotCef
+                ? TotallyNotCefHealthCheckResponse.CorrectResponse
+                : TotallyNotCefHealthCheckResponse.InvalidResponse;
+        }
+        catch (JsonSerializationException)
+        {
+            return TotallyNotCefHealthCheckResponse.InvalidResponse;
+        }
+    }
+
     private async Task GetCactbotHtml()
     {
         _parsedResponse = null;
 
         try
         {
+            if (LastHealthResponse != TotallyNotCefHealthCheckResponse.CorrectResponse)
+            {
+                var health = await CheckIfPortBelongsToTotallyNotCef();
+                LastHealthResponse = health;
+                if (health != TotallyNotCefHealthCheckResponse.CorrectResponse)
+                {
+                    return;
+                }
+                else
+                {
+                    _iinactCactbotClient.Start(); // should be idempotent
+                }
+            }
+
             var response = await _httpClient.GetAsync(_httpUrl, cancellationToken: _cancelTokenSource.Token);
             if (response.Content == null) return;
             var rawHtml = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
@@ -288,7 +357,8 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             await StartTotallyNotCefProcess();
         }
 
-        if (_bypassWebSocket)
+        LastHealthResponse = await CheckIfPortBelongsToTotallyNotCef();
+        if (_bypassWebSocket && LastHealthResponse == TotallyNotCefHealthCheckResponse.CorrectResponse)
         {
             ConnectionState = TotallyNotCefConnectionState.AttemptingHandshake;
             _iinactCactbotClient.Start();
@@ -311,7 +381,8 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                 if
                 (
                     ConnectionState != TotallyNotCefConnectionState.Disabled &&
-                    ConnectionState != TotallyNotCefConnectionState.WaitingForConnection
+                    ConnectionState != TotallyNotCefConnectionState.WaitingForConnection &&
+                    ConnectionState != TotallyNotCefConnectionState.BadConnectionHealth
                 )
                 {
                     LastPollSuccessful = _parsedResponse != null;

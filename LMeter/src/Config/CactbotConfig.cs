@@ -305,6 +305,11 @@ public class CactbotConfig : IConfigPage, IDisposable
                 ImGui.Text(""); // Loading Spinner
                 break;
             }
+            case TotallyNotCefConnectionState.BadConnectionHealth:
+            {
+                ImGui.Text(""); // Boxed X Mark
+                break;
+            }
             case TotallyNotCefConnectionState.Connected:
             {
                 ImGui.Text(""); // Boxed checkmark
@@ -324,6 +329,12 @@ public class CactbotConfig : IConfigPage, IDisposable
         ImGui.PopFont();
         ImGui.SameLine();
         ImGui.Text(Cactbot?.ConnectionState.ToString() ?? "null");
+        if (Cactbot?.LastHealthResponse != TotallyNotCefHealthCheckResponse.CorrectResponse)
+        {
+            ImGui.Text("Most Recent Response:");
+            ImGui.SameLine();
+            ImGui.Text(Cactbot?.LastHealthResponse.ToString() ?? "null");
+        }
 
         if (EnableConnection)
         {
