@@ -268,7 +268,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var connectionScope = new DrawChildScope
         (
             "##ConnectionSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 85 + (this.EnableConnection ? 145 : 0) },
+            windowSize with { X = windowSize.X * 0.94f, Y = 85 + (this.EnableConnection ? 166 : 0) },
             true
         );
         if (!connectionScope.Success) return;

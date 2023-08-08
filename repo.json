@@ -25,8 +25,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.0.16",
-        "TestingAssemblyVersion": "0.2.0.16",
+        "AssemblyVersion": "0.2.0.17",
+        "TestingAssemblyVersion": "0.2.0.17",
         "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 8,
@@ -35,10 +35,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.16/latest.zip",
-        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.16/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.16/latest.zip",
+        "DownloadLinkInstall": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.17/latest.zip",
+        "DownloadLinkTesting": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.17/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/joshua-software-dev/LMeter/releases/download/v0.2.0.17/latest.zip",
         "IconUrl": "https://raw.githubusercontent.com/joshua-software-dev/LMeter/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.0.16\n- LMeter will now attempt a very basic handshake to determine if the responses\n  it receives come from a program claiming to be the background web browser,\n  and not some other program unexpectedly on the same port."
+        "Changelog": "# Version 0.2.0.17\n- More aggressively catch errors during basic handshake to ensure plugin never\n  crashes even when communicating with out of date background web browser\n  versions."
     }
 ]

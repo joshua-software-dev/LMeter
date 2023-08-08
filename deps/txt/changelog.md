@@ -1,3 +1,8 @@
+# Version 0.2.0.17
+- More aggressively catch errors during basic handshake to ensure plugin never
+  crashes even when communicating with out of date background web browser
+  versions.
+
 # Version 0.2.0.16
 - LMeter will now attempt a very basic handshake to determine if the responses
   it receives come from a program claiming to be the background web browser,

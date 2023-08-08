@@ -127,16 +127,15 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         var rawJson = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
         if (rawJson == null) return TotallyNotCefHealthCheckResponse.InvalidResponse;
 
-        TotallyNotCefPortValidResponse? parsedJson;
         try
         {
-            parsedJson = JsonConvert.DeserializeObject<TotallyNotCefPortValidResponse?>(rawJson);
+            var parsedJson = JsonConvert.DeserializeObject<TotallyNotCefPortValidResponse?>(rawJson);
             if (parsedJson == null) return TotallyNotCefHealthCheckResponse.InvalidResponse;
             return parsedJson.IsTotallyNotCef
                 ? TotallyNotCefHealthCheckResponse.CorrectResponse
                 : TotallyNotCefHealthCheckResponse.InvalidResponse;
         }
-        catch (JsonSerializationException)
+        catch (Exception)
         {
             return TotallyNotCefHealthCheckResponse.InvalidResponse;
         }
