@@ -1,3 +1,7 @@
+# Version 0.2.0.18
+- Add option to write all responses from background web browser to log file for
+  debugging purposes.
+
 # Version 0.2.0.17
 - More aggressively catch errors during basic handshake to ensure plugin never
   crashes even when communicating with out of date background web browser

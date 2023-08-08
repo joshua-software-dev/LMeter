@@ -26,6 +26,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     private readonly IinactCactbotClient _iinactCactbotClient;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly bool _enableAudio;
+    private readonly bool _enableVerboseResponseLogging;
     private readonly HttpClient _httpClient;
     private readonly HtmlParser _htmlParser;
     private readonly string _httpUrl;
@@ -46,7 +47,8 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         bool bypassWebSocket,
         string cactbotUrl,
         ushort httpPort,
-        bool enableAudio
+        bool enableAudio,
+        bool enableVerboseResponseLogging
     )
     {
         CactbotState = new ();
@@ -72,6 +74,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
         _cancelTokenSource = new ();
         _enableAudio = enableAudio;
+        _enableVerboseResponseLogging = enableVerboseResponseLogging;
         _htmlParser = new ();
         _httpPort = httpPort;
         _httpUrl = $"http://127.0.0.1:{httpPort}";
@@ -163,8 +166,14 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
             var response = await _httpClient.GetAsync(_httpUrl, cancellationToken: _cancelTokenSource.Token);
             if (response.Content == null) return;
+
             var rawHtml = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
             if (rawHtml == null) return;
+            if (_enableVerboseResponseLogging)
+            {
+                PluginLog.LogInformation(rawHtml);
+            }
+
             _parsedResponse = await _htmlParser.ParseDocumentAsync(rawHtml, _cancelTokenSource.Token);
             CactbotState.UpdateState(_parsedResponse);
             ConnectionState = TotallyNotCefConnectionState.Connected;

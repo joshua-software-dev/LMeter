@@ -27,6 +27,7 @@ public class CactbotConfig : IConfigPage, IDisposable
     public string CactbotUrl = MagicValues.DefaultCactbotUrl;
     public int HttpPort = 8080;
     public bool BypassCactbotWebSocketUsingIPC = true;
+    public bool LogAllResponsesFromBackgroundWebBrowser = false;
 
     public bool RaidbossEnableAudio = true;
     public int RaidbossInCombatPollingRate = 10;
@@ -74,7 +75,8 @@ public class CactbotConfig : IConfigPage, IDisposable
                     BypassCactbotWebSocketUsingIPC,
                     CactbotUrl,
                     (ushort) HttpPort,
-                    RaidbossEnableAudio
+                    RaidbossEnableAudio,
+                    LogAllResponsesFromBackgroundWebBrowser
                 );
                 this.Cactbot.StartBackgroundPollingThread(forceStart);
             }
@@ -268,7 +270,7 @@ public class CactbotConfig : IConfigPage, IDisposable
         using var connectionScope = new DrawChildScope
         (
             "##ConnectionSettings",
-            windowSize with { X = windowSize.X * 0.94f, Y = 85 + (this.EnableConnection ? 166 : 0) },
+            windowSize with { X = windowSize.X * 0.94f, Y = 85 + (this.EnableConnection ? 225 : 0) },
             true
         );
         if (!connectionScope.Success) return;
@@ -397,6 +399,15 @@ public class CactbotConfig : IConfigPage, IDisposable
             {
                 this.RaidbossOutOfCombatPollingRate = tempOutRate;
             }
+
+            ImGui.Separator();
+            ImGui.Text("Connection Debug Options");
+            ImGui.Separator();
+            ImGui.Checkbox
+            (
+                "Log all responses from browser [WARNING: HIGH PERFORMANCE IMPACT]",
+                ref LogAllResponsesFromBackgroundWebBrowser
+            );
         }
     }
 
