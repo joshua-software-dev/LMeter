@@ -1,8 +1,11 @@
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using Dalamud.Game.Text;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Text;
 
 
 namespace LMeter.Cactbot;
@@ -109,6 +112,32 @@ public class CactbotState
         }
     }
 
+    private string GetHolderTextContent(IElement? holder)
+    {
+        if (holder == null || holder.ChildElementCount < 1) return string.Empty;
+        if (holder.ChildElementCount > 1)
+        {
+            var set = new OrderedDictionary();
+            foreach (var child in holder.Children)
+            {
+                set[child.TextContent.Trim()] = string.Empty;
+            }
+
+            var sb = new StringBuilder();
+            var i = 0;
+            foreach (var result in set)
+            {
+                if (i > 0) sb.Append('\n');
+                sb.Append(((System.Collections.DictionaryEntry) result).Key);
+                i += 1;
+            }
+
+            return sb.ToString();
+        }
+
+        return holder.TextContent.Trim();
+    }
+
     public void UpdateState(IHtmlDocument? html)
     {
         if (html == null)
@@ -130,7 +159,7 @@ public class CactbotState
         var info = infoContainer?.GetElementsByClassName("holder")?[0];
 
         var alarmWasEmpty = string.IsNullOrEmpty(Alarm);
-        Alarm = alarm?.TextContent.Trim();
+        Alarm = GetHolderTextContent(alarm);
         if (alarmWasEmpty && !string.IsNullOrEmpty(Alarm))
         {
             AlarmStateChanged?.Invoke(this, EventArgs.Empty);
@@ -141,7 +170,7 @@ public class CactbotState
         }
 
         var alertWasEmpty = string.IsNullOrEmpty(Alert);
-        Alert = alert?.TextContent.Trim();
+        Alert = GetHolderTextContent(alert);
         if (alertWasEmpty && !string.IsNullOrEmpty(Alert))
         {
             AlertStateChanged?.Invoke(this, EventArgs.Empty);
@@ -152,7 +181,7 @@ public class CactbotState
         }
 
         var infoWasEmpty = string.IsNullOrEmpty(Info);
-        Info = info?.TextContent.Trim();
+        Info = GetHolderTextContent(info);
         if (infoWasEmpty && !string.IsNullOrEmpty(Info))
         {
             InfoStateChanged?.Invoke(this, EventArgs.Empty);

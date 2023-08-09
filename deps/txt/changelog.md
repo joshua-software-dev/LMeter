@@ -1,3 +1,6 @@
+# Version 0.2.0.19
+- Fix occasional text doubling in cactbot popups (alarms, alerts, info)
+
 # Version 0.2.0.18
 - Add option to write all responses from background web browser to log file for
   debugging purposes.
