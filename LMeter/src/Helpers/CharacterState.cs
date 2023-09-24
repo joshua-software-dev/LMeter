@@ -21,6 +21,7 @@ public static class CharacterState
         831, // The Manderville Tables | Mojang
         899, // The Falling City of Nym | Jump puzzles
         941, // The Battlehall | ???
+        1098, // Sylphstep | Jump puzzles
     };
 
     public static bool IsCharacterBusy() =>
