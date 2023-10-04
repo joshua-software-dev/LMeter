@@ -14,6 +14,8 @@ using LMeter.Meter;
 using System.IO;
 using System.Reflection;
 using System;
+using Dalamud.Interface.Internal;
+using Dalamud.Plugin.Services;
 
 
 namespace LMeter;
@@ -26,17 +28,17 @@ public class Plugin : IDalamudPlugin
     public const string ConfigFileName = "LMeter.json";
     public static string ConfigFilePath { get; private set; } = string.Empty;
     public static string? GitHash { get; private set; }
-    public static TextureWrap? IconTexture { get; private set; }
+    public static IDalamudTextureWrap? IconTexture { get; private set; }
     public string Name => "LMeter";
     public static string? Version { get; private set; }
 
     public Plugin(
-        ClientState clientState,
-        CommandManager commandManager,
-        Condition condition,
+        IClientState clientState,
+        ICommandManager commandManager,
+        ICondition condition,
         DalamudPluginInterface pluginInterface,
-        DataManager dataManager,
-        ChatGui chatGui
+        IDataManager dataManager,
+        IChatGui chatGui
     )
     {
         LoadVersion();
@@ -88,7 +90,7 @@ public class Plugin : IDalamudPlugin
         config.FirstLoad = false;
     }
 
-    private static TextureWrap? LoadIconTexture(UiBuilder uiBuilder)
+    private static IDalamudTextureWrap? LoadIconTexture(UiBuilder uiBuilder)
     {
         var pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (string.IsNullOrEmpty(pluginPath)) return null;

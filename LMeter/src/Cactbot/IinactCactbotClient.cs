@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Dalamud.Plugin.Services;
 
 
 namespace LMeter.Cactbot;
@@ -20,7 +21,7 @@ namespace LMeter.Cactbot;
 public class IinactCactbotClient : IActClient
 {
     private readonly bool _bypassWebSocket;
-    private readonly ClientState _clientState;
+    private readonly IClientState _clientState;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly DalamudPluginInterface _dpi;
     private readonly HttpClient _httpClient;
@@ -68,7 +69,7 @@ public class IinactCactbotClient : IActClient
     public IinactCactbotClient
     (
         bool bypassWebSocket,
-        ClientState clientState,
+        IClientState clientState,
         CancellationTokenSource cts,
         DalamudPluginInterface dpi,
         HttpClient httpClient,
@@ -93,7 +94,7 @@ public class IinactCactbotClient : IActClient
         catch { }
     }
 
-    private void HandleOnLogin(object? sender, EventArgs args)
+    private void HandleOnLogin()
     {
         if (_bypassWebSocket && !_fakeHandshakeComplete)
         {

@@ -10,6 +10,7 @@ using LMeter.Config;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System;
+using Dalamud.Plugin.Services;
 
 
 namespace LMeter.Act;
@@ -28,7 +29,7 @@ public enum SubscriptionStatus
 
 public class IinactClient : ActEventParser, IActClient
 {
-    private readonly ChatGui _chatGui;
+    private readonly IChatGui _chatGui;
     private readonly ActConfig _config;
     private readonly DalamudPluginInterface _dpi;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
@@ -44,7 +45,7 @@ public class IinactClient : ActEventParser, IActClient
     private SubscriptionStatus _status;
     private string? _lastErrorMessage;
 
-    public IinactClient(ChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
+    public IinactClient(IChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
     {
         _chatGui = chatGui;
         _config = config;
@@ -206,7 +207,7 @@ public class IinactClient : ActEventParser, IActClient
             Type = XivChatType.Echo
         };
 
-        _chatGui.PrintChat(message);
+        _chatGui.Print(message);
     }
 
     public void Clear()
@@ -222,7 +223,7 @@ public class IinactClient : ActEventParser, IActClient
                 Type = XivChatType.Echo
             };
 
-            _chatGui.PrintChat(message);
+            _chatGui.Print(message);
         }
     }
 

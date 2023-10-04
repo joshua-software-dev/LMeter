@@ -1,5 +1,6 @@
 using Dalamud.Game.Gui;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using LMeter.Config;
 
 
@@ -8,12 +9,12 @@ namespace LMeter.Act;
 public class ActClient
 {
     private readonly ActConfig _config;
-    private readonly ChatGui _chatGui;
+    private readonly IChatGui _chatGui;
     private readonly DalamudPluginInterface _dpi;
 
     public IActClient Current;
 
-    public ActClient(ChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
+    public ActClient(IChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
     {
         _chatGui = chatGui;
         _config = config;

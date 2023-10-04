@@ -48,7 +48,7 @@ public class CactbotState
             Message = $"RAIDBOSS ALARM: {Alarm}",
             Type = XivChatType.ErrorMessage
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void OnAlertStateChange(object? sender, EventArgs eventArgs)
@@ -61,7 +61,7 @@ public class CactbotState
             Name = "RAIDBOSS ALERT",
             Type = XivChatType.Yell
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void OnInfoStateChange(object? sender, EventArgs eventArgs)
@@ -74,7 +74,7 @@ public class CactbotState
             Name = "RAIDBOSS INFO",
             Type = XivChatType.NPCDialogueAnnouncements
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void UpdateTimeline(IHtmlDocument html)

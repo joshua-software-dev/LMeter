@@ -4,6 +4,7 @@ using ImGuiNET;
 using ImGuiScene;
 using System.Numerics;
 using System;
+using Dalamud.Interface.Internal;
 
 
 namespace LMeter.Helpers;
@@ -112,7 +113,7 @@ public class DrawHelpers
         drawList.AddImage(tex.ImGuiHandle, position, position + size, uv0, uv1);
     }
 
-    public static (Vector2, Vector2) GetTexCoordinates(TextureWrap? texture, bool cropIcon = true)
+    public static (Vector2, Vector2) GetTexCoordinates(IDalamudTextureWrap? texture, bool cropIcon = true)
     {
         if (texture == null) return (Vector2.Zero, Vector2.Zero);
 

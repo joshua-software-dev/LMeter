@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 using System;
+using Dalamud.Plugin.Services;
 
 
 namespace LMeter.Act;
@@ -35,14 +36,14 @@ public class ActWebSocketClient : ActEventParser, IActClient
     private ClientWebSocket _socket;
     private CancellationTokenSource _cancellationTokenSource;
     private Task? _receiveTask;
-    private readonly ChatGui _chatGui;
+    private readonly IChatGui _chatGui;
 
     private ConnectionStatus _status;
     private string? _lastErrorMessage;
 
     public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
 
-    public ActWebSocketClient(ChatGui chatGui, ActConfig config)
+    public ActWebSocketClient(IChatGui chatGui, ActConfig config)
     {
         _chatGui = chatGui;
         _config = config;
@@ -202,7 +203,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
             Type = XivChatType.Echo
         };
 
-        _chatGui.PrintChat(message);
+        _chatGui.Print(message);
     }
 
     public void Clear()
@@ -217,7 +218,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 Type = XivChatType.Echo
             };
 
-            _chatGui.PrintChat(message);
+            _chatGui.Print(message);
         }
     }
 

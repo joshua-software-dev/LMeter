@@ -1,11 +1,10 @@
-using Dalamud.Data;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState;
+using System;
+using System.Numerics;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
+using Dalamud.Interface.Utility;
 using Dalamud.Interface.Windowing;
-using Dalamud.Interface;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using LMeter.Act;
 using LMeter.Cactbot;
@@ -13,18 +12,16 @@ using LMeter.Config;
 using LMeter.Helpers;
 using LMeter.Meter;
 using LMeter.Windows;
-using System.Numerics;
-using System;
-
 
 namespace LMeter;
 
 public class PluginManager : IDisposable
 {
     private readonly Vector2 _origin = ImGui.GetMainViewport().Size / 2f;
-    private readonly Vector2 _configSize = new (550, 550);
+    private readonly Vector2 _configSize = new(550, 550);
     private readonly ConfigWindow _configRoot;
     private readonly WindowSystem _windowSystem;
+
     private readonly ImGuiWindowFlags _mainWindowFlags =
         ImGuiWindowFlags.NoTitleBar |
         ImGuiWindowFlags.NoScrollbar |
@@ -34,15 +31,15 @@ public class PluginManager : IDisposable
         ImGuiWindowFlags.NoBringToFrontOnFocus |
         ImGuiWindowFlags.NoSavedSettings;
 
-    private readonly CommandManager _commandManager;
+    private readonly ICommandManager _commandManager;
     private readonly LMeterConfig _config;
 
     public readonly ActClient ActClient;
     public readonly CactbotConfig CactbotConfig;
-    public readonly ChatGui ChatGui;
-    public readonly ClientState ClientState;
-    public readonly Condition Condition;
-    public readonly DataManager DataManager;
+    public readonly IChatGui ChatGui;
+    public readonly IClientState ClientState;
+    public readonly ICondition Condition;
+    public readonly IDataManager DataManager;
     public readonly FontsManager FontsManager;
     public readonly DalamudPluginInterface PluginInterface;
     public readonly TexturesCache TexCache;
@@ -52,18 +49,18 @@ public class PluginManager : IDisposable
     public PluginManager
     (
         ActClient actClient,
-        ChatGui chatGui,
-        ClientState clientState,
-        CommandManager commandManager,
-        Condition condition,
+        IChatGui chatGui,
+        IClientState clientState,
+        ICommandManager commandManager,
+        ICondition condition,
         LMeterConfig config,
-        DataManager dataManager,
+        IDataManager dataManager,
         FontsManager fontsManager,
         DalamudPluginInterface pluginInterface,
         TexturesCache texCache
     )
     {
-        PluginManager.Instance = this;
+        Instance = this;
 
         ActClient = actClient;
         ChatGui = chatGui;
@@ -154,12 +151,12 @@ public class PluginManager : IDisposable
         if (!_configRoot.IsOpen) _configRoot.PushConfig(_config);
     }
 
-    private void OnLogin(object? sender, EventArgs? args)
+    private void OnLogin()
     {
         if (_config.ActConfig.WaitForCharacterLogin) ActClient.Current.Start();
     }
 
-    private void OnLogout(object? sender, EventArgs? args) =>
+    private void OnLogout() =>
         ConfigHelpers.SaveConfig(_config);
 
     private void PluginCommand(string command, string arguments)

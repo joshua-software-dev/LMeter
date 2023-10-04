@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System;
+using Dalamud.Plugin.Services;
 
 
 namespace LMeter.Helpers;
@@ -26,7 +27,7 @@ public static class Utils
             _ => position
         };
 
-    public static GameObject? FindTargetOfTarget(ObjectTable objectTable, GameObject? player, GameObject? target)
+    public static GameObject? FindTargetOfTarget(IObjectTable objectTable, GameObject? player, GameObject? target)
     {
         if (target == null) return null;
 

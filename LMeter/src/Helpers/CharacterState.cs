@@ -59,7 +59,7 @@ public static class CharacterState
 
         unsafe
         {
-            return (Job) ((Character*) player.Address)->ClassJob;
+            return (Job)((Character*)player.Address)->CharacterData.ClassJob;
         }
     }
 
