@@ -161,7 +161,7 @@
     <!-- NuGet Packages -->
     <ItemGroup>
         <PackageReference Include="AngleSharp" Version="1.0.1" />
-        <PackageReference Include="DalamudPackager" Version="2.1.11" />
+        <PackageReference Include="DalamudPackager" Version="2.1.12" />
     </ItemGroup>
 
     <!-- Dalamud Packager Task-->

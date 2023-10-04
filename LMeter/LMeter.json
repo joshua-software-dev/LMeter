@@ -1,5 +1,6 @@
 {
     "Name": "LMeter",
+    "InternalName": "lmeter",
     "Author": "Lichie, joshua.software.dev",
     "Punchline": "Plugin to display ACT combat log data.",
     "Description": "Renders ACT combat log data (and optionally Cactbot) as a plugin instead of using a web based overlay",
