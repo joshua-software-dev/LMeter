@@ -1,3 +1,7 @@
+# THIS PROJECT HAS MOVED ITS REPOSITORY
+## The most recent versions can be found here: https://gitlab.com/joshua.software.dev/LMeter
+
+
 # LMeter
 
 [![ko-fi](https://img.shields.io/badge/donate-ko--fi-blue)](https://ko-fi.com/lichie)
